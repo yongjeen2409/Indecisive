@@ -9,16 +9,16 @@ import { ROUTES } from '../lib/routes';
 import { Blueprint } from '../types';
 
 const CONFLICT_TYPE_COLORS: Record<string, string> = {
-  budget: '#ef4444',
-  timeline: '#f59e0b',
-  headcount: '#8b5cf6',
-  technical: '#06b6d4',
+  budget: 'var(--color-danger)',
+  timeline: 'var(--color-warning)',
+  headcount: 'var(--color-accent)',
+  technical: 'var(--color-accent)',
 };
 
 function ConflictBadge({ label }: { label: string }) {
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+      className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium"
       style={{
         background: `${CONFLICT_TYPE_COLORS[label]}20`,
         border: `1px solid ${CONFLICT_TYPE_COLORS[label]}50`,
@@ -47,38 +47,38 @@ function BlueprintCard({
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.45 }}
-      className="rounded-2xl overflow-hidden flex flex-col"
+      className="overflow-hidden flex flex-col"
       style={{
-        background: '#0c1428',
-        border: `1px solid ${selected ? `${blueprint.color}70` : '#1a2d50'}`,
+        background: 'var(--color-bg-card)',
+        border: `1px solid ${selected ? `${blueprint.color}70` : 'var(--color-border)'}`,
         boxShadow: selected ? `0 0 26px ${blueprint.color}1d` : 'none',
       }}
     >
       <div
         className="p-5"
-        style={{ borderBottom: '1px solid #1a2d50', background: `linear-gradient(135deg, ${blueprint.color}12, transparent)` }}
+        style={{ borderBottom: '1px solid var(--color-border)', background: `linear-gradient(135deg, ${blueprint.color}12, transparent)` }}
       >
         <div className="flex items-start justify-between gap-4 mb-3">
           <div>
             <span
-              className="text-xs font-mono px-2 py-0.5 rounded"
+              className="text-xs font-mono px-2 py-0.5"
               style={{ background: `${blueprint.color}20`, color: blueprint.accentColor }}
             >
               {blueprint.department}
             </span>
-            <h3 className="font-display font-bold text-lg mt-2" style={{ color: '#f0f6ff' }}>
+            <h3 className="font-display font-bold text-lg mt-2" style={{ color: 'var(--color-text-primary)' }}>
               {blueprint.title}
             </h3>
           </div>
           <div
-            className="px-3 py-1.5 rounded-xl text-xs font-medium"
-            style={{ background: '#080d1a', border: '1px solid #1a2d50', color: '#8bafd4' }}
+            className="px-3 py-1.5 text-xs font-medium"
+            style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
           >
             Blueprint {index + 1}
           </div>
         </div>
 
-        <p className="text-sm leading-relaxed mb-4" style={{ color: '#8bafd4' }}>
+        <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--color-text-secondary)' }}>
           {blueprint.description}
         </p>
 
@@ -95,54 +95,54 @@ function BlueprintCard({
         <PrototypePreview preview={blueprint.prototypePreview} accentColor={blueprint.accentColor} />
 
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl" style={{ background: '#080d1a', border: '1px solid #1a2d50' }}>
+          <div className="p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
             <p className="text-xs font-mono mb-3" style={{ color: blueprint.accentColor }}>
               SYSTEM ARCHITECTURE
             </p>
             <div className="space-y-2">
               {blueprint.architecture.slice(0, 4).map(item => (
-                <div key={item} className="flex items-center gap-2 text-xs" style={{ color: '#8bafd4' }}>
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: blueprint.color }} />
+                <div key={item} className="flex items-center gap-2 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                  <div className="w-1.5 h-1.5" style={{ background: blueprint.color }} />
                   {item}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="p-4 rounded-xl" style={{ background: '#080d1a', border: '1px solid #1a2d50' }}>
+          <div className="p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
             <p className="text-xs font-mono mb-3" style={{ color: blueprint.accentColor }}>
               FINANCE MODEL
             </p>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
-                <p style={{ color: '#4a6a94' }}>CAPEX</p>
-                <p style={{ color: '#f0f6ff' }}>{blueprint.financeModel.capex}</p>
+                <p style={{ color: 'var(--color-text-muted)' }}>CAPEX</p>
+                <p style={{ color: 'var(--color-text-primary)' }}>{blueprint.financeModel.capex}</p>
               </div>
               <div>
-                <p style={{ color: '#4a6a94' }}>OPEX</p>
-                <p style={{ color: '#f0f6ff' }}>{blueprint.financeModel.opex}</p>
+                <p style={{ color: 'var(--color-text-muted)' }}>OPEX</p>
+                <p style={{ color: 'var(--color-text-primary)' }}>{blueprint.financeModel.opex}</p>
               </div>
               <div>
-                <p style={{ color: '#4a6a94' }}>ROI</p>
-                <p style={{ color: '#10b981' }}>{blueprint.financeModel.roi}</p>
+                <p style={{ color: 'var(--color-text-muted)' }}>ROI</p>
+                <p style={{ color: 'var(--color-success)' }}>{blueprint.financeModel.roi}</p>
               </div>
               <div>
-                <p style={{ color: '#4a6a94' }}>Payback</p>
-                <p style={{ color: '#f0f6ff' }}>{blueprint.financeModel.paybackPeriod}</p>
+                <p style={{ color: 'var(--color-text-muted)' }}>Payback</p>
+                <p style={{ color: 'var(--color-text-primary)' }}>{blueprint.financeModel.paybackPeriod}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-4" style={{ borderTop: '1px solid #1a2d50' }}>
+      <div className="p-4" style={{ borderTop: '1px solid var(--color-border)' }}>
         <button
           onClick={onSelect}
-          className="w-full py-3 rounded-xl text-sm font-medium transition-all"
+          className="w-full py-3 text-sm font-medium transition-all"
           style={{
             background: selected ? blueprint.color : `${blueprint.color}1f`,
             border: `1px solid ${blueprint.color}50`,
-            color: selected ? '#fff' : blueprint.accentColor,
+            color: selected ? 'var(--color-text-primary)' : blueprint.accentColor,
           }}
         >
           {selected ? 'Preferred blueprint selected' : 'Select as preferred blueprint'}
@@ -160,23 +160,23 @@ export default function BlueprintArena() {
   );
 
   return (
-    <div className="page-shell" style={{ background: '#050810' }}>
+    <div className="page-shell" style={{ background: 'var(--color-bg-deep)' }}>
       <div className="page-container max-w-7xl space-y-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <p className="font-mono text-xs mb-2" style={{ color: '#2563eb' }}>
+          <p className="font-mono text-xs mb-2" style={{ color: 'var(--color-primary)' }}>
             BLUEPRINT ARENA
           </p>
-          <h1 className="font-display font-bold text-3xl mb-2" style={{ color: '#f0f6ff' }}>
+          <h1 className="font-display font-bold text-3xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
             ODIS generated {blueprints.length} solution blueprints
           </h1>
-          <p style={{ color: '#8bafd4' }}>
+          <p style={{ color: 'var(--color-text-secondary)' }}>
             Review the prototype concept, architecture, tech stack, and finance model for each
             option before moving into conflict review and ranking.
           </p>
           {activeSubmission ? (
-            <div className="mt-4 inline-flex max-w-3xl p-3 rounded-xl" style={{ background: '#0c1428', border: '1px solid #1a2d50' }}>
-              <p className="text-xs leading-relaxed" style={{ color: '#8bafd4' }}>
-                <span style={{ color: '#4a6a94' }}>Problem: </span>
+            <div className="mt-4 inline-flex max-w-3xl p-3" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+                <span style={{ color: 'var(--color-text-muted)' }}>Problem: </span>
                 {activeSubmission.problemStatement}
               </p>
             </div>
@@ -187,18 +187,18 @@ export default function BlueprintArena() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.18 }}
-          className="mb-6 p-4 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+          className="mb-6 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
           style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
         >
           <div className="flex items-start gap-3">
             <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ repeat: 2, duration: 0.5 }}>
-              <AlertTriangle size={18} style={{ color: '#ef4444' }} />
+              <AlertTriangle size={18} style={{ color: 'var(--color-danger)' }} />
             </motion.div>
             <div>
-              <p className="text-sm font-medium" style={{ color: '#f0f6ff' }}>
+              <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
                 {uniqueConflicts.length} conflicts detected before ranking
               </p>
-              <p className="text-xs" style={{ color: '#8bafd4' }}>
+              <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                 ODIS requires conflict review before the scoring table opens.
               </p>
             </div>
@@ -208,8 +208,8 @@ export default function BlueprintArena() {
               openConflictReview();
               router.push(ROUTES.conflicts);
             }}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105"
-            style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)' }}
+            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-all hover:scale-105"
+            style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--color-danger-glow)', border: '1px solid rgba(239, 68, 68, 0.4)' }}
           >
             Review conflict report
             <ChevronRight size={14} />
@@ -232,12 +232,12 @@ export default function BlueprintArena() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.45 }}
-          className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 rounded-2xl"
-          style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+          className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4"
+          style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
         >
           <div className="flex items-center gap-3">
-            <Layers3 size={16} style={{ color: '#06b6d4' }} />
-            <p className="text-sm" style={{ color: '#8bafd4' }}>
+            <Layers3 size={16} style={{ color: 'var(--color-accent)' }} />
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
               {selectedBlueprint
                 ? `Preferred blueprint: ${selectedBlueprint.title}`
                 : 'Select a preferred blueprint now or choose it later in the scoring table.'}
@@ -248,8 +248,8 @@ export default function BlueprintArena() {
               openConflictReview();
               router.push(ROUTES.conflicts);
             }}
-            className="px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105"
-            style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: '#fff' }}
+            className="px-4 py-2 text-sm font-medium transition-all hover:scale-105"
+            style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary))', color: 'var(--color-text-primary)' }}
           >
             Continue to conflict review
           </button>

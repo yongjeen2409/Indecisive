@@ -1,27 +1,79 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg-deep: #050810;
-  --color-bg-panel: #080d1a;
-  --color-bg-card: #0c1428;
-  --color-bg-elevated: #111d35;
-  --color-border: #1a2d50;
-  --color-border-bright: #2a4a7f;
-  --color-primary: #2563eb;
-  --color-primary-bright: #3b82f6;
-  --color-primary-glow: #60a5fa;
-  --color-accent: #06b6d4;
-  --color-accent-glow: #22d3ee;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-danger-glow: #f87171;
-  --color-text-primary: #f0f6ff;
-  --color-text-secondary: #8bafd4;
-  --color-text-muted: #4a6a94;
+  --color-bg-deep: var(--bg-deep);
+  --color-bg-panel: var(--bg-panel);
+  --color-bg-card: var(--bg-card);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-border: var(--border);
+  --color-border-bright: var(--border-bright);
+  --color-primary: var(--primary);
+  --color-primary-bright: var(--primary-bright);
+  --color-primary-glow: var(--primary-glow);
+  --color-accent: var(--accent);
+  --color-accent-glow: var(--accent-glow);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-danger-glow: var(--danger-glow);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
   --font-display: var(--font-display-ui), sans-serif;
   --font-mono: var(--font-mono-ui), monospace;
   --font-body: var(--font-body-ui), sans-serif;
+}
+
+:root {
+  /* Light mode tokens (Ledger theme) */
+  --bg-deep: #EBE7DD;
+  --bg-panel: #F5F3EC;
+  --bg-card: #F5F3EC;
+  --bg-elevated: #FCFBFA;
+  --border: #D1CCC1;
+  --border-bright: #2A2A2A;
+  
+  --primary: #C26049;
+  --primary-bright: #D96A51;
+  --primary-glow: #C26049;
+  
+  --accent: #C26049; /* Terracotta orange-red */
+  --accent-glow: #C26049;
+  
+  --success: #5C8065; /* Muted ledger green */
+  --warning: #C98A44;
+  --danger: #B84A39;
+  --danger-glow: #B84A39;
+
+  --text-primary: #2A2A2A;
+  --text-secondary: #6E6A62;
+  --text-muted: #969188;
+}
+
+.dark {
+  /* Dark mode tokens */
+  --bg-deep: #121212;
+  --bg-panel: #1A1A1A;
+  --bg-card: #1E1E1E;
+  --bg-elevated: #242424;
+  --border: #2A2A2A;
+  --border-bright: #333333;
+  
+  --primary: #C26049;
+  --primary-bright: #D96A51;
+  --primary-glow: #C26049;
+  
+  --accent: #C26049;
+  --accent-glow: #C26049;
+
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --danger-glow: #ef4444;
+
+  --text-primary: #EDEDEB;
+  --text-secondary: #A1A1A1;
+  --text-muted: #808080;
 }
 
 * {
@@ -34,11 +86,12 @@ html {
 
 body {
   margin: 0;
-  background-color: #050810;
-  color: #f0f6ff;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
   font-family: var(--font-body-ui), sans-serif;
   line-height: 1.6;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body > div:first-child {
@@ -56,47 +109,39 @@ textarea {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #080d1a;
+  background: var(--bg-panel);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1a2d50;
+  background: var(--border);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2a4a7f;
+  background: var(--border-bright);
 }
 
 .font-display { font-family: var(--font-display-ui), sans-serif; }
 .font-mono { font-family: var(--font-mono-ui), monospace; }
 .font-body { font-family: var(--font-body-ui), sans-serif; }
 
-.glow-blue {
-  box-shadow: 0 0 20px rgba(37, 99, 235, 0.3), 0 0 40px rgba(37, 99, 235, 0.1);
-}
-.glow-cyan {
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
-}
-.glow-red {
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.15);
-}
-.glow-green {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+.glow-blue, .glow-cyan, .glow-red, .glow-green, .merge-glow {
+  box-shadow: none;
 }
 
 .grid-bg {
   background-image: 
-    linear-gradient(rgba(37, 99, 235, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(37, 99, 235, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(139, 124, 246, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 124, 246, 0.04) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
 .card-border {
-  border: 1px solid #1a2d50;
-  background: #0c1428;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  transition: border-color 0.3s ease, background-color 0.3s ease;
 }
 
 .card-border:hover {
-  border-color: #2a4a7f;
+  border-color: var(--border-bright);
 }
 
 @keyframes pulse-ring {
@@ -162,14 +207,11 @@ textarea {
   animation: float 0.4s ease-out;
 }
 
-.merge-glow {
-  animation: pulse-ring 1.5s ease-in-out infinite;
-  box-shadow: 0 0 30px rgba(6, 182, 212, 0.5), 0 0 60px rgba(6, 182, 212, 0.2);
-}
-
 .page-shell {
   min-height: 100vh;
   padding: 7rem clamp(1rem, 2vw + 0.5rem, 2rem) 4.5rem;
+  background-color: var(--bg-deep);
+  transition: background-color 0.3s ease;
 }
 
 .page-container {
@@ -185,14 +227,15 @@ textarea {
 
 .section-copy {
   max-width: 54rem;
-  color: #8bafd4;
+  color: var(--text-secondary);
   line-height: 1.75;
 }
 
 .surface-panel {
-  background: #0c1428;
-  border: 1px solid #1a2d50;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 1rem;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 @media (max-width: 640px) {

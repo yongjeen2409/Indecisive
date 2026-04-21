@@ -47,18 +47,18 @@ export default function Dashboard() {
       ];
 
   return (
-    <div className="page-shell" style={{ background: '#050810' }}>
+    <div className="page-shell" style={{ background: 'var(--color-bg-deep)' }}>
       <div className="page-container max-w-6xl space-y-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <p className="font-mono text-xs mb-3" style={{ color: '#2563eb' }}>
+          <p className="font-mono text-xs mb-3" style={{ color: 'var(--color-primary)' }}>
             {superiorMode ? 'SUPERIOR DASHBOARD' : 'STAFF DASHBOARD'}
           </p>
-          <h1 className="font-display font-bold text-3xl mb-2" style={{ color: '#f0f6ff' }}>
+          <h1 className="font-display font-bold text-3xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
             {superiorMode
               ? `Leadership review center for ${currentUser.name}`
               : `Welcome back, ${currentUser.name}`}
           </h1>
-          <p style={{ color: '#8bafd4' }}>
+          <p style={{ color: 'var(--color-text-secondary)' }}>
             {superiorMode
               ? 'Review escalations, inspect ODIS merge suggestions, and move the strongest option toward executive approval.'
               : 'Track your current submission, inspect retrieved context, and continue from the right point in the blueprint workflow.'}
@@ -75,24 +75,24 @@ export default function Dashboard() {
             >
               <button
                 onClick={() => router.push(ROUTES.merge)}
-                className="p-5 rounded-2xl text-left transition-all hover:scale-[1.02]"
-                style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+                className="p-5 text-left transition-all hover:scale-[1.02]"
+                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
               >
-                <GitMerge size={18} className="mb-3" style={{ color: '#8b5cf6' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: '#f0f6ff' }}>
+                <GitMerge size={18} className="mb-3" style={{ color: 'var(--color-accent)' }} />
+                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                   Pending merges
                 </p>
-                <p className="text-xs" style={{ color: '#8bafd4' }}>
+                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                   {pendingEscalations.length} escalations are waiting for superior review.
                 </p>
               </button>
 
-              <div className="p-5 rounded-2xl" style={{ background: '#0c1428', border: '1px solid #1a2d50' }}>
-                <Sparkles size={18} className="mb-3" style={{ color: '#06b6d4' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: '#f0f6ff' }}>
+              <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                <Sparkles size={18} className="mb-3" style={{ color: 'var(--color-accent)' }} />
+                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                   GLM suggestions
                 </p>
-                <p className="text-xs" style={{ color: '#8bafd4' }}>
+                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                   {mergeSuggestions.length > 0
                     ? `${mergeSuggestions.length} compatible blueprint pairs are ready for comparison.`
                     : 'No merge suggestions yet. Escalate more blueprints to unlock a paired review.'}
@@ -101,14 +101,14 @@ export default function Dashboard() {
 
               <button
                 onClick={() => router.push(mergedStrategy ? ROUTES.output : ROUTES.merge)}
-                className="p-5 rounded-2xl text-left transition-all hover:scale-[1.02]"
-                style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+                className="p-5 text-left transition-all hover:scale-[1.02]"
+                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
               >
-                <FileText size={18} className="mb-3" style={{ color: '#10b981' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: '#f0f6ff' }}>
+                <FileText size={18} className="mb-3" style={{ color: 'var(--color-success)' }} />
+                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                   Latest strategy output
                 </p>
-                <p className="text-xs" style={{ color: '#8bafd4' }}>
+                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                   {mergedStrategy
                     ? `${mergedStrategy.title} is ready for review.`
                     : 'No unified strategy generated yet.'}
@@ -121,14 +121,14 @@ export default function Dashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.14 }}
-                className="p-6 rounded-2xl"
-                style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+                className="p-6"
+                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-display font-semibold" style={{ color: '#f0f6ff' }}>
+                  <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
                     Pending escalations
                   </h2>
-                  <span className="text-xs font-mono px-2 py-1 rounded" style={{ background: '#1a2d50', color: '#8bafd4' }}>
+                  <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
                     {pendingEscalations.length} pending
                   </span>
                 </div>
@@ -139,29 +139,29 @@ export default function Dashboard() {
                       <button
                         key={record.id}
                         onClick={() => router.push(ROUTES.merge)}
-                        className="w-full p-4 rounded-xl text-left transition-all hover:border-blue-500/30"
-                        style={{ background: '#080d1a', border: '1px solid #1a2d50' }}
+                        className="w-full p-4 text-left transition-all hover:border-blue-500/30"
+                        style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
                       >
                         <div className="flex items-center justify-between gap-4">
                           <div>
-                            <p className="font-display font-semibold text-sm mb-1" style={{ color: '#f0f6ff' }}>
+                            <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                               {record.blueprint.title}
                             </p>
-                            <p className="text-xs" style={{ color: '#8bafd4' }}>
+                            <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                               Escalated by {record.submittedBy.name} from {record.submittedBy.department}
                             </p>
                           </div>
-                          <ArrowRight size={16} style={{ color: '#4a6a94' }} />
+                          <ArrowRight size={16} style={{ color: 'var(--color-text-muted)' }} />
                         </div>
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <div className="p-5 rounded-xl" style={{ background: '#080d1a', border: '1px solid #1a2d50' }}>
-                    <p className="text-sm mb-1" style={{ color: '#f0f6ff' }}>
+                  <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                    <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                       No escalations are waiting right now.
                     </p>
-                    <p className="text-xs" style={{ color: '#8bafd4' }}>
+                    <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                       Once staff users escalate a blueprint, ODIS will queue it here for superior review.
                     </p>
                   </div>
@@ -172,24 +172,24 @@ export default function Dashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="p-6 rounded-2xl"
-                style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+                className="p-6"
+                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
               >
-                <h2 className="font-display font-semibold mb-4" style={{ color: '#f0f6ff' }}>
+                <h2 className="font-display font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>
                   Best merge suggestion
                 </h2>
                 {mergeSuggestions[0] ? (
                   <>
-                    <p className="text-sm leading-relaxed mb-4" style={{ color: '#8bafd4' }}>
+                    <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--color-text-secondary)' }}>
                       {mergeSuggestions[0].rationale}
                     </p>
                     <div className="grid grid-cols-2 gap-3 mb-5">
                       {Object.entries(mergeSuggestions[0].compatibility).map(([label, value]) => (
-                        <div key={label} className="p-3 rounded-xl" style={{ background: '#080d1a', border: '1px solid #1a2d50' }}>
-                          <p className="text-xs capitalize mb-1" style={{ color: '#4a6a94' }}>
+                        <div key={label} className="p-3" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                          <p className="text-xs capitalize mb-1" style={{ color: 'var(--color-text-muted)' }}>
                             {label}
                           </p>
-                          <p className="font-display font-bold text-lg" style={{ color: '#f0f6ff' }}>
+                          <p className="font-display font-bold text-lg" style={{ color: 'var(--color-text-primary)' }}>
                             {value}%
                           </p>
                         </div>
@@ -197,14 +197,14 @@ export default function Dashboard() {
                     </div>
                     <button
                       onClick={() => router.push(ROUTES.merge)}
-                      className="w-full py-3 rounded-xl font-semibold text-white transition-all hover:scale-[1.02]"
-                      style={{ background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)' }}
+                      className="w-full py-3 font-semibold text-white transition-all hover:scale-[1.02]"
+                      style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent))' }}
                     >
                       Open merge workspace
                     </button>
                   </>
                 ) : (
-                  <p className="text-sm leading-relaxed" style={{ color: '#8bafd4' }}>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
                     ODIS needs at least two pending escalations before it can recommend a compatible merge pair.
                   </p>
                 )}
@@ -221,40 +221,40 @@ export default function Dashboard() {
             >
               <button
                 onClick={() => router.push(ROUTES.submit)}
-                className="p-5 rounded-2xl text-left transition-all hover:scale-[1.02]"
+                className="p-5 text-left transition-all hover:scale-[1.02]"
                 style={{ background: 'linear-gradient(135deg, #2563eb20, #1d4ed820)', border: '1px solid rgba(37, 99, 235, 0.3)' }}
               >
-                <Plus size={18} className="mb-3" style={{ color: '#3b82f6' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: '#f0f6ff' }}>
+                <Plus size={18} className="mb-3" style={{ color: 'var(--color-primary-bright)' }} />
+                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                   Start a new problem
                 </p>
-                <p className="text-xs" style={{ color: '#8bafd4' }}>
+                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                   Open a fresh submission and let ODIS build a new set of blueprints.
                 </p>
               </button>
 
               <button
                 onClick={() => router.push(latestStaffRoute)}
-                className="p-5 rounded-2xl text-left transition-all hover:scale-[1.02]"
-                style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+                className="p-5 text-left transition-all hover:scale-[1.02]"
+                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
               >
-                <Layers3 size={18} className="mb-3" style={{ color: '#06b6d4' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: '#f0f6ff' }}>
+                <Layers3 size={18} className="mb-3" style={{ color: 'var(--color-accent)' }} />
+                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                   Continue current flow
                 </p>
-                <p className="text-xs" style={{ color: '#8bafd4' }}>
+                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                   {activeSubmission
                     ? `Resume at the ${submissionStatus} stage for your active submission.`
                     : 'No active submission yet. ODIS will take you to the submission page.'}
                 </p>
               </button>
 
-              <div className="p-5 rounded-2xl" style={{ background: '#0c1428', border: '1px solid #1a2d50' }}>
-                <BarChart3 size={18} className="mb-3" style={{ color: '#10b981' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: '#f0f6ff' }}>
+              <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                <BarChart3 size={18} className="mb-3" style={{ color: 'var(--color-success)' }} />
+                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                   Escalation queue
                 </p>
-                <p className="text-xs" style={{ color: '#8bafd4' }}>
+                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                   {pendingEscalations.length} blueprint{pendingEscalations.length === 1 ? '' : 's'} are currently waiting in the superior review queue.
                 </p>
               </div>
@@ -265,66 +265,66 @@ export default function Dashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.14 }}
-                className="p-6 rounded-2xl"
-                style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+                className="p-6"
+                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
               >
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-display font-semibold" style={{ color: '#f0f6ff' }}>
+                  <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
                     Active submission
                   </h2>
-                  <span className="text-xs font-mono px-2 py-1 rounded" style={{ background: '#1a2d50', color: '#8bafd4' }}>
+                  <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
                     {submissionStatus}
                   </span>
                 </div>
 
                 {activeSubmission ? (
                   <div className="space-y-5">
-                    <div className="p-4 rounded-xl" style={{ background: '#080d1a', border: '1px solid #1a2d50' }}>
-                      <p className="text-xs mb-2" style={{ color: '#4a6a94' }}>
+                    <div className="p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                      <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>
                         Problem statement
                       </p>
-                      <p className="text-sm leading-relaxed" style={{ color: '#f0f6ff' }}>
+                      <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-primary)' }}>
                         {activeSubmission.problemStatement}
                       </p>
                     </div>
 
                     <div className="grid grid-cols-3 gap-3">
                       {contextCounts.map(item => (
-                        <div key={item.label} className="p-4 rounded-xl text-center" style={{ background: '#080d1a', border: '1px solid #1a2d50' }}>
-                          <p className="font-display font-bold text-2xl" style={{ color: '#f0f6ff' }}>
+                        <div key={item.label} className="p-4 text-center" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                          <p className="font-display font-bold text-2xl" style={{ color: 'var(--color-text-primary)' }}>
                             {item.value}
                           </p>
-                          <p className="text-xs" style={{ color: '#8bafd4' }}>
+                          <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                             {item.label}
                           </p>
                         </div>
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: '#080d1a', border: '1px solid #1a2d50' }}>
+                    <div className="flex items-center justify-between p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
                       <div>
-                        <p className="text-xs mb-1" style={{ color: '#4a6a94' }}>
+                        <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>
                           Preferred blueprint
                         </p>
-                        <p className="text-sm" style={{ color: '#f0f6ff' }}>
+                        <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>
                           {selectedBlueprint ? selectedBlueprint.title : 'Not selected yet'}
                         </p>
                       </div>
                       <button
                         onClick={() => router.push(latestStaffRoute)}
-                        className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
-                        style={{ background: '#1a2d50', color: '#8bafd4' }}
+                        className="px-4 py-2 text-sm font-medium transition-all"
+                        style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
                       >
                         Continue
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="p-5 rounded-xl" style={{ background: '#080d1a', border: '1px solid #1a2d50' }}>
-                    <p className="text-sm mb-1" style={{ color: '#f0f6ff' }}>
+                  <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                    <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                       No active submission yet.
                     </p>
-                    <p className="text-xs" style={{ color: '#8bafd4' }}>
+                    <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                       Start a new problem to see retrieved context, generated blueprints, conflicts,
                       and ranking progress here.
                     </p>
@@ -336,12 +336,12 @@ export default function Dashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="p-6 rounded-2xl"
-                style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+                className="p-6"
+                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
               >
                 <div className="flex items-center gap-2 mb-4">
-                  <Users size={16} style={{ color: '#06b6d4' }} />
-                  <h2 className="font-display font-semibold" style={{ color: '#f0f6ff' }}>
+                  <Users size={16} style={{ color: 'var(--color-accent)' }} />
+                  <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
                     Staff workflow guide
                   </h2>
                 </div>
@@ -352,8 +352,8 @@ export default function Dashboard() {
                     'Acknowledge conflicts before opening the ranking table.',
                     'Escalate one preferred blueprint to a superior.',
                   ].map(step => (
-                    <div key={step} className="p-3 rounded-xl" style={{ background: '#080d1a', border: '1px solid #1a2d50' }}>
-                      <p className="text-sm" style={{ color: '#8bafd4' }}>
+                    <div key={step} className="p-3" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                      <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
                         {step}
                       </p>
                     </div>

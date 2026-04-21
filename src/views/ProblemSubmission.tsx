@@ -47,16 +47,16 @@ export default function ProblemSubmission() {
   };
 
   return (
-    <div className="page-shell" style={{ background: '#050810' }}>
+    <div className="page-shell" style={{ background: 'var(--color-bg-deep)' }}>
       <div className="page-container max-w-4xl space-y-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <p className="font-mono text-xs mb-2" style={{ color: '#2563eb' }}>
+          <p className="font-mono text-xs mb-2" style={{ color: 'var(--color-primary)' }}>
             PROBLEM SUBMISSION
           </p>
-          <h1 className="font-display font-bold text-3xl mb-2" style={{ color: '#f0f6ff' }}>
+          <h1 className="font-display font-bold text-3xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
             Describe the business problem ODIS should solve
           </h1>
-          <p className="max-w-3xl" style={{ color: '#8bafd4' }}>
+          <p className="max-w-3xl" style={{ color: 'var(--color-text-secondary)' }}>
             Submit the challenge in plain language. ODIS will retrieve context, extract
             constraints, detect conflicts, and propose multiple cross-department blueprints for
             review.
@@ -71,30 +71,30 @@ export default function ProblemSubmission() {
             onSubmit={handleSubmit}
             className="space-y-4"
           >
-            <div className="rounded-2xl overflow-hidden" style={{ background: '#0c1428', border: '1px solid #1a2d50' }}>
+            <div className="overflow-hidden" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
               <textarea
                 value={problemStatement}
                 onChange={event => setProblemStatement(event.target.value)}
                 placeholder="Example: We need one decision process across engineering, data, and operations because each team is pursuing a different solution to the same business issue."
                 rows={11}
                 className="w-full px-5 py-4 text-sm leading-relaxed outline-none resize-none"
-                style={{ background: 'transparent', color: '#f0f6ff' }}
+                style={{ background: 'transparent', color: 'var(--color-text-primary)' }}
               />
 
-              <div className="flex items-center justify-between px-5 py-3 gap-3" style={{ borderTop: '1px solid #1a2d50' }}>
+              <div className="flex items-center justify-between px-5 py-3 gap-3" style={{ borderTop: '1px solid var(--color-border)' }}>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     className="flex items-center gap-2 text-xs transition-colors hover:text-blue-400"
-                    style={{ color: '#8bafd4' }}
+                    style={{ color: 'var(--color-text-secondary)' }}
                   >
                     <Paperclip size={14} />
                     Attach supporting files
                   </button>
                   <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleAttachFiles} />
                 </div>
-                <span className="text-xs font-mono" style={{ color: problemStatement.trim().length >= 30 ? '#8bafd4' : '#4a6a94' }}>
+                <span className="text-xs font-mono" style={{ color: problemStatement.trim().length >= 30 ? 'var(--color-text-secondary)' : 'var(--color-text-muted)' }}>
                   {problemStatement.trim().length} chars
                 </span>
               </div>
@@ -105,12 +105,12 @@ export default function ProblemSubmission() {
                 {attachments.map(file => (
                   <span
                     key={file.id}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs"
-                    style={{ background: '#0c1428', border: '1px solid #1a2d50', color: '#8bafd4' }}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs"
+                    style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
                   >
                     <Paperclip size={10} />
                     {file.name}
-                    <span style={{ color: '#4a6a94' }}>{file.sizeLabel}</span>
+                    <span style={{ color: 'var(--color-text-muted)' }}>{file.sizeLabel}</span>
                   </span>
                 ))}
               </motion.div>
@@ -119,9 +119,9 @@ export default function ProblemSubmission() {
             <button
               type="submit"
               disabled={problemStatement.trim().length < 30}
-              className="w-full py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all hover:scale-105 disabled:opacity-40 disabled:scale-100"
+              className="w-full py-4 font-semibold text-white flex items-center justify-center gap-2 transition-all hover:scale-105 disabled:opacity-40 disabled:scale-100"
               style={{
-                background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary))',
                 boxShadow:
                   problemStatement.trim().length >= 30 ? '0 0 30px rgba(37, 99, 235, 0.4)' : 'none',
               }}
@@ -136,12 +136,12 @@ export default function ProblemSubmission() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="p-5 rounded-2xl"
-              style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+              className="p-5"
+              style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
             >
               <div className="flex items-center gap-2 mb-3">
-                <Lightbulb size={14} style={{ color: '#f59e0b' }} />
-                <span className="text-xs font-medium" style={{ color: '#8bafd4' }}>
+                <Lightbulb size={14} style={{ color: 'var(--color-warning)' }} />
+                <span className="text-xs font-medium" style={{ color: 'var(--color-text-secondary)' }}>
                   Example prompts
                 </span>
               </div>
@@ -150,8 +150,8 @@ export default function ProblemSubmission() {
                   <button
                     key={example}
                     onClick={() => setProblemStatement(example)}
-                    className="w-full text-left p-3 rounded-xl text-xs leading-relaxed transition-all hover:border-blue-500/30"
-                    style={{ background: '#080d1a', border: '1px solid #1a2d50', color: '#8bafd4' }}
+                    className="w-full text-left p-3 text-xs leading-relaxed transition-all hover:border-blue-500/30"
+                    style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
                   >
                     {example}
                   </button>
@@ -163,34 +163,34 @@ export default function ProblemSubmission() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="p-5 rounded-2xl"
+              className="p-5"
               style={{ background: 'rgba(37, 99, 235, 0.08)', border: '1px solid rgba(37, 99, 235, 0.25)' }}
             >
-              <p className="text-xs font-mono mb-3" style={{ color: '#3b82f6' }}>
+              <p className="text-xs font-mono mb-3" style={{ color: 'var(--color-primary-bright)' }}>
                 ODIS WILL AUTOMATICALLY PULL
               </p>
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
-                  <p className="font-display font-bold text-xl" style={{ color: '#f0f6ff' }}>
+                  <p className="font-display font-bold text-xl" style={{ color: 'var(--color-text-primary)' }}>
                     5
                   </p>
-                  <p className="text-xs" style={{ color: '#8bafd4' }}>
+                  <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                     Jira tickets
                   </p>
                 </div>
                 <div>
-                  <p className="font-display font-bold text-xl" style={{ color: '#f0f6ff' }}>
+                  <p className="font-display font-bold text-xl" style={{ color: 'var(--color-text-primary)' }}>
                     4
                   </p>
-                  <p className="text-xs" style={{ color: '#8bafd4' }}>
+                  <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                     Confluence docs
                   </p>
                 </div>
                 <div>
-                  <p className="font-display font-bold text-xl" style={{ color: '#f0f6ff' }}>
+                  <p className="font-display font-bold text-xl" style={{ color: 'var(--color-text-primary)' }}>
                     3
                   </p>
-                  <p className="text-xs" style={{ color: '#8bafd4' }}>
+                  <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                     Past decisions
                   </p>
                 </div>
@@ -201,16 +201,16 @@ export default function ProblemSubmission() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
-              className="p-5 rounded-2xl"
-              style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+              className="p-5"
+              style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
             >
-              <p className="text-xs font-mono mb-3" style={{ color: '#06b6d4' }}>
+              <p className="text-xs font-mono mb-3" style={{ color: 'var(--color-accent)' }}>
                 ACTIVE ROLE
               </p>
-              <p className="font-display font-semibold text-sm mb-1" style={{ color: '#f0f6ff' }}>
+              <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                 {currentUser?.name ?? 'ODIS staff mode'}
               </p>
-              <p className="text-xs leading-relaxed" style={{ color: '#8bafd4' }}>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
                 Staff users own problem submission, conflict acknowledgement, blueprint ranking, and escalation to leadership.
               </p>
             </motion.div>

@@ -32,7 +32,7 @@ function TypewriterText({ text, delay = 0 }: { text: string; delay?: number }) {
     <span>
       {displayed}
       {displayed.length < text.length && started ? (
-        <span className="inline-block w-0.5 h-4 ml-0.5 animate-pulse" style={{ background: '#3b82f6', verticalAlign: 'middle' }} />
+        <span className="inline-block w-0.5 h-4 ml-0.5 animate-pulse" style={{ background: 'var(--color-primary-bright)', verticalAlign: 'middle' }} />
       ) : null}
     </span>
   );
@@ -104,44 +104,44 @@ export default function OutputPage() {
   ];
 
   return (
-    <div className="page-shell" style={{ background: '#050810' }}>
+    <div className="page-shell" style={{ background: 'var(--color-bg-deep)' }}>
       <div className="page-container max-w-5xl space-y-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: 1 }}
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)', boxShadow: '0 0 25px rgba(139, 92, 246, 0.4)' }}
+              className="w-10 h-10 flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent))', boxShadow: '0 0 25px rgba(139, 92, 246, 0.4)' }}
             >
               <Sparkles size={18} className="text-white" />
             </motion.div>
             <div>
-              <p className="font-mono text-xs" style={{ color: '#8b5cf6' }}>
+              <p className="font-mono text-xs" style={{ color: 'var(--color-accent)' }}>
                 UNIFIED STRATEGY OUTPUT
               </p>
-              <h1 className="font-display font-bold text-2xl" style={{ color: '#f0f6ff' }}>
+              <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--color-text-primary)' }}>
                 {mergedStrategy.title}
               </h1>
             </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs" style={{ color: '#4a6a94' }}>
+            <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
               Synthesized from:
             </span>
             {mergedStrategy.sourceBlueprintTitles.map(title => (
               <span
                 key={title}
-                className="text-xs px-2 py-0.5 rounded"
-                style={{ background: '#1a2d50', color: '#8bafd4' }}
+                className="text-xs px-2 py-0.5"
+                style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
               >
                 {title}
               </span>
             ))}
             <span
-              className="text-xs px-2 py-0.5 rounded"
-              style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#10b981' }}
+              className="text-xs px-2 py-0.5"
+              style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: 'var(--color-success)' }}
             >
               {mergedStrategy.approvalStatus}
             </span>
@@ -152,17 +152,17 @@ export default function OutputPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.08 }}
-          className="flex gap-1 p-1 rounded-2xl mb-6"
-          style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+          className="flex gap-1 p-1 mb-6"
+          style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
         >
           {tabs.map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all"
               style={{
                 background: activeTab === tab.key ? 'linear-gradient(135deg, #2563eb20, #06b6d420)' : 'transparent',
-                color: activeTab === tab.key ? '#f0f6ff' : '#4a6a94',
+                color: activeTab === tab.key ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
                 border: activeTab === tab.key ? '1px solid rgba(37, 99, 235, 0.3)' : '1px solid transparent',
               }}
             >
@@ -174,10 +174,10 @@ export default function OutputPage() {
 
         <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24 }}>
           {activeTab === 'brief' ? (
-            <div className="p-6 rounded-2xl" style={{ background: '#0c1428', border: '1px solid #1a2d50' }}>
+            <div className="p-6" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#10b981' }} />
-                <span className="text-xs font-mono" style={{ color: '#10b981' }}>
+                <div className="w-2 h-2 animate-pulse" style={{ background: 'var(--color-success)' }} />
+                <span className="text-xs font-mono" style={{ color: 'var(--color-success)' }}>
                   GLM COMPOSING
                 </span>
               </div>
@@ -189,19 +189,19 @@ export default function OutputPage() {
 
           {activeTab === 'technical' ? (
             <div className="space-y-6">
-              <div className="p-5 rounded-2xl" style={{ background: '#0c1428', border: '1px solid #1a2d50' }}>
-                <p className="text-xs font-mono mb-4" style={{ color: '#06b6d4' }}>
+              <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                <p className="text-xs font-mono mb-4" style={{ color: 'var(--color-accent)' }}>
                   ARCHITECTURE LAYERS
                 </p>
                 <div className="grid md:grid-cols-2 gap-2">
                   {mergedStrategy.technicalBlueprint.architecture.map(item => (
                     <div
                       key={item}
-                      className="flex items-center gap-2 p-2.5 rounded-lg"
-                      style={{ background: '#080d1a', border: '1px solid #1a2d50' }}
+                      className="flex items-center gap-2 p-2.5"
+                      style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
                     >
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#06b6d4' }} />
-                      <span className="text-xs" style={{ color: '#f0f6ff' }}>
+                      <div className="w-1.5 h-1.5" style={{ background: 'var(--color-accent)' }} />
+                      <span className="text-xs" style={{ color: 'var(--color-text-primary)' }}>
                         {item}
                       </span>
                     </div>
@@ -209,16 +209,16 @@ export default function OutputPage() {
                 </div>
               </div>
 
-              <div className="p-5 rounded-2xl" style={{ background: '#0c1428', border: '1px solid #1a2d50' }}>
-                <p className="text-xs font-mono mb-4" style={{ color: '#3b82f6' }}>
+              <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                <p className="text-xs font-mono mb-4" style={{ color: 'var(--color-primary-bright)' }}>
                   TECH STACK
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {mergedStrategy.technicalBlueprint.techStack.map(item => (
                     <span
                       key={item}
-                      className="px-3 py-1.5 rounded-lg text-xs font-mono"
-                      style={{ background: 'rgba(37, 99, 235, 0.15)', border: '1px solid rgba(37, 99, 235, 0.3)', color: '#60a5fa' }}
+                      className="px-3 py-1.5 text-xs font-mono"
+                      style={{ background: 'rgba(37, 99, 235, 0.15)', border: '1px solid rgba(37, 99, 235, 0.3)', color: 'var(--color-primary-glow)' }}
                     >
                       {item}
                     </span>
@@ -226,28 +226,28 @@ export default function OutputPage() {
                 </div>
               </div>
 
-              <div className="p-5 rounded-2xl" style={{ background: '#0c1428', border: '1px solid #1a2d50' }}>
-                <p className="text-xs font-mono mb-4" style={{ color: '#8b5cf6' }}>
+              <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                <p className="text-xs font-mono mb-4" style={{ color: 'var(--color-accent)' }}>
                   DELIVERY PHASES
                 </p>
                 <div className="space-y-4">
                   {mergedStrategy.technicalBlueprint.phases.map(phase => (
                     <div
                       key={phase.name}
-                      className="p-4 rounded-xl"
-                      style={{ background: '#080d1a', border: '1px solid #1a2d50', borderLeft: '3px solid #8b5cf6' }}
+                      className="p-4"
+                      style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', borderLeft: '3px solid var(--color-accent)' }}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-display font-semibold text-sm" style={{ color: '#f0f6ff' }}>
+                        <span className="font-display font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>
                           {phase.name}
                         </span>
-                        <span className="text-xs font-mono px-2 py-0.5 rounded" style={{ background: '#1a2d50', color: '#8bafd4' }}>
+                        <span className="text-xs font-mono px-2 py-0.5" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
                           {phase.duration}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {phase.deliverables.map(deliverable => (
-                          <span key={deliverable} className="text-xs px-2 py-0.5 rounded" style={{ background: '#0c1428', color: '#8bafd4' }}>
+                          <span key={deliverable} className="text-xs px-2 py-0.5" style={{ background: 'var(--color-bg-card)', color: 'var(--color-text-secondary)' }}>
                             {deliverable}
                           </span>
                         ))}
@@ -263,13 +263,13 @@ export default function OutputPage() {
             <div className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: 'CAPEX', value: mergedStrategy.financeModel.capex, color: '#f0f6ff' },
-                  { label: 'OPEX / month', value: mergedStrategy.financeModel.opex, color: '#f0f6ff' },
-                  { label: 'Projected ROI', value: mergedStrategy.financeModel.roi, color: '#10b981' },
-                  { label: 'Payback Period', value: mergedStrategy.financeModel.paybackPeriod, color: '#3b82f6' },
+                  { label: 'CAPEX', value: mergedStrategy.financeModel.capex, color: 'var(--color-text-primary)' },
+                  { label: 'OPEX / month', value: mergedStrategy.financeModel.opex, color: 'var(--color-text-primary)' },
+                  { label: 'Projected ROI', value: mergedStrategy.financeModel.roi, color: 'var(--color-success)' },
+                  { label: 'Payback Period', value: mergedStrategy.financeModel.paybackPeriod, color: 'var(--color-primary-bright)' },
                 ].map(item => (
-                  <div key={item.label} className="p-5 rounded-2xl text-center" style={{ background: '#0c1428', border: '1px solid #1a2d50' }}>
-                    <p className="text-xs mb-2" style={{ color: '#4a6a94' }}>
+                  <div key={item.label} className="p-5 text-center" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                    <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>
                       {item.label}
                     </p>
                     <p className="font-display font-bold text-2xl" style={{ color: item.color }}>
@@ -280,13 +280,13 @@ export default function OutputPage() {
               </div>
 
               <div
-                className="p-5 rounded-2xl"
+                className="p-5"
                 style={{ background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.25)' }}
               >
-                <p className="text-xs font-mono mb-2" style={{ color: '#10b981' }}>
+                <p className="text-xs font-mono mb-2" style={{ color: 'var(--color-success)' }}>
                   TOTAL INVESTMENT (YEAR 1)
                 </p>
-                <p className="font-display font-bold text-3xl" style={{ color: '#f0f6ff' }}>
+                <p className="font-display font-bold text-3xl" style={{ color: 'var(--color-text-primary)' }}>
                   {mergedStrategy.financeModel.totalCost}
                 </p>
               </div>
@@ -307,8 +307,8 @@ export default function OutputPage() {
                 onClick={() => {
                   void action.onClick();
                 }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-[1.02]"
-                style={{ background: '#0c1428', border: '1px solid #1a2d50', color: '#8bafd4' }}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all hover:scale-[1.02]"
+                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
               >
                 <action.icon size={14} />
                 {action.label}
@@ -317,7 +317,7 @@ export default function OutputPage() {
           </div>
 
           {statusMessage ? (
-            <p className="text-xs" style={{ color: '#4a6a94' }}>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
               {statusMessage}
             </p>
           ) : null}

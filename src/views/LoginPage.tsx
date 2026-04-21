@@ -21,7 +21,7 @@ const ROLE_OPTIONS: {
     label: 'Department Staff',
     description: 'Submit a business problem, review conflicts, rank blueprints, and escalate a preferred option.',
     icon: Users,
-    color: '#2563eb',
+    color: 'var(--color-primary)',
     userId: 'u1',
   },
   {
@@ -29,7 +29,7 @@ const ROLE_OPTIONS: {
     label: 'Department Lead',
     description: 'Review pending escalations, compare compatible pairs, and approve a merged recommendation.',
     icon: Briefcase,
-    color: '#06b6d4',
+    color: 'var(--color-accent)',
     userId: 'u2',
   },
   {
@@ -37,7 +37,7 @@ const ROLE_OPTIONS: {
     label: 'Director',
     description: 'Oversee cross-department strategy alignment and pressure-test the recommended merge path.',
     icon: Building2,
-    color: '#8b5cf6',
+    color: 'var(--color-accent)',
     userId: 'u3',
   },
   {
@@ -45,7 +45,7 @@ const ROLE_OPTIONS: {
     label: 'Executive',
     description: 'Review the final unified strategy, finance model, and executive brief for sign-off.',
     icon: Crown,
-    color: '#f59e0b',
+    color: 'var(--color-warning)',
     userId: 'u4',
   },
 ];
@@ -73,7 +73,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 py-12 relative" style={{ background: '#050810' }}>
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 py-12 relative" style={{ background: 'var(--color-bg-deep)' }}>
       <div className="absolute inset-0 pointer-events-none grid-bg" />
       <div
         className="absolute inset-0 pointer-events-none"
@@ -85,7 +85,7 @@ export default function LoginPage() {
       <button
         onClick={() => router.push(ROUTES.landing)}
         className="absolute top-6 left-6 z-10 flex items-center gap-2 text-sm transition-colors hover:text-blue-400"
-        style={{ color: '#4a6a94' }}
+        style={{ color: 'var(--color-text-muted)' }}
       >
         <ChevronLeft size={16} />
         Back
@@ -102,46 +102,46 @@ export default function LoginPage() {
           >
             <div className="text-center mb-12">
               <div
-                className="inline-flex w-14 h-14 rounded-2xl items-center justify-center mb-4"
+                className="inline-flex w-14 h-14 items-center justify-center mb-4 rounded-xl"
                 style={{
-                  background: 'linear-gradient(135deg, #2563eb, #06b6d4)',
+                  background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
                   boxShadow: '0 0 30px rgba(37, 99, 235, 0.4)',
                 }}
               >
                 <span className="font-display font-bold text-xl text-white">O</span>
               </div>
-              <h1 className="font-display font-bold text-2xl" style={{ color: '#f0f6ff' }}>
+              <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--color-text-primary)' }}>
                 Welcome to ODIS
               </h1>
-              <p className="text-sm mt-1" style={{ color: '#8bafd4' }}>
+              <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
                 Sign in to explore the role-based decision intelligence demo.
               </p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-5">
-              <div className="p-7 rounded-2xl space-y-5" style={{ background: '#0c1428', border: '1px solid #1a2d50' }}>
+              <div className="p-7 space-y-5 rounded-2xl" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
                 <div>
-                  <label className="block text-xs font-medium mb-2" style={{ color: '#8bafd4' }}>
+                  <label className="block text-xs font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
                     Work email
                   </label>
                   <input
                     type="email"
                     value={email}
                     onChange={event => setEmail(event.target.value)}
-                    className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all focus:border-blue-500/50"
-                    style={{ background: '#080d1a', border: '1px solid #1a2d50', color: '#f0f6ff' }}
+                    className="w-full px-4 py-3 text-sm outline-none transition-all focus:border-blue-500/50 rounded-lg"
+                    style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-2" style={{ color: '#8bafd4' }}>
+                  <label className="block text-xs font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
                     Password
                   </label>
                   <input
                     type="password"
                     value={password}
                     onChange={event => setPassword(event.target.value)}
-                    className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
-                    style={{ background: '#080d1a', border: '1px solid #1a2d50', color: '#f0f6ff' }}
+                    className="w-full px-4 py-3 text-sm outline-none transition-all rounded-lg"
+                    style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
                   />
                 </div>
               </div>
@@ -149,15 +149,15 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 rounded-xl font-semibold text-white transition-all hover:scale-105 disabled:opacity-70 disabled:scale-100 flex items-center justify-center gap-2"
+                className="w-full py-4 font-semibold text-white transition-all hover:scale-105 disabled:opacity-70 disabled:scale-100 flex items-center justify-center gap-2 rounded-xl"
                 style={{
-                  background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                  background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary))',
                   boxShadow: '0 0 20px rgba(37, 99, 235, 0.3)',
                 }}
               >
                 {loading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white animate-spin rounded-full" />
                     Authenticating...
                   </>
                 ) : (
@@ -169,7 +169,7 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <p className="text-center text-xs mt-6" style={{ color: '#4a6a94' }}>
+            <p className="text-center text-xs mt-6" style={{ color: 'var(--color-text-muted)' }}>
               Demo mode: any credentials will work.
             </p>
           </motion.div>
@@ -182,10 +182,10 @@ export default function LoginPage() {
             className="relative z-10 w-full max-w-3xl"
           >
             <div className="text-center mb-10">
-              <h2 className="font-display font-bold text-2xl mb-2" style={{ color: '#f0f6ff' }}>
+              <h2 className="font-display font-bold text-2xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
                 Select your role
               </h2>
-              <p className="text-sm" style={{ color: '#8bafd4' }}>
+              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
                 Your role changes what ODIS shows next in the decision flow.
               </p>
             </div>
@@ -198,8 +198,8 @@ export default function LoginPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.08 }}
                   onClick={() => handleRoleSelect(option.userId)}
-                  className="p-6 rounded-2xl text-left group transition-all"
-                  style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+                  className="p-6 text-left group transition-all"
+                  style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
                   whileHover={{
                     scale: 1.02,
                     borderColor: `${option.color}70`,
@@ -208,16 +208,16 @@ export default function LoginPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      className="w-10 h-10 flex items-center justify-center flex-shrink-0"
                       style={{ background: `${option.color}20`, border: `1px solid ${option.color}40` }}
                     >
                       <option.icon size={20} style={{ color: option.color }} />
                     </div>
                     <div>
-                      <div className="font-display font-semibold text-sm mb-1" style={{ color: '#f0f6ff' }}>
+                      <div className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                         {option.label}
                       </div>
-                      <div className="text-xs leading-relaxed" style={{ color: '#8bafd4' }}>
+                      <div className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
                         {option.description}
                       </div>
                     </div>

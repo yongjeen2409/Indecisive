@@ -9,10 +9,10 @@ import { ROUTES } from '../lib/routes';
 import { Scores } from '../types';
 
 const CRITERIA = [
-  { key: 'feasibility', label: 'Feasibility', description: 'Technical and organizational viability', color: '#3b82f6' },
-  { key: 'businessImpact', label: 'Business Impact', description: 'Strategic value and measurable upside', color: '#10b981' },
-  { key: 'effort', label: 'Effort', description: 'Implementation ease and resource readiness', color: '#8b5cf6' },
-  { key: 'riskConflict', label: 'Risk / Conflict', description: 'Conflict tolerance and delivery resilience', color: '#f59e0b' },
+  { key: 'feasibility', label: 'Feasibility', description: 'Technical and organizational viability', color: 'var(--color-primary-bright)' },
+  { key: 'businessImpact', label: 'Business Impact', description: 'Strategic value and measurable upside', color: 'var(--color-success)' },
+  { key: 'effort', label: 'Effort', description: 'Implementation ease and resource readiness', color: 'var(--color-accent)' },
+  { key: 'riskConflict', label: 'Risk / Conflict', description: 'Conflict tolerance and delivery resilience', color: 'var(--color-warning)' },
 ] as const satisfies ReadonlyArray<{
   key: keyof Omit<Scores, 'total'>;
   label: string;
@@ -24,16 +24,16 @@ function ScoreBar({ score, color, delay }: { score: number; color: string; delay
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: '#1a2d50' }}>
+        <div className="flex-1 h-2 overflow-hidden" style={{ background: 'var(--color-border)' }}>
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${score}%` }}
             transition={{ duration: 0.9, delay, ease: 'easeOut' }}
-            className="h-full rounded-full"
+            className="h-full"
             style={{ background: `linear-gradient(90deg, ${color}, ${color}bb)` }}
           />
         </div>
-        <span className="text-xs font-mono w-8 text-right" style={{ color: '#8bafd4' }}>
+        <span className="text-xs font-mono w-8 text-right" style={{ color: 'var(--color-text-secondary)' }}>
           {score}
         </span>
       </div>
@@ -72,16 +72,16 @@ export default function ScoringView() {
   };
 
   return (
-    <div className="page-shell" style={{ background: '#050810' }}>
+    <div className="page-shell" style={{ background: 'var(--color-bg-deep)' }}>
       <div className="page-container max-w-6xl space-y-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <p className="font-mono text-xs mb-2" style={{ color: '#2563eb' }}>
+          <p className="font-mono text-xs mb-2" style={{ color: 'var(--color-primary)' }}>
             SCORING AND RANKING
           </p>
-          <h1 className="font-display font-bold text-3xl mb-2" style={{ color: '#f0f6ff' }}>
+          <h1 className="font-display font-bold text-3xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
             Compare blueprints side by side
           </h1>
-          <p style={{ color: '#8bafd4' }}>
+          <p style={{ color: 'var(--color-text-secondary)' }}>
             The decision engine has scored each blueprint across the four ODIS criteria. Select one
             option and escalate it to your superior for review.
           </p>
@@ -91,19 +91,19 @@ export default function ScoringView() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="overflow-x-auto rounded-2xl"
-          style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+          className="overflow-x-auto"
+          style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
         >
           <div className="min-w-[920px]">
             <div
               className="grid"
               style={{ gridTemplateColumns: `260px repeat(${rankedBlueprints.length}, minmax(220px, 1fr))` }}
             >
-              <div className="p-5" style={{ borderRight: '1px solid #1a2d50', borderBottom: '1px solid #1a2d50' }}>
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: '#f0f6ff' }}>
+              <div className="p-5" style={{ borderRight: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
+                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                   Ranking table
                 </p>
-                <p className="text-xs leading-relaxed" style={{ color: '#8bafd4' }}>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
                   Higher scores indicate stronger fit for the requested outcome under the current constraints.
                 </p>
               </div>
@@ -113,8 +113,8 @@ export default function ScoringView() {
                   key={blueprint.id}
                   className="p-5"
                   style={{
-                    borderLeft: index === 0 ? 'none' : '1px solid #1a2d50',
-                    borderBottom: '1px solid #1a2d50',
+                    borderLeft: index === 0 ? 'none' : '1px solid var(--color-border)',
+                    borderBottom: '1px solid var(--color-border)',
                     background: selectedBlueprint?.id === blueprint.id ? `${blueprint.color}14` : 'transparent',
                   }}
                 >
@@ -123,15 +123,15 @@ export default function ScoringView() {
                       <p className="text-xs font-mono mb-2" style={{ color: blueprint.accentColor }}>
                         Rank {index + 1}
                       </p>
-                      <h2 className="font-display font-semibold text-sm mb-1" style={{ color: '#f0f6ff' }}>
+                      <h2 className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                         {blueprint.title}
                       </h2>
-                      <p className="text-xs" style={{ color: '#8bafd4' }}>
+                      <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                         {blueprint.department}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[11px]" style={{ color: '#4a6a94' }}>
+                      <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
                         Total
                       </p>
                       <p className="font-display font-bold text-2xl" style={{ color: blueprint.accentColor }}>
@@ -142,11 +142,11 @@ export default function ScoringView() {
 
                   <button
                     onClick={() => selectBlueprint(blueprint.id)}
-                    className="w-full py-2.5 rounded-xl text-sm font-medium transition-all"
+                    className="w-full py-2.5 text-sm font-medium transition-all"
                     style={{
                       background: selectedBlueprint?.id === blueprint.id ? blueprint.color : `${blueprint.color}22`,
                       border: `1px solid ${blueprint.color}55`,
-                      color: selectedBlueprint?.id === blueprint.id ? '#fff' : blueprint.accentColor,
+                      color: selectedBlueprint?.id === blueprint.id ? 'var(--color-text-primary)' : blueprint.accentColor,
                     }}
                   >
                     {selectedBlueprint?.id === blueprint.id ? 'Selected for escalation' : 'Select blueprint'}
@@ -156,11 +156,11 @@ export default function ScoringView() {
 
               {CRITERIA.map((criterion, criterionIndex) => (
                 <div key={criterion.key} className="contents">
-                  <div className="p-5" style={{ borderRight: '1px solid #1a2d50', borderBottom: '1px solid #1a2d50' }}>
-                    <p className="font-display font-semibold text-sm mb-1" style={{ color: '#f0f6ff' }}>
+                  <div className="p-5" style={{ borderRight: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
+                    <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                       {criterion.label}
                     </p>
-                    <p className="text-xs leading-relaxed" style={{ color: '#8bafd4' }}>
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
                       {criterion.description}
                     </p>
                   </div>
@@ -170,8 +170,8 @@ export default function ScoringView() {
                       key={`${criterion.key}-${blueprint.id}`}
                       className="p-5"
                       style={{
-                        borderLeft: columnIndex === 0 ? 'none' : '1px solid #1a2d50',
-                        borderBottom: '1px solid #1a2d50',
+                        borderLeft: columnIndex === 0 ? 'none' : '1px solid var(--color-border)',
+                        borderBottom: '1px solid var(--color-border)',
                         background: selectedBlueprint?.id === blueprint.id ? `${blueprint.color}14` : 'transparent',
                       }}
                     >
@@ -192,18 +192,18 @@ export default function ScoringView() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="mt-8 p-5 rounded-2xl"
-          style={{ background: '#0c1428', border: '1px solid #1a2d50' }}
+          className="mt-8 p-5"
+          style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
         >
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <ShieldCheck size={16} style={{ color: '#10b981' }} />
-                <p className="font-display font-semibold" style={{ color: '#f0f6ff' }}>
+                <ShieldCheck size={16} style={{ color: 'var(--color-success)' }} />
+                <p className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
                   Ready to escalate?
                 </p>
               </div>
-              <p className="text-sm" style={{ color: '#8bafd4' }}>
+              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
                 {selectedBlueprint
                   ? `${selectedBlueprint.title} will move into the superior review queue.`
                   : 'Select one blueprint from the comparison table to continue.'}
@@ -213,24 +213,24 @@ export default function ScoringView() {
             <div className="flex gap-3">
               <button
                 onClick={() => router.push(ROUTES.blueprints)}
-                className="px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
-                style={{ background: '#080d1a', border: '1px solid #1a2d50', color: '#8bafd4' }}
+                className="px-4 py-2.5 text-sm font-medium transition-all"
+                style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
               >
                 Back to blueprints
               </button>
               <motion.button
                 onClick={handleEscalate}
                 disabled={!selectedBlueprint || isEscalating}
-                className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center gap-2 transition-all disabled:opacity-50"
+                className="px-6 py-2.5 text-sm font-semibold text-white flex items-center gap-2 transition-all disabled:opacity-50"
                 style={{
-                  background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                  background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary))',
                   boxShadow: selectedBlueprint ? '0 0 20px rgba(37, 99, 235, 0.35)' : 'none',
                 }}
                 whileHover={!isEscalating && selectedBlueprint ? { scale: 1.03 } : {}}
               >
                 {isEscalating ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white animate-spin" />
                     Escalating...
                   </>
                 ) : (

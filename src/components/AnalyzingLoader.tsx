@@ -49,15 +49,15 @@ export default function AnalyzingLoader() {
   }, [completeAnalysis, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-6" style={{ background: '#050810' }}>
+    <div className="flex flex-col items-center justify-center min-h-screen px-6" style={{ background: 'var(--color-bg-deep)' }}>
       <div className="text-center mb-10">
-        <p className="font-mono text-xs mb-3" style={{ color: '#2563eb' }}>
+        <p className="font-mono text-xs mb-3" style={{ color: 'var(--color-primary)' }}>
           ODIS IS ANALYZING
         </p>
-        <h1 className="font-display font-bold text-3xl mb-3" style={{ color: '#f0f6ff' }}>
+        <h1 className="font-display font-bold text-3xl mb-3" style={{ color: 'var(--color-text-primary)' }}>
           Building solution blueprints
         </h1>
-        <p className="max-w-xl text-sm leading-relaxed" style={{ color: '#8bafd4' }}>
+        <p className="max-w-xl text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
           {activeSubmission
             ? `ODIS is processing your submission: "${activeSubmission.problemStatement.slice(0, 110)}${activeSubmission.problemStatement.length > 110 ? '...' : ''}"`
             : 'ODIS is processing your submission and assembling the strongest cross-department options.'}
@@ -65,32 +65,32 @@ export default function AnalyzingLoader() {
       </div>
 
       <div className="relative w-40 h-40 mb-10">
-        <div className="absolute inset-0 rounded-full border-2" style={{ borderColor: 'rgba(37, 99, 235, 0.2)' }} />
+        <div className="absolute inset-0 border-2" style={{ borderColor: 'rgba(37, 99, 235, 0.2)' }} />
         <div
-          className="absolute inset-0 rounded-full animate-spin-slow"
+          className="absolute inset-0 animate-spin-slow"
           style={{
-            background: 'conic-gradient(from 0deg, transparent 70%, #2563eb 100%)',
+            background: 'conic-gradient(from 0deg, transparent 70%, var(--color-primary) 100%)',
             borderRadius: '50%',
             WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), white calc(100% - 2px))',
             mask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), white calc(100% - 2px))',
           }}
         />
         <div
-          className="absolute rounded-full border"
+          className="absolute border"
           style={{ inset: '12px', borderColor: 'rgba(6, 182, 212, 0.2)' }}
         />
         <div
-          className="absolute rounded-full animate-spin-reverse"
+          className="absolute animate-spin-reverse"
           style={{
             inset: '12px',
-            background: 'conic-gradient(from 180deg, transparent 70%, #06b6d4 100%)',
+            background: 'conic-gradient(from 180deg, transparent 70%, var(--color-accent) 100%)',
             borderRadius: '50%',
             WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 1.5px), white calc(100% - 1.5px))',
             mask: 'radial-gradient(farthest-side, transparent calc(100% - 1.5px), white calc(100% - 1.5px))',
           }}
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="font-display font-bold text-sm tracking-widest" style={{ color: '#60a5fa' }}>
+          <span className="font-display font-bold text-sm tracking-widest" style={{ color: 'var(--color-primary-glow)' }}>
             ODIS
           </span>
         </div>
@@ -105,21 +105,21 @@ export default function AnalyzingLoader() {
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.3 }}
             className="font-mono text-sm text-center"
-            style={{ color: '#60a5fa' }}
+            style={{ color: 'var(--color-primary-glow)' }}
           >
             {STEPS[stepIndex]}
           </motion.p>
         </AnimatePresence>
       </div>
 
-      <div className="w-64 h-1 rounded-full overflow-hidden" style={{ background: '#1a2d50' }}>
+      <div className="w-64 h-1 overflow-hidden" style={{ background: 'var(--color-border)' }}>
         <motion.div
-          className="h-full rounded-full"
-          style={{ background: 'linear-gradient(90deg, #2563eb, #06b6d4)', width: `${Math.min(progress, 100)}%` }}
+          className="h-full"
+          style={{ background: 'linear-gradient(90deg, var(--color-primary), var(--color-accent))', width: `${Math.min(progress, 100)}%` }}
           transition={{ duration: 0.1 }}
         />
       </div>
-      <p className="mt-3 font-mono text-xs" style={{ color: '#4a6a94' }}>
+      <p className="mt-3 font-mono text-xs" style={{ color: 'var(--color-text-muted)' }}>
         {Math.min(Math.round(progress), 100)}%
       </p>
     </div>

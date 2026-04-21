@@ -11,7 +11,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { currentUser } = useApp();
 
   return (
-    <div className="min-h-screen" style={{ background: '#050810' }}>
+    <div className="min-h-screen" style={{ background: 'var(--color-bg-deep)' }}>
       {currentUser ? <Navbar /> : null}
       <AnimatePresence mode="wait">
         <motion.div

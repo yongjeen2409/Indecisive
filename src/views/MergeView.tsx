@@ -23,26 +23,26 @@ function EscalationCard({
   return (
     <button
       onClick={onSelect}
-      className="w-full p-4 rounded-2xl text-left transition-all"
+      className="w-full p-4 text-left transition-all"
       style={{
-        background: selected ? 'rgba(37, 99, 235, 0.15)' : '#0c1428',
-        border: `1px solid ${selected ? 'rgba(37, 99, 235, 0.45)' : '#1a2d50'}`,
+        background: selected ? 'rgba(37, 99, 235, 0.15)' : 'var(--color-bg-card)',
+        border: `1px solid ${selected ? 'rgba(37, 99, 235, 0.45)' : 'var(--color-border)'}`,
         boxShadow: selected ? '0 0 18px rgba(37, 99, 235, 0.2)' : 'none',
       }}
     >
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="font-display font-semibold text-sm mb-1" style={{ color: '#f0f6ff' }}>
+          <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
             {title}
           </p>
-          <p className="text-xs mb-2" style={{ color: '#8bafd4' }}>
+          <p className="text-xs mb-2" style={{ color: 'var(--color-text-secondary)' }}>
             {subtitle}
           </p>
-          <p className="text-[11px]" style={{ color: '#4a6a94' }}>
+          <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
             {meta}
           </p>
         </div>
-        {selected ? <CheckCircle size={16} style={{ color: '#60a5fa' }} /> : null}
+        {selected ? <CheckCircle size={16} style={{ color: 'var(--color-primary-glow)' }} /> : null}
       </div>
     </button>
   );
@@ -98,16 +98,16 @@ export default function MergeView() {
   };
 
   return (
-    <div className="page-shell" style={{ background: '#050810' }}>
+    <div className="page-shell" style={{ background: 'var(--color-bg-deep)' }}>
       <div className="page-container max-w-6xl space-y-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <p className="font-mono text-xs mb-2" style={{ color: '#8b5cf6' }}>
+          <p className="font-mono text-xs mb-2" style={{ color: 'var(--color-accent)' }}>
             SUPERIOR MERGE VIEW
           </p>
-          <h1 className="font-display font-bold text-3xl mb-2" style={{ color: '#f0f6ff' }}>
+          <h1 className="font-display font-bold text-3xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
             Compare pending escalations and generate a unified strategy
           </h1>
-          <p style={{ color: '#8bafd4' }}>
+          <p style={{ color: 'var(--color-text-secondary)' }}>
             Review only the blueprints that staff have escalated, choose a compatible pair, and let
             ODIS synthesize one executive-ready recommendation.
           </p>
@@ -118,15 +118,15 @@ export default function MergeView() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.14 }}
-            className="mb-6 p-4 rounded-2xl flex items-start gap-3"
+            className="mb-6 p-4 flex items-start gap-3"
             style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.3)' }}
           >
             <Sparkles size={18} style={{ color: '#a78bfa' }} />
             <div>
-              <p className="text-sm font-medium" style={{ color: '#f0f6ff' }}>
+              <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
                 GLM merge suggestion
               </p>
-              <p className="text-xs leading-relaxed" style={{ color: '#8bafd4' }}>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
                 {activeMergeSuggestion.rationale}
               </p>
             </div>
@@ -137,14 +137,14 @@ export default function MergeView() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-10 rounded-2xl text-center"
-            style={{ background: '#0c1428', border: '1px dashed #1a2d50' }}
+            className="p-10 text-center"
+            style={{ background: 'var(--color-bg-card)', border: '1px dashed var(--color-border)' }}
           >
-            <GitMerge size={32} className="mx-auto mb-4" style={{ color: '#4a6a94' }} />
-            <h2 className="font-display font-semibold text-xl mb-2" style={{ color: '#f0f6ff' }}>
+            <GitMerge size={32} className="mx-auto mb-4" style={{ color: 'var(--color-text-muted)' }} />
+            <h2 className="font-display font-semibold text-xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
               No pending escalations yet
             </h2>
-            <p className="max-w-xl mx-auto text-sm" style={{ color: '#8bafd4' }}>
+            <p className="max-w-xl mx-auto text-sm" style={{ color: 'var(--color-text-secondary)' }}>
               Once staff users escalate their preferred blueprint, it will appear here for
               leadership review and merge analysis.
             </p>
@@ -153,10 +153,10 @@ export default function MergeView() {
           <div className="grid lg:grid-cols-[1fr,1.1fr] gap-8">
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-display font-semibold" style={{ color: '#f0f6ff' }}>
+                <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
                   Pending escalations
                 </h2>
-                <span className="text-xs font-mono px-2 py-1 rounded" style={{ background: '#1a2d50', color: '#8bafd4' }}>
+                <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
                   {mergeableEscalations.length} items
                 </span>
               </div>
@@ -176,7 +176,7 @@ export default function MergeView() {
             </div>
 
             <div>
-              <h2 className="font-display font-semibold mb-4" style={{ color: '#f0f6ff' }}>
+              <h2 className="font-display font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>
                 Merge preview
               </h2>
 
@@ -187,11 +187,11 @@ export default function MergeView() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="p-8 rounded-2xl flex flex-col items-center justify-center text-center"
-                    style={{ background: '#0c1428', border: '1px dashed #1a2d50', minHeight: '300px' }}
+                    className="p-8 flex flex-col items-center justify-center text-center"
+                    style={{ background: 'var(--color-bg-card)', border: '1px dashed var(--color-border)', minHeight: '300px' }}
                   >
-                    <GitMerge size={32} className="mb-3" style={{ color: '#2a4a7f' }} />
-                    <p style={{ color: '#4a6a94' }}>
+                    <GitMerge size={32} className="mb-3" style={{ color: 'var(--color-border-bright)' }} />
+                    <p style={{ color: 'var(--color-text-muted)' }}>
                       Select two pending escalations to preview the unified strategy path.
                     </p>
                   </motion.div>
@@ -201,24 +201,24 @@ export default function MergeView() {
                       {selectedRecords.map(record => (
                         <div
                           key={record.id}
-                          className="p-4 rounded-2xl"
-                          style={{ background: '#0c1428', border: `1px solid ${record.blueprint.color}45` }}
+                          className="p-4"
+                          style={{ background: 'var(--color-bg-card)', border: `1px solid ${record.blueprint.color}45` }}
                         >
                           <p className="text-xs font-mono mb-2" style={{ color: record.blueprint.accentColor }}>
                             {record.blueprint.department}
                           </p>
-                          <p className="font-display font-semibold text-sm mb-2" style={{ color: '#f0f6ff' }}>
+                          <p className="font-display font-semibold text-sm mb-2" style={{ color: 'var(--color-text-primary)' }}>
                             {record.blueprint.title}
                           </p>
-                          <p className="text-xs leading-relaxed mb-3" style={{ color: '#8bafd4' }}>
+                          <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--color-text-secondary)' }}>
                             {record.blueprint.description}
                           </p>
                           <div className="flex flex-wrap gap-2">
                             {record.blueprint.techStack.slice(0, 3).map(item => (
                               <span
                                 key={item}
-                                className="text-[11px] px-2 py-0.5 rounded"
-                                style={{ background: '#080d1a', border: '1px solid #1a2d50', color: '#8bafd4' }}
+                                className="text-[11px] px-2 py-0.5"
+                                style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
                               >
                                 {item}
                               </span>
@@ -229,38 +229,38 @@ export default function MergeView() {
                     </div>
 
                     {activeMergeSuggestion ? (
-                      <div className="p-5 rounded-2xl mb-4" style={{ background: '#0c1428', border: '1px solid #1a2d50' }}>
-                        <p className="text-xs font-mono mb-4" style={{ color: '#8b5cf6' }}>
+                      <div className="p-5 mb-4" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                        <p className="text-xs font-mono mb-4" style={{ color: 'var(--color-accent)' }}>
                           COMPATIBILITY ANALYSIS
                         </p>
                         <div className="space-y-3">
                           {Object.entries(activeMergeSuggestion.compatibility).map(([label, value], index) => (
                             <div key={label}>
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs capitalize" style={{ color: '#8bafd4' }}>
+                                <span className="text-xs capitalize" style={{ color: 'var(--color-text-secondary)' }}>
                                   {label}
                                 </span>
-                                <span className="text-xs font-mono" style={{ color: '#f0f6ff' }}>
+                                <span className="text-xs font-mono" style={{ color: 'var(--color-text-primary)' }}>
                                   {value}%
                                 </span>
                               </div>
-                              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#1a2d50' }}>
+                              <div className="h-1.5 overflow-hidden" style={{ background: 'var(--color-border)' }}>
                                 <motion.div
                                   initial={{ width: 0 }}
                                   animate={{ width: `${value}%` }}
                                   transition={{ delay: index * 0.08 + 0.2, duration: 0.8, ease: 'easeOut' }}
-                                  className="h-full rounded-full"
-                                  style={{ background: 'linear-gradient(90deg, #8b5cf6, #06b6d4)' }}
+                                  className="h-full"
+                                  style={{ background: 'linear-gradient(90deg, var(--color-accent), var(--color-accent))' }}
                                 />
                               </div>
                             </div>
                           ))}
                         </div>
-                        <div className="mt-4 p-4 rounded-xl" style={{ background: '#080d1a', border: '1px solid #1a2d50' }}>
-                          <p className="text-xs mb-1" style={{ color: '#4a6a94' }}>
+                        <div className="mt-4 p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                          <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>
                             Projected shared savings
                           </p>
-                          <p className="font-display font-bold text-xl" style={{ color: '#10b981' }}>
+                          <p className="font-display font-bold text-xl" style={{ color: 'var(--color-success)' }}>
                             {activeMergeSuggestion.projectedSavings}
                           </p>
                         </div>
@@ -270,12 +270,12 @@ export default function MergeView() {
                     <motion.button
                       onClick={handleMerge}
                       disabled={isMerging || selectedMergeRecords.length !== 2}
-                      className="w-full py-3.5 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all hover:scale-[1.02] disabled:scale-100 disabled:opacity-60"
-                      style={{ background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)' }}
+                      className="w-full py-3.5 font-semibold text-white flex items-center justify-center gap-2 transition-all hover:scale-[1.02] disabled:scale-100 disabled:opacity-60"
+                      style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent))' }}
                     >
                       {isMerging ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white animate-spin" />
                           Synthesizing unified strategy...
                         </>
                       ) : (

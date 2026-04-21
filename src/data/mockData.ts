@@ -17,9 +17,9 @@ import {
 const TODAY = '2026-04-21';
 
 const COLOR_TOKENS = [
-  { color: '#2563eb', accentColor: '#60a5fa' },
-  { color: '#06b6d4', accentColor: '#67e8f9' },
-  { color: '#f59e0b', accentColor: '#fcd34d' },
+  { color: 'var(--color-primary)', accentColor: 'var(--color-primary)' },
+  { color: 'var(--color-success)', accentColor: 'var(--color-success)' },
+  { color: 'var(--color-warning)', accentColor: 'var(--color-warning)' },
 ];
 
 interface ProblemTheme {
