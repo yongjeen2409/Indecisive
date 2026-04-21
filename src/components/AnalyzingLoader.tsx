@@ -1,0 +1,127 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { useApp } from '../context/AppContext';
+import { ROUTES } from '../lib/routes';
+
+const STEPS = [
+  'Retrieving Jira tickets...',
+  'Scanning Confluence docs...',
+  'Loading past decisions...',
+  'Extracting constraints...',
+  'Detecting conflicts...',
+  'Generating blueprints...',
+];
+
+export default function AnalyzingLoader() {
+  const { activeSubmission, completeAnalysis } = useApp();
+  const router = useRouter();
+  const [stepIndex, setStepIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const stepTimer = window.setInterval(() => {
+      setStepIndex(current => (current < STEPS.length - 1 ? current + 1 : current));
+    }, 650);
+
+    const progressTimer = window.setInterval(() => {
+      setProgress(current => {
+        if (current >= 100) {
+          window.clearInterval(progressTimer);
+          return 100;
+        }
+        return current + 2.8;
+      });
+    }, 90);
+
+    const completionTimer = window.setTimeout(() => {
+      completeAnalysis();
+      router.replace(ROUTES.blueprints);
+    }, 3600);
+
+    return () => {
+      window.clearInterval(stepTimer);
+      window.clearInterval(progressTimer);
+      window.clearTimeout(completionTimer);
+    };
+  }, [completeAnalysis, router]);
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen px-6" style={{ background: '#050810' }}>
+      <div className="text-center mb-10">
+        <p className="font-mono text-xs mb-3" style={{ color: '#2563eb' }}>
+          ODIS IS ANALYZING
+        </p>
+        <h1 className="font-display font-bold text-3xl mb-3" style={{ color: '#f0f6ff' }}>
+          Building solution blueprints
+        </h1>
+        <p className="max-w-xl text-sm leading-relaxed" style={{ color: '#8bafd4' }}>
+          {activeSubmission
+            ? `ODIS is processing your submission: "${activeSubmission.problemStatement.slice(0, 110)}${activeSubmission.problemStatement.length > 110 ? '...' : ''}"`
+            : 'ODIS is processing your submission and assembling the strongest cross-department options.'}
+        </p>
+      </div>
+
+      <div className="relative w-40 h-40 mb-10">
+        <div className="absolute inset-0 rounded-full border-2" style={{ borderColor: 'rgba(37, 99, 235, 0.2)' }} />
+        <div
+          className="absolute inset-0 rounded-full animate-spin-slow"
+          style={{
+            background: 'conic-gradient(from 0deg, transparent 70%, #2563eb 100%)',
+            borderRadius: '50%',
+            WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), white calc(100% - 2px))',
+            mask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), white calc(100% - 2px))',
+          }}
+        />
+        <div
+          className="absolute rounded-full border"
+          style={{ inset: '12px', borderColor: 'rgba(6, 182, 212, 0.2)' }}
+        />
+        <div
+          className="absolute rounded-full animate-spin-reverse"
+          style={{
+            inset: '12px',
+            background: 'conic-gradient(from 180deg, transparent 70%, #06b6d4 100%)',
+            borderRadius: '50%',
+            WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 1.5px), white calc(100% - 1.5px))',
+            mask: 'radial-gradient(farthest-side, transparent calc(100% - 1.5px), white calc(100% - 1.5px))',
+          }}
+        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="font-display font-bold text-sm tracking-widest" style={{ color: '#60a5fa' }}>
+            ODIS
+          </span>
+        </div>
+      </div>
+
+      <div className="h-8 mb-6 overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={stepIndex}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.3 }}
+            className="font-mono text-sm text-center"
+            style={{ color: '#60a5fa' }}
+          >
+            {STEPS[stepIndex]}
+          </motion.p>
+        </AnimatePresence>
+      </div>
+
+      <div className="w-64 h-1 rounded-full overflow-hidden" style={{ background: '#1a2d50' }}>
+        <motion.div
+          className="h-full rounded-full"
+          style={{ background: 'linear-gradient(90deg, #2563eb, #06b6d4)', width: `${Math.min(progress, 100)}%` }}
+          transition={{ duration: 0.1 }}
+        />
+      </div>
+      <p className="mt-3 font-mono text-xs" style={{ color: '#4a6a94' }}>
+        {Math.min(Math.round(progress), 100)}%
+      </p>
+    </div>
+  );
+}

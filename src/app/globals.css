@@ -1,0 +1,203 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-deep: #050810;
+  --color-bg-panel: #080d1a;
+  --color-bg-card: #0c1428;
+  --color-bg-elevated: #111d35;
+  --color-border: #1a2d50;
+  --color-border-bright: #2a4a7f;
+  --color-primary: #2563eb;
+  --color-primary-bright: #3b82f6;
+  --color-primary-glow: #60a5fa;
+  --color-accent: #06b6d4;
+  --color-accent-glow: #22d3ee;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-danger-glow: #f87171;
+  --color-text-primary: #f0f6ff;
+  --color-text-secondary: #8bafd4;
+  --color-text-muted: #4a6a94;
+  --font-display: var(--font-display-ui), sans-serif;
+  --font-mono: var(--font-mono-ui), monospace;
+  --font-body: var(--font-body-ui), sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background-color: #050810;
+  color: #f0f6ff;
+  font-family: var(--font-body-ui), sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+body > div:first-child {
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  line-height: 1.45;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #080d1a;
+}
+::-webkit-scrollbar-thumb {
+  background: #1a2d50;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2a4a7f;
+}
+
+.font-display { font-family: var(--font-display-ui), sans-serif; }
+.font-mono { font-family: var(--font-mono-ui), monospace; }
+.font-body { font-family: var(--font-body-ui), sans-serif; }
+
+.glow-blue {
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.3), 0 0 40px rgba(37, 99, 235, 0.1);
+}
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
+}
+.glow-red {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.15);
+}
+.glow-green {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.grid-bg {
+  background-image: 
+    linear-gradient(rgba(37, 99, 235, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.card-border {
+  border: 1px solid #1a2d50;
+  background: #0c1428;
+}
+
+.card-border:hover {
+  border-color: #2a4a7f;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.7; }
+  100% { transform: scale(0.95); opacity: 1; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes conflict-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+@keyframes bar-fill {
+  from { width: 0%; }
+  to { width: var(--target-width); }
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes node-pulse {
+  0%, 100% { opacity: 0.6; r: 4; }
+  50% { opacity: 1; r: 6; }
+}
+
+@keyframes dash-flow {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+
+.animate-pulse-ring { animation: pulse-ring 2s ease-in-out infinite; }
+.animate-spin-slow { animation: spin-slow 8s linear infinite; }
+.animate-spin-reverse { animation: spin-reverse 6s linear infinite; }
+.animate-conflict-shake { animation: conflict-shake 0.5s ease-in-out; }
+.animate-float { animation: float 4s ease-in-out infinite; }
+
+.bar-animate {
+  animation: bar-fill 1.2s ease-out forwards;
+}
+
+.escalate-btn:active .escalate-arrow {
+  animation: float 0.4s ease-out;
+}
+
+.merge-glow {
+  animation: pulse-ring 1.5s ease-in-out infinite;
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.5), 0 0 60px rgba(6, 182, 212, 0.2);
+}
+
+.page-shell {
+  min-height: 100vh;
+  padding: 7rem clamp(1rem, 2vw + 0.5rem, 2rem) 4.5rem;
+}
+
+.page-container {
+  width: min(100%, 80rem);
+  margin-inline: auto;
+}
+
+.page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.section-copy {
+  max-width: 54rem;
+  color: #8bafd4;
+  line-height: 1.75;
+}
+
+.surface-panel {
+  background: #0c1428;
+  border: 1px solid #1a2d50;
+  border-radius: 1rem;
+}
+
+@media (max-width: 640px) {
+  .page-shell {
+    padding-top: 6rem;
+    padding-bottom: 3.5rem;
+  }
+}
