@@ -6,9 +6,11 @@ import {
   FinanceModel,
   MergeSuggestion,
   MergedStrategy,
+  Phase,
   RetrievedContext,
   Role,
   Scores,
+  ScoringInsight,
   Submission,
   TechnicalBlueprint,
   User,
@@ -250,6 +252,82 @@ export function createRetrievedContext(problemStatement: string): RetrievedConte
   };
 }
 
+const YEARLY_BUDGET = 1_500_000;
+
+function buildScoringInsights(scores: Scores, financeModel: FinanceModel, blueprintIndex: number): ScoringInsight[] {
+  const budgetPct = financeModel.totalCostYearOneValue / YEARLY_BUDGET;
+  const budgetScore = budgetPct < 0.2 ? 85 : budgetPct < 0.35 ? 67 : 42;
+  const budget: ScoringInsight =
+    budgetPct < 0.2
+      ? { dimension: 'Budget', status: 'positive', summary: 'Well within annual budget envelope', score: budgetScore }
+      : budgetPct < 0.35
+        ? { dimension: 'Budget', status: 'neutral', summary: 'Moderate allocation from yearly budget', score: budgetScore }
+        : { dimension: 'Budget', status: 'warning', summary: 'Significant portion of annual budget', score: budgetScore };
+
+  const pmTexts: Array<[ScoringInsight['status'], string, number]> = [
+    ['neutral', 'Overlaps with 2 active initiatives in project tracker', 65],
+    ['positive', 'Complements current project pipeline with no conflicts', 82],
+    ['positive', 'No competing initiatives found in project management app', 88],
+  ];
+  const projectMgmt: ScoringInsight = { dimension: 'Project Pipeline', status: pmTexts[blueprintIndex][0], summary: pmTexts[blueprintIndex][1], score: pmTexts[blueprintIndex][2] };
+
+  const productTexts: Array<[ScoringInsight['status'], string, number]> = [
+    ['positive', 'Extends existing platform — no duplication with product list', 80],
+    ['neutral', 'Partially overlaps with a product currently in the catalogue', 61],
+    ['positive', 'Fills a confirmed gap in the company product portfolio', 85],
+  ];
+  const productList: ScoringInsight = { dimension: 'Product Portfolio', status: productTexts[blueprintIndex][0], summary: productTexts[blueprintIndex][1], score: productTexts[blueprintIndex][2] };
+
+  const rejectedTexts: Array<[ScoringInsight['status'], string, number]> = [
+    ['neutral', 'Minor similarity to a shelved proposal from last year', 70],
+    ['positive', 'No match with any historically rejected ideas', 90],
+    ['positive', 'Distinct approach — no overlap with past rejections', 88],
+  ];
+  const pastRejected: ScoringInsight = { dimension: 'Past Rejections', status: rejectedTexts[blueprintIndex][0], summary: rejectedTexts[blueprintIndex][1], score: rejectedTexts[blueprintIndex][2] };
+
+  const market: ScoringInsight =
+    scores.businessImpact >= 85
+      ? { dimension: 'Market Research', status: 'positive', summary: 'Strong demand signal from market analysis', score: scores.businessImpact }
+      : scores.businessImpact >= 70
+        ? { dimension: 'Market Research', status: 'neutral', summary: 'Moderate market opportunity identified', score: scores.businessImpact }
+        : { dimension: 'Market Research', status: 'warning', summary: 'Limited external market validation found', score: scores.businessImpact };
+
+  const hrScore = Math.round((scores.feasibility + scores.effort) / 2);
+  const hr: ScoringInsight =
+    hrScore >= 80
+      ? { dimension: 'HR & Execution', status: 'positive', summary: 'Existing team can execute with minimal gaps', score: hrScore }
+      : hrScore >= 65
+        ? { dimension: 'HR & Execution', status: 'neutral', summary: 'Small skill gaps — 1 to 2 hires recommended', score: hrScore }
+        : { dimension: 'HR & Execution', status: 'warning', summary: 'Significant capacity or skills gap flagged', score: hrScore };
+
+  const legal: ScoringInsight =
+    scores.riskConflict >= 70
+      ? { dimension: 'Legal & Compliance', status: 'positive', summary: 'Aligned with current legal and policy framework', score: scores.riskConflict }
+      : scores.riskConflict >= 55
+        ? { dimension: 'Legal & Compliance', status: 'neutral', summary: 'Standard compliance review required before approval', score: scores.riskConflict }
+        : { dimension: 'Legal & Compliance', status: 'warning', summary: 'Policy gaps must be resolved before proceeding', score: scores.riskConflict };
+
+  return [budget, projectMgmt, productList, pastRejected, market, hr, legal];
+}
+
+const BLUEPRINT_TIMELINES: Phase[][] = [
+  [
+    { name: 'Phase 1 — Foundation', duration: '4 weeks', deliverables: ['Event-driven backbone setup', 'API contract definition', 'Team roles and governance aligned'] },
+    { name: 'Phase 2 — MVP Launch', duration: '6 weeks', deliverables: ['Core orchestration workflows live', 'Integration with existing systems', 'Internal user acceptance testing complete'] },
+    { name: 'Phase 3 — Full Rollout', duration: '12 weeks', deliverables: ['All departments onboarded', 'Monitoring and alerting in place', 'Executive dashboard published'] },
+  ],
+  [
+    { name: 'Phase 1 — Data Layer', duration: '6 weeks', deliverables: ['Semantic layer design finalised', 'Context retrieval pipeline built', 'Data quality baseline established'] },
+    { name: 'Phase 2 — Decision MVP', duration: '6 weeks', deliverables: ['Decision cockpit launched', 'Constraint mapping active', 'Pilot with 2 departments complete'] },
+    { name: 'Phase 3 — Scale & Embed', duration: '12 weeks', deliverables: ['Full cross-team rollout', 'Executive reporting layer live', 'Self-serve insight access enabled'] },
+  ],
+  [
+    { name: 'Phase 1 — Template Library', duration: '3 weeks', deliverables: ['Core template catalogue built', 'Internal portal scaffolded', 'Governance framework defined'] },
+    { name: 'Phase 2 — Self-Serve MVP', duration: '5 weeks', deliverables: ['Automation workflows live', 'Role-based access controls active', 'Pilot team onboarded and trained'] },
+    { name: 'Phase 3 — Organisation-Wide', duration: '10 weeks', deliverables: ['All teams trained and live', 'Automation coverage above 70%', 'Continuous improvement loop running'] },
+  ],
+];
+
 export function createDemoBlueprints(problemStatement: string): Blueprint[] {
   const theme = inferTheme(problemStatement);
   const ids = ['bp-1', 'bp-2', 'bp-3'].map(id => createId(id));
@@ -271,6 +349,8 @@ export function createDemoBlueprints(problemStatement: string): Blueprint[] {
       financeModel: buildFinanceModel(210000, 18000, 228, 11),
       scores: buildScores(76, 88, 69, 63),
       conflicts: conflicts.filter(conflict => conflict.affectedBlueprints.includes(ids[0])),
+      scoringInsights: buildScoringInsights(buildScores(76, 88, 69, 63), buildFinanceModel(210000, 18000, 228, 11), 0),
+      timeline: BLUEPRINT_TIMELINES[0],
       ...COLOR_TOKENS[0],
     },
     {
@@ -288,6 +368,8 @@ export function createDemoBlueprints(problemStatement: string): Blueprint[] {
       financeModel: buildFinanceModel(175000, 22000, 276, 10),
       scores: buildScores(82, 92, 73, 72),
       conflicts: conflicts.filter(conflict => conflict.affectedBlueprints.includes(ids[1])),
+      scoringInsights: buildScoringInsights(buildScores(82, 92, 73, 72), buildFinanceModel(175000, 22000, 276, 10), 1),
+      timeline: BLUEPRINT_TIMELINES[1],
       ...COLOR_TOKENS[1],
     },
     {
@@ -305,6 +387,8 @@ export function createDemoBlueprints(problemStatement: string): Blueprint[] {
       financeModel: buildFinanceModel(90000, 12000, 192, 7),
       scores: buildScores(89, 75, 86, 79),
       conflicts: conflicts.filter(conflict => conflict.affectedBlueprints.includes(ids[2])),
+      scoringInsights: buildScoringInsights(buildScores(89, 75, 86, 79), buildFinanceModel(90000, 12000, 192, 7), 2),
+      timeline: BLUEPRINT_TIMELINES[2],
       ...COLOR_TOKENS[2],
     },
   ];

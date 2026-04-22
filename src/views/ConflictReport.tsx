@@ -108,8 +108,8 @@ export default function ConflictReport() {
   };
 
   useEffect(() => {
-    if (isAcknowledging && conflictsAcknowledged && submissionStatus === 'scoring') {
-      router.push(ROUTES.scoring);
+    if (isAcknowledging && conflictsAcknowledged && submissionStatus === 'blueprints') {
+      router.push(ROUTES.blueprints);
     }
   }, [conflictsAcknowledged, isAcknowledging, router, submissionStatus]);
 

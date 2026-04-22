@@ -66,6 +66,15 @@ export interface Scores {
   total: number;
 }
 
+export type ScoringInsightStatus = 'positive' | 'neutral' | 'warning';
+
+export interface ScoringInsight {
+  dimension: string;
+  status: ScoringInsightStatus;
+  summary: string;
+  score: number;
+}
+
 export interface Conflict {
   id: string;
   type: ConflictType;
@@ -86,6 +95,8 @@ export interface Blueprint {
   financeModel: FinanceModel;
   scores: Scores;
   conflicts: Conflict[];
+  scoringInsights: ScoringInsight[];
+  timeline: Phase[];
   color: string;
   accentColor: string;
 }

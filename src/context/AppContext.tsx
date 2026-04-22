@@ -195,7 +195,7 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         conflictsAcknowledged: true,
-        submissionStatus: 'scoring',
+        submissionStatus: 'blueprints',
         selectedBlueprintId: getRecommendedBlueprintId(state.blueprints, state.selectedBlueprintId),
       };
     case 'escalateSelectedBlueprint': {
