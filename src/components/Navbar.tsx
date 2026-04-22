@@ -1,11 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Bell, FileText, GitMerge, LayoutDashboard, LogOut, PlusCircle } from 'lucide-react';
+import { Bell, ClipboardList, FileText, GitMerge, LayoutDashboard, LogOut, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useApp } from '../context/AppContext';
-import { ROUTES, isSuperior } from '../lib/routes';
+import { ROUTES, isDeptHead, isDirector } from '../lib/routes';
 import ThemeToggle from './ThemeToggle';
 
 const ROLE_COLORS: Record<string, string> = {
@@ -32,11 +32,16 @@ export default function Navbar() {
   }
 
   const roleColor = ROLE_COLORS[currentUser.role];
-  const navItems = isSuperior(currentUser.role)
+  const navItems = isDirector(currentUser.role)
     ? [
         { to: ROUTES.dashboard, label: 'Dashboard', icon: LayoutDashboard },
         { to: ROUTES.merge, label: 'Merge View', icon: GitMerge },
         ...(mergedStrategy ? [{ to: ROUTES.output, label: 'Latest Output', icon: FileText }] : []),
+      ]
+    : isDeptHead(currentUser.role)
+    ? [
+        { to: ROUTES.dashboard, label: 'Dashboard', icon: LayoutDashboard },
+        { to: ROUTES.review, label: 'Review Escalations', icon: ClipboardList },
       ]
     : [
         { to: ROUTES.dashboard, label: 'Dashboard', icon: LayoutDashboard },

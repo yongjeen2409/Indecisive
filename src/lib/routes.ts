@@ -10,12 +10,21 @@ export const ROUTES = {
   conflicts: '/conflicts',
   scoring: '/scoring',
   escalated: '/escalated',
+  review: '/review',
   merge: '/merge',
   output: '/output',
 } as const;
 
+export function isDeptHead(role: Role | null | undefined) {
+  return role === 'lead';
+}
+
+export function isDirector(role: Role | null | undefined) {
+  return role === 'director' || role === 'executive';
+}
+
 export function isSuperior(role: Role | null | undefined) {
-  return role === 'lead' || role === 'director' || role === 'executive';
+  return isDeptHead(role) || isDirector(role);
 }
 
 export function getLatestStaffRoute(status: SubmissionStatus) {

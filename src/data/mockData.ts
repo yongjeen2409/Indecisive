@@ -2,6 +2,7 @@ import {
   Attachment,
   Blueprint,
   Conflict,
+  EscalationLevel,
   EscalationRecord,
   FinanceModel,
   MergeSuggestion,
@@ -410,7 +411,7 @@ function createSubmission(submittedBy: User, problemStatement: string, attachmen
   };
 }
 
-function createEscalationRecord(submittedBy: User, problemStatement: string, blueprintIndex: number, note: string): EscalationRecord {
+function createEscalationRecord(submittedBy: User, problemStatement: string, blueprintIndex: number, note: string, level: EscalationLevel = 'staff_to_head'): EscalationRecord {
   const attachments: Attachment[] = [
     { id: createId('attachment'), name: `${submittedBy.department.toLowerCase().replace(/\s+/g, '-')}-brief.pdf`, sizeLabel: '2.4 MB' },
   ];
@@ -424,29 +425,49 @@ function createEscalationRecord(submittedBy: User, problemStatement: string, blu
     submittedBy: submission.submittedBy,
     escalatedAt: TODAY,
     note,
-    status: 'pending',
+    status: level === 'head_to_director' ? 'forwarded' : 'pending',
+    level,
   };
 }
 
 export function createSeedEscalationQueue(): EscalationRecord[] {
   return [
+    // Director queue — already approved by dept head
     createEscalationRecord(
       TEAM_SUBMITTERS[0],
       'Our legacy delivery model is slowing releases and causing risk during major platform changes.',
       0,
-      'Requesting leadership review on the staged modernization approach.',
+      'Approved by department head after scoring review.',
+      'head_to_director',
     ),
     createEscalationRecord(
       TEAM_SUBMITTERS[2],
       'Business teams are making decisions with conflicting data and no shared view of constraints.',
       1,
-      'Escalated for merge with any cross-functional intelligence initiative.',
+      'Approved for merge with any cross-functional intelligence initiative.',
+      'head_to_director',
     ),
     createEscalationRecord(
       TEAM_SUBMITTERS[1],
       'Engineering is overloaded with manual internal requests, and operations needs a governed self-serve option.',
       2,
-      'Needs leadership approval for shared enablement capacity.',
+      'Approved — needs director sign-off for shared enablement capacity.',
+      'head_to_director',
+    ),
+    // Dept head queue — pending review
+    createEscalationRecord(
+      TEAM_SUBMITTERS[0],
+      'Customer onboarding takes 3 weeks due to manual document verification and no automated validation pipeline.',
+      1,
+      'Requesting dept head review on the intelligence layer approach.',
+      'staff_to_head',
+    ),
+    createEscalationRecord(
+      TEAM_SUBMITTERS[1],
+      'Our reporting infrastructure cannot keep pace with stakeholder demand for real-time operational metrics.',
+      2,
+      'Escalated after scoring — enablement studio ranked highest for our team capacity.',
+      'staff_to_head',
     ),
   ];
 }
@@ -463,7 +484,7 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export function createMergeSuggestions(queue: EscalationRecord[]): MergeSuggestion[] {
-  const pending = queue.filter(record => record.status === 'pending');
+  const pending = queue.filter(record => record.status === 'forwarded');
   const suggestions: MergeSuggestion[] = [];
 
   for (let index = 0; index < pending.length; index += 1) {

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import {
   ArrowRight,
   BarChart3,
+  ClipboardList,
   FileText,
   GitMerge,
   Layers3,
@@ -13,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../context/AppContext';
-import { ROUTES, getLatestStaffRoute, isSuperior } from '../lib/routes';
+import { ROUTES, getLatestStaffRoute, isDeptHead, isDirector } from '../lib/routes';
 
 export default function Dashboard() {
   const {
@@ -22,6 +23,7 @@ export default function Dashboard() {
     retrievedContext,
     submissionStatus,
     selectedBlueprint,
+    staffEscalations,
     pendingEscalations,
     mergeSuggestions,
     mergedStrategy,
@@ -32,7 +34,8 @@ export default function Dashboard() {
     return null;
   }
 
-  const superiorMode = isSuperior(currentUser.role);
+  const deptHeadMode = isDeptHead(currentUser.role);
+  const directorMode = isDirector(currentUser.role);
   const latestStaffRoute = getLatestStaffRoute(submissionStatus);
   const contextCounts = retrievedContext
     ? [
@@ -51,21 +54,122 @@ export default function Dashboard() {
       <div className="page-container max-w-6xl space-y-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <p className="font-mono text-xs mb-3" style={{ color: 'var(--color-primary)' }}>
-            {superiorMode ? 'SUPERIOR DASHBOARD' : 'STAFF DASHBOARD'}
+            {deptHeadMode ? 'DEPT HEAD DASHBOARD' : directorMode ? 'DIRECTOR DASHBOARD' : 'STAFF DASHBOARD'}
           </p>
           <h1 className="font-display font-bold text-3xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
-            {superiorMode
-              ? `Leadership review center for ${currentUser.name}`
-              : `Welcome back, ${currentUser.name}`}
+            {deptHeadMode || directorMode ? `Leadership review center for ${currentUser.name}` : `Welcome back, ${currentUser.name}`}
           </h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>
-            {superiorMode
-              ? 'Review escalations, inspect Indecisive merge suggestions, and move the strongest option toward executive approval.'
+            {deptHeadMode
+              ? 'Review blueprints escalated by your staff, inspect scores, and forward the strongest options to the Director.'
+              : directorMode
+              ? 'Review escalations approved by department heads, inspect merge suggestions, and generate a unified strategy.'
               : 'Track your current submission, inspect retrieved context, and continue from the right point in the blueprint workflow.'}
           </p>
         </motion.div>
 
-        {superiorMode ? (
+        {deptHeadMode ? (
+          <>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 }}
+              className="grid md:grid-cols-3 gap-4"
+            >
+              <button
+                onClick={() => router.push(ROUTES.review)}
+                className="p-5 text-left transition-all hover:scale-[1.02]"
+                style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.12), rgba(29,78,216,0.12))', border: '1px solid rgba(37,99,235,0.3)' }}
+              >
+                <ClipboardList size={18} className="mb-3" style={{ color: 'var(--color-accent)' }} />
+                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                  Review staff escalations
+                </p>
+                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                  {staffEscalations.filter(r => r.status === 'pending').length} blueprint{staffEscalations.filter(r => r.status === 'pending').length === 1 ? '' : 's'} are waiting for your review.
+                </p>
+              </button>
+
+              <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                <GitMerge size={18} className="mb-3" style={{ color: 'var(--color-success)' }} />
+                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                  Forwarded to Director
+                </p>
+                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                  {staffEscalations.filter(r => r.status !== 'pending').length} blueprint{staffEscalations.filter(r => r.status !== 'pending').length === 1 ? '' : 's'} approved and in the Director queue.
+                </p>
+              </div>
+
+              <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                <BarChart3 size={18} className="mb-3" style={{ color: 'var(--color-warning)' }} />
+                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                  Total escalations
+                </p>
+                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                  {staffEscalations.length} solution{staffEscalations.length === 1 ? '' : 's'} submitted by your staff for review.
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.14 }}
+              className="p-6"
+              style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                  Staff escalation queue
+                </h2>
+                <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
+                  {staffEscalations.filter(r => r.status === 'pending').length} pending
+                </span>
+              </div>
+
+              {staffEscalations.length > 0 ? (
+                <div className="space-y-3">
+                  {staffEscalations.slice(0, 4).map(record => (
+                    <button
+                      key={record.id}
+                      onClick={() => router.push(ROUTES.review)}
+                      className="w-full p-4 text-left transition-all hover:border-blue-500/30"
+                      style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                            {record.blueprint.title}
+                          </p>
+                          <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                            {record.submittedBy.name} · {record.submittedBy.department} · score {record.blueprint.scores.total}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {record.status !== 'pending' && (
+                            <span className="text-[10px] px-2 py-0.5 font-mono" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)', border: '1px solid rgba(16,185,129,0.3)' }}>
+                              FORWARDED
+                            </span>
+                          )}
+                          <ArrowRight size={16} style={{ color: 'var(--color-text-muted)' }} />
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                  <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                    No escalations yet.
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                    Once staff escalate a blueprint from the scoring step, it will appear here for review.
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          </>
+        ) : directorMode ? (
           <>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -83,7 +187,7 @@ export default function Dashboard() {
                   Pending merges
                 </p>
                 <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  {pendingEscalations.length} escalations are waiting for superior review.
+                  {pendingEscalations.length} escalations approved by dept heads, ready for merge.
                 </p>
               </button>
 
@@ -95,7 +199,7 @@ export default function Dashboard() {
                 <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                   {mergeSuggestions.length > 0
                     ? `${mergeSuggestions.length} compatible blueprint pairs are ready for comparison.`
-                    : 'No merge suggestions yet. Escalate more blueprints to unlock a paired review.'}
+                    : 'No merge suggestions yet. Department heads must forward blueprints first.'}
                 </p>
               </div>
 
@@ -159,10 +263,10 @@ export default function Dashboard() {
                 ) : (
                   <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
                     <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                      No escalations are waiting right now.
+                      No escalations waiting for merge.
                     </p>
                     <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                      Once staff users escalate a blueprint, Indecisive will queue it here for superior review.
+                      Once department heads approve and forward blueprints, they will appear here for merge.
                     </p>
                   </div>
                 )}
@@ -255,7 +359,7 @@ export default function Dashboard() {
                   Escalation queue
                 </p>
                 <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  {pendingEscalations.length} blueprint{pendingEscalations.length === 1 ? '' : 's'} are currently waiting in the superior review queue.
+                  Submit and escalate a blueprint to start the review pipeline.
                 </p>
               </div>
             </motion.div>

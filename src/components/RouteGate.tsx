@@ -3,9 +3,9 @@
 import { ReactNode, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useApp } from '../context/AppContext';
-import { ROUTES, isSuperior } from '../lib/routes';
+import { ROUTES, isDeptHead, isDirector, isSuperior } from '../lib/routes';
 
-type AccessMode = 'public-only' | 'authenticated' | 'staff' | 'superior';
+type AccessMode = 'public-only' | 'authenticated' | 'staff' | 'dept_head' | 'director' | 'superior';
 
 export default function RouteGate({
   mode,
@@ -30,6 +30,22 @@ export default function RouteGate({
     if (!app.currentUser) {
       redirect = ROUTES.login;
     } else if (app.currentUser.role !== 'staff') {
+      redirect = ROUTES.dashboard;
+    } else {
+      redirect = validate?.(app) ?? null;
+    }
+  } else if (mode === 'dept_head') {
+    if (!app.currentUser) {
+      redirect = ROUTES.login;
+    } else if (!isDeptHead(app.currentUser.role)) {
+      redirect = ROUTES.dashboard;
+    } else {
+      redirect = validate?.(app) ?? null;
+    }
+  } else if (mode === 'director') {
+    if (!app.currentUser) {
+      redirect = ROUTES.login;
+    } else if (!isDirector(app.currentUser.role)) {
       redirect = ROUTES.dashboard;
     } else {
       redirect = validate?.(app) ?? null;

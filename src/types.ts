@@ -6,7 +6,8 @@ export type ConflictType = 'budget' | 'timeline' | 'headcount' | 'technical';
 
 export type Severity = 'high' | 'medium' | 'low';
 
-export type EscalationStatus = 'pending' | 'merged';
+export type EscalationStatus = 'pending' | 'forwarded' | 'merged';
+export type EscalationLevel = 'staff_to_head' | 'head_to_director';
 
 export interface User {
   id: string;
@@ -140,6 +141,7 @@ export interface EscalationRecord {
   escalatedAt: string;
   note: string;
   status: EscalationStatus;
+  level: EscalationLevel;
 }
 
 export interface MergeCompatibility {

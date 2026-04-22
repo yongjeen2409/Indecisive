@@ -6,6 +6,7 @@ import { ROUTES, getLatestStaffRoute } from '../lib/routes';
 import BlueprintArena from '../views/BlueprintArena';
 import ConflictReport from '../views/ConflictReport';
 import Dashboard from '../views/Dashboard';
+import DeptHeadReview from '../views/DeptHeadReview';
 import EscalatedPage from '../views/EscalatedPage';
 import LandingPage from '../views/LandingPage';
 import LoginPage from '../views/LoginPage';
@@ -143,9 +144,17 @@ export function EscalatedRoute() {
   );
 }
 
+export function ReviewRoute() {
+  return (
+    <RouteGate mode="dept_head">
+      <DeptHeadReview />
+    </RouteGate>
+  );
+}
+
 export function MergeRoute() {
   return (
-    <RouteGate mode="superior">
+    <RouteGate mode="director">
       <MergeView />
     </RouteGate>
   );
@@ -153,7 +162,7 @@ export function MergeRoute() {
 
 export function OutputRoute() {
   return (
-    <RouteGate mode="superior" validate={app => (app.mergedStrategy ? null : ROUTES.merge)}>
+    <RouteGate mode="director" validate={app => (app.mergedStrategy ? null : ROUTES.merge)}>
       <OutputPage />
     </RouteGate>
   );

@@ -37,6 +37,7 @@ export interface AppState {
 
 interface AppContextValue extends AppState {
   selectedBlueprint: Blueprint | null;
+  staffEscalations: EscalationRecord[];
   pendingEscalations: EscalationRecord[];
   mergeSuggestions: MergeSuggestion[];
   selectedMergeRecords: EscalationRecord[];
@@ -51,6 +52,7 @@ interface AppContextValue extends AppState {
   acknowledgeConflicts: () => void;
   escalateSelectedBlueprint: () => void;
   resetSubmission: () => void;
+  approveToDirector: (recordId: string) => void;
   selectMergePair: (blueprintIds: string[]) => void;
   completeMerge: () => void;
 }
@@ -66,6 +68,7 @@ type Action =
   | { type: 'acknowledgeConflicts' }
   | { type: 'escalateSelectedBlueprint' }
   | { type: 'resetSubmission' }
+  | { type: 'approveToDirector'; payload: { recordId: string } }
   | { type: 'selectMergePair'; payload: { blueprintIds: string[] } }
   | { type: 'completeMerge' };
 
@@ -99,14 +102,14 @@ function createInitialState(overrides?: Partial<AppState>): AppState {
 }
 
 function syncMergeSelection(state: AppState): AppState {
-  const pendingIds = new Set(
-    state.escalationQueue.filter(record => record.status === 'pending').map(record => record.blueprint.id),
+  const forwardedIds = new Set(
+    state.escalationQueue.filter(record => record.status === 'forwarded').map(record => record.blueprint.id),
   );
-  const normalized = state.selectedMergeIds.filter(id => pendingIds.has(id));
+  const normalized = state.selectedMergeIds.filter(id => forwardedIds.has(id));
   const mergeSuggestions = createMergeSuggestions(state.escalationQueue);
   const defaultSelection = mergeSuggestions[0]?.blueprintIds ?? [];
   const selectedMergeIds =
-    normalized.length === 2 && normalized.every(id => pendingIds.has(id)) ? normalized : defaultSelection;
+    normalized.length === 2 && normalized.every(id => forwardedIds.has(id)) ? normalized : defaultSelection;
 
   return {
     ...state,
@@ -227,6 +230,7 @@ function reducer(state: AppState, action: Action): AppState {
           escalatedAt: '2026-04-21',
           note: `Escalated from the ${state.currentUser.department} team after staff review.`,
           status: 'pending' as const,
+          level: 'staff_to_head' as const,
         },
         ...state.escalationQueue,
       ];
@@ -236,6 +240,14 @@ function reducer(state: AppState, action: Action): AppState {
         escalationQueue: nextQueue,
         submissionStatus: 'escalated',
       });
+    }
+    case 'approveToDirector': {
+      const escalationQueue = state.escalationQueue.map(record =>
+        record.id === action.payload.recordId
+          ? { ...record, status: 'forwarded' as const }
+          : record,
+      );
+      return syncMergeSelection({ ...state, escalationQueue });
     }
     case 'resetSubmission':
       return {
@@ -257,7 +269,7 @@ function reducer(state: AppState, action: Action): AppState {
       if (!state.currentUser || state.selectedMergeIds.length !== 2) return state;
 
       const selectedRecords = state.escalationQueue.filter(
-        record => record.status === 'pending' && state.selectedMergeIds.includes(record.blueprint.id),
+        record => record.status === 'forwarded' && state.selectedMergeIds.includes(record.blueprint.id),
       );
 
       if (selectedRecords.length !== 2) return state;
@@ -297,7 +309,8 @@ export function AppProvider({
   const value = useMemo(() => {
     const selectedBlueprint =
       state.blueprints.find(blueprint => blueprint.id === state.selectedBlueprintId) ?? null;
-    const pendingEscalations = state.escalationQueue.filter(record => record.status === 'pending');
+    const staffEscalations = state.escalationQueue.filter(record => record.level === 'staff_to_head');
+    const pendingEscalations = state.escalationQueue.filter(record => record.status === 'forwarded');
     const mergeSuggestions = createMergeSuggestions(state.escalationQueue);
     const selectedMergeRecords = state.escalationQueue.filter(record =>
       state.selectedMergeIds.includes(record.blueprint.id),
@@ -308,6 +321,7 @@ export function AppProvider({
     return {
       ...state,
       selectedBlueprint,
+      staffEscalations,
       pendingEscalations,
       mergeSuggestions,
       selectedMergeRecords,
@@ -324,6 +338,7 @@ export function AppProvider({
       acknowledgeConflicts: () => dispatch({ type: 'acknowledgeConflicts' }),
       escalateSelectedBlueprint: () => dispatch({ type: 'escalateSelectedBlueprint' }),
       resetSubmission: () => dispatch({ type: 'resetSubmission' }),
+      approveToDirector: (recordId: string) => dispatch({ type: 'approveToDirector', payload: { recordId } }),
       selectMergePair: (blueprintIds: string[]) =>
         dispatch({ type: 'selectMergePair', payload: { blueprintIds } }),
       completeMerge: () => dispatch({ type: 'completeMerge' }),

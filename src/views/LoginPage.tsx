@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, Briefcase, Building2, ChevronLeft, Crown, Users } from 'lucide-react';
+import { ArrowRight, Briefcase, Building2, ChevronLeft, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../context/AppContext';
 import { ROUTES } from '../lib/routes';
@@ -19,15 +19,15 @@ const ROLE_OPTIONS: {
   {
     role: 'staff',
     label: 'Department Staff',
-    description: 'Submit a business problem, review conflicts, rank blueprints, and escalate a preferred option.',
+    description: 'Submit a business problem, review AI-generated blueprints, acknowledge conflicts, and escalate a preferred solution to your department head.',
     icon: Users,
     color: 'var(--color-primary)',
     userId: 'u1',
   },
   {
     role: 'lead',
-    label: 'Department Lead',
-    description: 'Review pending escalations, compare compatible pairs, and approve a merged recommendation.',
+    label: 'Department Head',
+    description: 'Review solutions escalated by your staff, inspect scores and architecture, then forward the strongest options to the Director.',
     icon: Briefcase,
     color: 'var(--color-accent)',
     userId: 'u2',
@@ -35,18 +35,10 @@ const ROLE_OPTIONS: {
   {
     role: 'director',
     label: 'Director',
-    description: 'Oversee cross-department strategy alignment and pressure-test the recommended merge path.',
+    description: 'Merge department-head-approved blueprints into a unified cross-organisational strategy and generate the final executive output.',
     icon: Building2,
-    color: 'var(--color-accent)',
-    userId: 'u3',
-  },
-  {
-    role: 'executive',
-    label: 'Executive',
-    description: 'Review the final unified strategy, finance model, and executive brief for sign-off.',
-    icon: Crown,
     color: 'var(--color-warning)',
-    userId: 'u4',
+    userId: 'u3',
   },
 ];
 
@@ -179,7 +171,7 @@ export default function LoginPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="relative z-10 w-full max-w-3xl"
+            className="relative z-10 w-full max-w-4xl"
           >
             <div className="text-center mb-10">
               <h2 className="font-display font-bold text-2xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
@@ -190,7 +182,7 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               {ROLE_OPTIONS.map((option, index) => (
                 <motion.button
                   key={option.role}
@@ -208,7 +200,7 @@ export default function LoginPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div
-                      className="w-10 h-10 flex items-center justify-center flex-shrink-0"
+                      className="w-10 h-10 flex items-center justify-center shrink-0"
                       style={{ background: `${option.color}20`, border: `1px solid ${option.color}40` }}
                     >
                       <option.icon size={20} style={{ color: option.color }} />
