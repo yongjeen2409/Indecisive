@@ -60,7 +60,7 @@ export default function Dashboard() {
           </h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>
             {superiorMode
-              ? 'Review escalations, inspect ODIS merge suggestions, and move the strongest option toward executive approval.'
+              ? 'Review escalations, inspect Indecisive merge suggestions, and move the strongest option toward executive approval.'
               : 'Track your current submission, inspect retrieved context, and continue from the right point in the blueprint workflow.'}
           </p>
         </motion.div>
@@ -162,7 +162,7 @@ export default function Dashboard() {
                       No escalations are waiting right now.
                     </p>
                     <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                      Once staff users escalate a blueprint, ODIS will queue it here for superior review.
+                      Once staff users escalate a blueprint, Indecisive will queue it here for superior review.
                     </p>
                   </div>
                 )}
@@ -205,7 +205,7 @@ export default function Dashboard() {
                   </>
                 ) : (
                   <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                    ODIS needs at least two pending escalations before it can recommend a compatible merge pair.
+                    Indecisive needs at least two pending escalations before it can recommend a compatible merge pair.
                   </p>
                 )}
               </motion.div>
@@ -229,7 +229,7 @@ export default function Dashboard() {
                   Start a new problem
                 </p>
                 <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  Open a fresh submission and let ODIS build a new set of blueprints.
+                  Open a fresh submission and let Indecisive build a new set of blueprints.
                 </p>
               </button>
 
@@ -245,7 +245,7 @@ export default function Dashboard() {
                 <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                   {activeSubmission
                     ? `Resume at the ${submissionStatus} stage for your active submission.`
-                    : 'No active submission yet. ODIS will take you to the submission page.'}
+                    : 'No active submission yet. Indecisive will take you to the submission page.'}
                 </p>
               </button>
 

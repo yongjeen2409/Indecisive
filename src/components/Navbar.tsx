@@ -59,14 +59,14 @@ export default function Navbar() {
           className="w-8 h-8 flex items-center justify-center"
           style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))' }}
         >
-          <span className="font-display font-bold text-xs text-white">O</span>
+          <span className="font-display font-bold text-xs text-white">I</span>
         </div>
         <div className="text-left">
           <p className="font-display font-bold text-sm tracking-wider" style={{ color: 'var(--color-text-primary)' }}>
-            ODIS
+            Indecisive
           </p>
           <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-            Organisational Decision Intelligence System
+            AI Decision Intelligence Platform
           </p>
         </div>
       </button>

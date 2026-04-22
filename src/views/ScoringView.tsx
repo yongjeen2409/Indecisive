@@ -82,7 +82,7 @@ export default function ScoringView() {
             Compare blueprints side by side
           </h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>
-            The decision engine has scored each blueprint across the four ODIS criteria. Select one
+            The decision engine has scored each blueprint across the four Indecisive criteria. Select one
             option and escalate it to your superior for review.
           </p>
         </motion.div>

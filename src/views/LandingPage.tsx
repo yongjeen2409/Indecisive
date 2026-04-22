@@ -19,7 +19,7 @@ const HOW_IT_WORKS = [
     icon: Zap,
     title: 'Submit and analyze',
     description:
-      'Users describe a business problem in plain language, and ODIS pulls related Jira tickets, Confluence documents, and past decisions.',
+      'Users describe a business problem in plain language, and Indecisive pulls related Jira tickets, Confluence documents, and past decisions.',
   },
   {
     step: '02',
@@ -96,7 +96,7 @@ export default function LandingPage() {
             className="text-lg mb-12 max-w-3xl mx-auto leading-relaxed"
             style={{ color: 'var(--color-text-secondary)' }}
           >
-            ODIS is a role-based AI decision platform that retrieves internal context, generates
+            Indecisive is a role-based AI decision platform that retrieves internal context, generates
             multiple cross-department blueprints, detects conflicts before ranking, and helps
             leadership merge the best options into one unified strategy.
           </motion.p>
@@ -115,7 +115,7 @@ export default function LandingPage() {
                 boxShadow: '0 0 30px rgba(37, 99, 235, 0.4)',
               }}
             >
-              Launch ODIS
+              Launch Indecisive
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
             <button
@@ -250,7 +250,7 @@ export default function LandingPage() {
                 Ready to align decision-making across the organization?
               </h2>
               <p className="mb-8" style={{ color: 'var(--color-text-secondary)' }}>
-                Try the ODIS demo to submit a business problem, review AI-generated blueprints,
+                Try the Indecisive demo to submit a business problem, review AI-generated blueprints,
                 and step through the superior merge flow.
               </p>
               <button

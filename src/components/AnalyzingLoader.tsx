@@ -52,15 +52,15 @@ export default function AnalyzingLoader() {
     <div className="flex flex-col items-center justify-center min-h-screen px-6" style={{ background: 'var(--color-bg-deep)' }}>
       <div className="text-center mb-10">
         <p className="font-mono text-xs mb-3" style={{ color: 'var(--color-primary)' }}>
-          ODIS IS ANALYZING
+          INDECISIVE IS ANALYZING
         </p>
         <h1 className="font-display font-bold text-3xl mb-3" style={{ color: 'var(--color-text-primary)' }}>
           Building solution blueprints
         </h1>
         <p className="max-w-xl text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
           {activeSubmission
-            ? `ODIS is processing your submission: "${activeSubmission.problemStatement.slice(0, 110)}${activeSubmission.problemStatement.length > 110 ? '...' : ''}"`
-            : 'ODIS is processing your submission and assembling the strongest cross-department options.'}
+            ? `Indecisive is processing your submission: "${activeSubmission.problemStatement.slice(0, 110)}${activeSubmission.problemStatement.length > 110 ? '...' : ''}"`
+            : 'Indecisive is processing your submission and assembling the strongest cross-department options.'}
         </p>
       </div>
 
@@ -91,7 +91,7 @@ export default function AnalyzingLoader() {
         />
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="font-display font-bold text-sm tracking-widest" style={{ color: 'var(--color-primary-glow)' }}>
-            ODIS
+            Indecisive
           </span>
         </div>
       </div>

@@ -6,7 +6,7 @@ import { renderApp } from './test/renderApp';
 const STAFF_PROBLEM_STATEMENT =
   'Our legacy monolith is slowing release cycles and creating risk whenever multiple teams need to ship at the same time.';
 
-describe('ODIS demo flows', () => {
+describe('Indecisive demo flows', () => {
   it(
     'supports the full staff submission to escalation flow',
     async () => {
@@ -21,10 +21,10 @@ describe('ODIS demo flows', () => {
       expect(await screen.findByText(`Welcome back, ${MOCK_USERS[0].name}`)).toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: /Start a new problem/i }));
-      expect(await screen.findByText('Describe the business problem ODIS should solve')).toBeInTheDocument();
+      expect(await screen.findByText('Describe the business problem Indecisive should solve')).toBeInTheDocument();
 
       fireEvent.change(screen.getByRole('textbox'), { target: { value: STAFF_PROBLEM_STATEMENT } });
-      const analyzeButton = screen.getByRole('button', { name: /Analyze with ODIS/i });
+      const analyzeButton = screen.getByRole('button', { name: /Analyze with Indecisive/i });
       expect(analyzeButton).toBeEnabled();
       await user.click(analyzeButton);
 
@@ -32,7 +32,7 @@ describe('ODIS demo flows', () => {
         await screen.findByText(/Building solution blueprints/i, {}, { timeout: 2000 }),
       ).toBeInTheDocument();
       expect(
-        await screen.findByRole('heading', { name: /ODIS generated 3 solution blueprints/i }, { timeout: 7000 }),
+        await screen.findByRole('heading', { name: /Indecisive generated 3 solution blueprints/i }, { timeout: 7000 }),
       ).toBeInTheDocument();
       expect(screen.queryByText(/Rank 1/i)).not.toBeInTheDocument();
 

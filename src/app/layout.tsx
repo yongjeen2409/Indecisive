@@ -25,8 +25,8 @@ const monoFont = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ODIS Demo',
-  description: 'Organisational Decision Intelligence System demo built with Next.js.',
+  title: 'Indecisive Demo',
+  description: 'Indecisive: A role-based AI decision platform demo built with Next.js.',
 };
 
 export default function RootLayout({

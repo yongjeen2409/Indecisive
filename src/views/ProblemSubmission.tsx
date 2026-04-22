@@ -54,10 +54,10 @@ export default function ProblemSubmission() {
             PROBLEM SUBMISSION
           </p>
           <h1 className="font-display font-bold text-3xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
-            Describe the business problem ODIS should solve
+            Describe the business problem Indecisive should solve
           </h1>
           <p className="max-w-3xl" style={{ color: 'var(--color-text-secondary)' }}>
-            Submit the challenge in plain language. ODIS will retrieve context, extract
+            Submit the challenge in plain language. Indecisive will retrieve context, extract
             constraints, detect conflicts, and propose multiple cross-department blueprints for
             review.
           </p>
@@ -127,7 +127,7 @@ export default function ProblemSubmission() {
               }}
             >
               <Send size={16} />
-              Analyze with ODIS
+              Analyze with Indecisive
             </button>
           </motion.form>
 
@@ -167,7 +167,7 @@ export default function ProblemSubmission() {
               style={{ background: 'rgba(37, 99, 235, 0.08)', border: '1px solid rgba(37, 99, 235, 0.25)' }}
             >
               <p className="text-xs font-mono mb-3" style={{ color: 'var(--color-primary-bright)' }}>
-                ODIS WILL AUTOMATICALLY PULL
+                INDECISIVE WILL AUTOMATICALLY PULL
               </p>
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
@@ -208,7 +208,7 @@ export default function ProblemSubmission() {
                 ACTIVE ROLE
               </p>
               <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                {currentUser?.name ?? 'ODIS staff mode'}
+                {currentUser?.name ?? 'Indecisive staff mode'}
               </p>
               <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
                 Staff users own problem submission, conflict acknowledgement, blueprint ranking, and escalation to leadership.

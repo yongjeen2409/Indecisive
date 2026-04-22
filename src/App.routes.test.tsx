@@ -2,10 +2,10 @@ import { screen } from '@testing-library/react';
 import { MOCK_USERS } from './data/mockData';
 import { renderApp } from './test/renderApp';
 
-describe('ODIS route guards', () => {
+describe('Indecisive route guards', () => {
   it('redirects unauthenticated users to the login screen', () => {
     renderApp('/dashboard');
-    expect(screen.getByText('Welcome to ODIS')).toBeInTheDocument();
+    expect(screen.getByText('Welcome to Indecisive')).toBeInTheDocument();
   });
 
   it('keeps staff users out of superior-only routes', () => {
@@ -17,7 +17,7 @@ describe('ODIS route guards', () => {
   it('keeps superior users out of staff-only routes', () => {
     renderApp('/submit', { currentUser: MOCK_USERS[2] });
     expect(screen.getByText(`Leadership review center for ${MOCK_USERS[2].name}`)).toBeInTheDocument();
-    expect(screen.queryByText('Describe the business problem ODIS should solve')).not.toBeInTheDocument();
+    expect(screen.queryByText('Describe the business problem Indecisive should solve')).not.toBeInTheDocument();
   });
 
   it('redirects superior users away from output when no merged strategy exists', () => {

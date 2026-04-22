@@ -1,8 +1,8 @@
-# ODIS Demo
+# Indecisive Demo
 
-ODIS stands for Organisational Decision Intelligence System. This repository contains a frontend-only demo of a role-based AI decision platform for complex organisational problem-solving, now migrated to a Next.js App Router project.
+Indecisive is a role-based AI decision platform for complex organisational problem-solving, now migrated to a Next.js App Router project. This repository contains a frontend-only demo of the system.
 
-The app simulates how ODIS helps teams submit business problems, pull internal context, generate multiple solution blueprints, surface conflicts, rank options, escalate decisions, and merge compatible strategies at a superior level.
+The app simulates how Indecisive helps teams submit business problems, pull internal context, generate multiple solution blueprints, surface conflicts, rank options, escalate decisions, and merge compatible strategies at a superior level.
 
 ## Demo Scope
 
@@ -17,7 +17,7 @@ This project is intentionally demo-only:
 
 The current demo follows this flow:
 
-1. Landing page with ODIS value proposition, flow summary, and demo metrics
+1. Landing page with Indecisive value proposition, flow summary, and demo metrics
 2. Login page followed by role selection
 3. Role-based dashboard
 4. Staff submission flow:
@@ -41,7 +41,7 @@ The demo now runs on:
 - Tailwind CSS v4 for styling
 - Vitest and React Testing Library for route and flow coverage
 
-Route guards still enforce the ODIS role model, but they now sit inside client-side wrappers used by the App Router pages instead of `react-router-dom`.
+Route guards still enforce the Indecisive role model, but they now sit inside client-side wrappers used by the App Router pages instead of `react-router-dom`.
 
 ## Routing
 

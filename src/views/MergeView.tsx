@@ -109,7 +109,7 @@ export default function MergeView() {
           </h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>
             Review only the blueprints that staff have escalated, choose a compatible pair, and let
-            ODIS synthesize one executive-ready recommendation.
+            Indecisive synthesize one executive-ready recommendation.
           </p>
         </motion.div>
 

@@ -81,7 +81,7 @@ export default function OutputPage() {
       label: 'Download JSON',
       icon: Download,
       onClick: () => {
-        downloadFile('odis-merged-strategy.json', strategyPayload, 'application/json');
+        downloadFile('indecisive-merged-strategy.json', strategyPayload, 'application/json');
         setStatusMessage('Merged strategy JSON downloaded.');
       },
     },
@@ -89,7 +89,7 @@ export default function OutputPage() {
       label: 'Download brief',
       icon: FileText,
       onClick: () => {
-        downloadFile('odis-executive-brief.txt', mergedStrategy.executiveBrief, 'text/plain');
+        downloadFile('indecisive-executive-brief.txt', mergedStrategy.executiveBrief, 'text/plain');
         setStatusMessage('Executive brief text file downloaded.');
       },
     },

@@ -111,7 +111,7 @@ export default function LoginPage() {
                 <span className="font-display font-bold text-xl text-white">O</span>
               </div>
               <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--color-text-primary)' }}>
-                Welcome to ODIS
+                Welcome to Indecisive
               </h1>
               <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
                 Sign in to explore the role-based decision intelligence demo.
@@ -186,7 +186,7 @@ export default function LoginPage() {
                 Select your role
               </h2>
               <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                Your role changes what ODIS shows next in the decision flow.
+                Your role changes what Indecisive shows next in the decision flow.
               </p>
             </div>
 

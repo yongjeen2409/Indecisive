@@ -167,7 +167,7 @@ export default function BlueprintArena() {
             BLUEPRINT ARENA
           </p>
           <h1 className="font-display font-bold text-3xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
-            ODIS generated {blueprints.length} solution blueprints
+            Indecisive generated {blueprints.length} solution blueprints
           </h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>
             Review the prototype concept, architecture, tech stack, and finance model for each
@@ -199,7 +199,7 @@ export default function BlueprintArena() {
                 {uniqueConflicts.length} conflicts detected before ranking
               </p>
               <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                ODIS requires conflict review before the scoring table opens.
+                Indecisive requires conflict review before the scoring table opens.
               </p>
             </div>
           </div>

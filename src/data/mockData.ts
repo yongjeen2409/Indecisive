@@ -172,7 +172,7 @@ function buildPrototypeScreens(theme: ProblemTheme, label: string, blueprintTitl
       id: `${label}-overview`,
       label: 'Overview',
       headline: `${sentenceCase(theme.shortLabel)} command panel`,
-      detail: `ODIS highlights the core problem, active stakeholders, and the first milestone for ${blueprintTitle}.`,
+      detail: `Indecisive highlights the core problem, active stakeholders, and the first milestone for ${blueprintTitle}.`,
       metricLabel: 'Decision pulse',
       metricValue: theme.priority,
     },
@@ -230,11 +230,11 @@ export function createRetrievedContext(problemStatement: string): RetrievedConte
 
   return {
     jiraTickets: [
-      { id: 'ODIS-124', title: `Align delivery backlog around ${theme.label}`, status: 'In Progress', priority: theme.priority, assignee: 'Alex Chen' },
-      { id: 'ODIS-208', title: `Reduce friction caused by ${theme.constraint}`, status: 'Open', priority: 'High', assignee: 'Priya Sharma' },
-      { id: 'ODIS-311', title: `Create phased rollout plan for ${theme.desiredOutcome}`, status: 'Review', priority: 'Medium', assignee: 'Marcus Webb' },
-      { id: 'ODIS-412', title: `Map dependencies for "${summary}"`, status: 'Open', priority: 'High', assignee: 'Jamie Patel' },
-      { id: 'ODIS-418', title: `Prepare finance model tied to ${theme.executiveAngle}`, status: 'Blocked', priority: 'Medium', assignee: 'Sofia Reyes' },
+      { id: 'Indecisive-124', title: `Align delivery backlog around ${theme.label}`, status: 'In Progress', priority: theme.priority, assignee: 'Alex Chen' },
+      { id: 'Indecisive-208', title: `Reduce friction caused by ${theme.constraint}`, status: 'Open', priority: 'High', assignee: 'Priya Sharma' },
+      { id: 'Indecisive-311', title: `Create phased rollout plan for ${theme.desiredOutcome}`, status: 'Review', priority: 'Medium', assignee: 'Marcus Webb' },
+      { id: 'Indecisive-412', title: `Map dependencies for "${summary}"`, status: 'Open', priority: 'High', assignee: 'Jamie Patel' },
+      { id: 'Indecisive-418', title: `Prepare finance model tied to ${theme.executiveAngle}`, status: 'Blocked', priority: 'Medium', assignee: 'Sofia Reyes' },
     ],
     confluenceDocs: [
       { id: 'c1', title: `${sentenceCase(theme.shortLabel)} architecture options`, space: 'Technology', lastUpdated: '2026-04-16', relevance: 95 },
@@ -404,7 +404,7 @@ export function createMergeSuggestions(queue: EscalationRecord[]): MergeSuggesti
       suggestions.push({
         id: createId('merge'),
         blueprintIds: [left.id, right.id],
-        rationale: `ODIS suggests combining "${left.title}" and "${right.title}" because they address ${inferTheme(left.description).label} from complementary delivery angles.`,
+        rationale: `Indecisive suggests combining "${left.title}" and "${right.title}" because they address ${inferTheme(left.description).label} from complementary delivery angles.`,
         projectedSavings: formatCurrency(savingsValue),
         compatibility: {
           architecture,
@@ -480,7 +480,7 @@ export function createMergedStrategy(records: EscalationRecord[], createdByRole:
     executiveBrief: [
       `${title} combines ${titles.join(' and ')} into one leadership-ready plan for ${theme.label}.`,
       `The merged strategy preserves the strongest parts of each blueprint while removing duplicated spend, clarifying ownership, and sequencing work around ${theme.constraint}.`,
-      `ODIS projects ${mergedFinance.roi} ROI with a ${mergedFinance.paybackPeriod.toLowerCase()} payback window, supported by a shared technical foundation and a single executive approval path.`,
+      `Indecisive projects ${mergedFinance.roi} ROI with a ${mergedFinance.paybackPeriod.toLowerCase()} payback window, supported by a shared technical foundation and a single executive approval path.`,
     ].join('\n\n'),
     technicalBlueprint: buildMergedTechnicalBlueprint(sourceBlueprints),
     financeModel: mergedFinance,

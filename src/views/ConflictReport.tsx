@@ -136,7 +136,7 @@ export default function ConflictReport() {
             </div>
           </div>
           <p style={{ color: 'var(--color-text-secondary)' }}>
-            ODIS identified the following delivery, budget, staffing, and technical conflicts across
+            Indecisive identified the following delivery, budget, staffing, and technical conflicts across
             the generated blueprints. Review them before the scoring table opens.
           </p>
         </motion.div>
@@ -181,7 +181,7 @@ export default function ConflictReport() {
           style={{ background: 'rgba(6, 182, 212, 0.06)', border: '1px solid rgba(6, 182, 212, 0.25)' }}
         >
           <p className="text-xs font-mono mb-2" style={{ color: 'var(--color-accent)' }}>
-            ODIS RECOMMENDATION
+            Indecisive RECOMMENDATION
           </p>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
             Continue to scoring once the team agrees that these conflicts are understood and can be
