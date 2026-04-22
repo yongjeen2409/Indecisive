@@ -1,430 +1,422 @@
-[
-  {
-    "id": "bp-ef8jqf1",
-    "title": "AI-Powered Self-Service & Agent Assist Expansion",
-    "department": "Engineering",
-    "description": "This blueprint expands on the existing AI-Assisted Support Ticketing project by adding a customer-facing self-service portal and enhancing agent-facing tools. It aims to deflect repetitive questions entirely through a knowledge base and provide real-time, context-aware assistance to agents for complex queries.",
-    "prototypePreview": {
-      "title": "Prototype concept",
-      "summary": "This blueprint expands on the existing AI-Assisted Support Ticketing project by adding a customer-facing self-service portal and enhancing agent-facing tools.",
-      "screens": []
-    },
-    "architecture": [
-      "User Interface: Customer Self-Service Portal (React, Next.js)",
-      "API Gateway: Secure API for external & internal access (AWS API Gateway)",
-      "Orchestration Layer: Intelligent Routing & Workflow Engine (Meridian Workflow Engine)",
-      "AI Reasoning Layer: LLM & Vector Database for context (OpenAI GPT-4, Pinecone/Weaviate)",
-      "Knowledge Management: Centralized Knowledge Base (Confluence, Internal DB)",
-      "Integration Layer: Ticketing System & Data Sources Connectors (Meridian Connect, Existing Ticketing Platform)",
-      "Data & Observability: Usage Analytics & Performance Monitoring (Snowflake, Datadog)"
-    ],
-    "techStack": [
-      "OpenAI GPT-4",
-      "Pinecone/Weaviate",
-      "React",
-      "Node.js",
-      "Python",
-      "Meridian Workflow Engine",
-      "Meridian Connect",
-      "Snowflake",
-      "Datadog"
-    ],
-    "financeModel": {
-      "capex": "$350k",
-      "opex": "$25k/mo",
-      "roi": "300%",
-      "paybackPeriod": "9 months",
-      "totalCost": "$650k",
-      "capexValue": 350000,
-      "opexMonthlyValue": 25000,
-      "roiValue": 300,
-      "paybackMonths": 9,
-      "totalCostYearOneValue": 650000
-    },
-    "scores": {
-      "feasibility": 85,
-      "businessImpact": 90,
-      "effort": 80,
-      "riskConflict": 75,
-      "total": 84
-    },
-    "conflicts": [
-      {
-        "id": "bp-ef8jqf1-timeline",
-        "type": "timeline",
-        "severity": "high",
-        "description": "Engineering sequencing overlaps with the infrastructure migration project, risking shared team contention in Q2-Q3.",
-        "resolution": "Phase foundation work after the migration milestone in August. Shared infrastructure team rotates in Q4.",
-        "affectedBlueprints": [
-          "bp-ef8jqf1",
-          "bp-pzg56nv"
-        ]
-      },
-      {
-        "id": "bp-pzg56nv-budget",
-        "type": "budget",
-        "severity": "high",
-        "description": "Running the first two blueprints in parallel would duplicate platform spend and exceed the Q2 remaining budget envelope of $3.3M.",
-        "resolution": "Share core platform services and consolidate vendor contracts. Sequence capex spend across quarters.",
-        "affectedBlueprints": [
-          "bp-ef8jqf1",
-          "bp-pzg56nv"
-        ]
-      }
-    ],
-    "scoringInsights": [
-      {
-        "dimension": "Budget",
-        "status": "positive",
-        "summary": "The estimated CAPEX of $350k is well within the remaining $850k CAPEX budget and the $3.3M total remaining budget.",
-        "score": 82
-      },
-      {
-        "dimension": "Project Pipeline",
-        "status": "neutral",
-        "summary": "Builds on 'AI-Assisted Support Ticketing' but requires additional engineering focus, which is already 87% allocated.",
-        "score": 65
-      },
-      {
-        "dimension": "Product Portfolio",
-        "status": "positive",
-        "summary": "Leverages the Meridian Workflow Engine and Meridian Connect for deeper automation, enhancing existing product value.",
-        "score": 78
-      },
-      {
-        "dimension": "Past Rejections",
-        "status": "positive",
-        "summary": "Aligns with the approved text-based AI assistant approach, avoiding the privacy issues of rejected voice assistants.",
-        "score": 85
-      },
-      {
-        "dimension": "Market Research",
-        "status": "positive",
-        "summary": "Directly addresses the 'AI-Native Automation' trend and the 'AI decision-assist layer' opportunity with high relevance.",
-        "score": 80
-      },
-      {
-        "dimension": "HR & Execution",
-        "status": "warning",
-        "summary": "Engineering capacity is high at 87% allocation, and there's a skill gap in AI/ML Engineering, potentially delaying execution.",
-        "score": 70
-      },
-      {
-        "dimension": "Legal & Compliance",
-        "status": "warning",
-        "summary": "Requires careful review for GDPR (DPIA, consent) and AI Ethics (human oversight, explainability, bias audit) given AI's role.",
-        "score": 70
-      }
-    ],
-    "timeline": [
-      {
-        "name": "Phase 1 — Foundation & Self-Service MVP",
-        "duration": "6 weeks",
-        "deliverables": [
-          "Finalize proj-001 integration",
-          "Basic FAQ chatbot deployment",
-          "Knowledge base synchronization"
-        ]
-      },
-      {
-        "name": "Phase 2 — Advanced Agent Assist & Portal",
-        "duration": "8 weeks",
-        "deliverables": [
-          "Agent-facing recommendation engine",
-          "Dynamic content expansion for self-service portal",
-          "User feedback mechanism implementation"
-        ]
-      },
-      {
-        "name": "Phase 3 — Continuous Improvement & Expansion",
-        "duration": "8 weeks",
-        "deliverables": [
-          "A/B testing for AI responses",
-          "Integration with additional internal data sources",
-          "Sentiment analysis for query prioritization"
-        ]
-      }
-    ],
-    "color": "var(--color-primary)",
-    "accentColor": "var(--color-primary)"
+{
+  "meta": {
+    "schemaVersion": 2,
+    "savedAt": "2026-04-22T00:00:00.000Z",
+    "prototypeFallbackSource": "data/interactive_prototype_mock_data.jsx"
   },
-  {
-    "id": "bp-pzg56nv",
-    "title": "Enterprise SaaS AI Customer Engagement Platform",
-    "department": "Operations",
-    "description": "This blueprint proposes adopting a leading SaaS platform specializing in AI-driven customer support, providing a comprehensive solution from intelligent chatbots to agent-assist tools. This approach minimizes internal development effort and leverages vendor expertise for rapid deployment and continuous updates.",
-    "prototypePreview": {
-      "title": "Prototype concept",
-      "summary": "This blueprint proposes adopting a leading SaaS platform specializing in AI-driven customer support, providing a comprehensive solution from intelligent chatbots to agent-assist tools.",
-      "screens": []
+  "conflicts": [
+    {
+      "id": "bp-ef8jqf1-timeline",
+      "type": "timeline",
+      "severity": "high",
+      "description": "Engineering sequencing overlaps with the infrastructure migration project, risking shared team contention in Q2-Q3.",
+      "resolution": "Phase foundation work after the migration milestone in August. Shared infrastructure team rotates in Q4.",
+      "affectedBlueprints": [
+        "bp-ef8jqf1",
+        "bp-pzg56nv"
+      ]
     },
-    "architecture": [
-      "User Interface: Omni-channel Customer Engagement Portal (Vendor SaaS UI)",
-      "SaaS Platform Core: AI-powered Chatbot & NLU Engine (Zendesk/ServiceNow AI)",
-      "Knowledge Management: Centralized & Dynamic Knowledge Base (Vendor KB)",
-      "Integration Layer: CRM & Ticketing System Connectors (Vendor API, Meridian Connect)",
-      "Data Sync & ETL: Secure Data Ingestion Pipeline (AWS Glue/Azure Data Factory)",
-      "Security & Compliance: Data Encryption & Access Control (Vendor Security Features, SSO)",
-      "Analytics & Reporting: Performance & User Behavior Dashboards (Vendor Analytics)"
-    ],
-    "techStack": [
-      "ServiceNow Customer Service Management (CSM)",
-      "Zendesk Suite with AI",
-      "Meridian Connect",
-      "SAML/OAuth (SSO)"
-    ],
-    "financeModel": {
-      "capex": "$180k",
-      "opex": "$45k/mo",
-      "roi": "250%",
-      "paybackPeriod": "15 months",
-      "totalCost": "$720k",
-      "capexValue": 180000,
-      "opexMonthlyValue": 45000,
-      "roiValue": 250,
-      "paybackMonths": 15,
-      "totalCostYearOneValue": 720000
+    {
+      "id": "bp-pzg56nv-budget",
+      "type": "budget",
+      "severity": "high",
+      "description": "Running the first two blueprints in parallel would duplicate platform spend and exceed the Q2 remaining budget envelope of $3.3M.",
+      "resolution": "Share core platform services and consolidate vendor contracts. Sequence capex spend across quarters.",
+      "affectedBlueprints": [
+        "bp-ef8jqf1",
+        "bp-pzg56nv"
+      ]
     },
-    "scores": {
-      "feasibility": 90,
-      "businessImpact": 80,
-      "effort": 65,
-      "riskConflict": 80,
-      "total": 80
+    {
+      "id": "bp-l8pinjh-headcount",
+      "type": "headcount",
+      "severity": "medium",
+      "description": "The third blueprint requires ML engineering capacity currently allocated to the AI ticketing project until July.",
+      "resolution": "Assign after July milestone or bring in contract ML engineer for initial phase.",
+      "affectedBlueprints": [
+        "bp-l8pinjh"
+      ]
+    }
+  ],
+  "blueprints": [
+    {
+      "id": "bp-ef8jqf1",
+      "title": "AI-Powered Self-Service & Agent Assist Expansion",
+      "department": "Engineering",
+      "description": "This blueprint expands on the existing AI-Assisted Support Ticketing project by adding a customer-facing self-service portal and enhancing agent-facing tools. It aims to deflect repetitive questions entirely through a knowledge base and provide real-time, context-aware assistance to agents for complex queries.",
+      "prototypePreview": {
+        "title": "Prototype concept",
+        "summary": "This blueprint expands on the existing AI-Assisted Support Ticketing project by adding a customer-facing self-service portal and enhancing agent-facing tools.",
+        "screens": []
+      },
+      "architecture": [
+        "User Interface: Customer Self-Service Portal (React, Next.js)",
+        "API Gateway: Secure API for external & internal access (AWS API Gateway)",
+        "Orchestration Layer: Intelligent Routing & Workflow Engine (Meridian Workflow Engine)",
+        "AI Reasoning Layer: LLM & Vector Database for context (OpenAI GPT-4, Pinecone/Weaviate)",
+        "Knowledge Management: Centralized Knowledge Base (Confluence, Internal DB)",
+        "Integration Layer: Ticketing System & Data Sources Connectors (Meridian Connect, Existing Ticketing Platform)",
+        "Data & Observability: Usage Analytics & Performance Monitoring (Snowflake, Datadog)"
+      ],
+      "techStack": [
+        "OpenAI GPT-4",
+        "Pinecone/Weaviate",
+        "React",
+        "Node.js",
+        "Python",
+        "Meridian Workflow Engine",
+        "Meridian Connect",
+        "Snowflake",
+        "Datadog"
+      ],
+      "financeModel": {
+        "capex": "$350k",
+        "opex": "$25k/mo",
+        "roi": "300%",
+        "paybackPeriod": "9 months",
+        "totalCost": "$650k",
+        "capexValue": 350000,
+        "opexMonthlyValue": 25000,
+        "roiValue": 300,
+        "paybackMonths": 9,
+        "totalCostYearOneValue": 650000
+      },
+      "scores": {
+        "feasibility": 85,
+        "businessImpact": 90,
+        "effort": 80,
+        "riskConflict": 75,
+        "total": 84
+      },
+      "conflictIds": [
+        "bp-ef8jqf1-timeline",
+        "bp-pzg56nv-budget"
+      ],
+      "scoringInsights": [
+        {
+          "dimension": "Budget",
+          "status": "positive",
+          "summary": "The estimated CAPEX of $350k is well within the remaining $850k CAPEX budget and the $3.3M total remaining budget.",
+          "score": 82
+        },
+        {
+          "dimension": "Project Pipeline",
+          "status": "neutral",
+          "summary": "Builds on 'AI-Assisted Support Ticketing' but requires additional engineering focus, which is already 87% allocated.",
+          "score": 65
+        },
+        {
+          "dimension": "Product Portfolio",
+          "status": "positive",
+          "summary": "Leverages the Meridian Workflow Engine and Meridian Connect for deeper automation, enhancing existing product value.",
+          "score": 78
+        },
+        {
+          "dimension": "Past Rejections",
+          "status": "positive",
+          "summary": "Aligns with the approved text-based AI assistant approach, avoiding the privacy issues of rejected voice assistants.",
+          "score": 85
+        },
+        {
+          "dimension": "Market Research",
+          "status": "positive",
+          "summary": "Directly addresses the 'AI-Native Automation' trend and the 'AI decision-assist layer' opportunity with high relevance.",
+          "score": 80
+        },
+        {
+          "dimension": "HR & Execution",
+          "status": "warning",
+          "summary": "Engineering capacity is high at 87% allocation, and there's a skill gap in AI/ML Engineering, potentially delaying execution.",
+          "score": 70
+        },
+        {
+          "dimension": "Legal & Compliance",
+          "status": "warning",
+          "summary": "Requires careful review for GDPR (DPIA, consent) and AI Ethics (human oversight, explainability, bias audit) given AI's role.",
+          "score": 70
+        }
+      ],
+      "timeline": [
+        {
+          "name": "Phase 1 - Foundation & Self-Service MVP",
+          "duration": "6 weeks",
+          "deliverables": [
+            "Finalize proj-001 integration",
+            "Basic FAQ chatbot deployment",
+            "Knowledge base synchronization"
+          ]
+        },
+        {
+          "name": "Phase 2 - Advanced Agent Assist & Portal",
+          "duration": "8 weeks",
+          "deliverables": [
+            "Agent-facing recommendation engine",
+            "Dynamic content expansion for self-service portal",
+            "User feedback mechanism implementation"
+          ]
+        },
+        {
+          "name": "Phase 3 - Continuous Improvement & Expansion",
+          "duration": "8 weeks",
+          "deliverables": [
+            "A/B testing for AI responses",
+            "Integration with additional internal data sources",
+            "Sentiment analysis for query prioritization"
+          ]
+        }
+      ],
+      "color": "var(--color-primary)",
+      "accentColor": "var(--color-primary)"
     },
-    "conflicts": [
-      {
-        "id": "bp-ef8jqf1-timeline",
-        "type": "timeline",
-        "severity": "high",
-        "description": "Engineering sequencing overlaps with the infrastructure migration project, risking shared team contention in Q2-Q3.",
-        "resolution": "Phase foundation work after the migration milestone in August. Shared infrastructure team rotates in Q4.",
-        "affectedBlueprints": [
-          "bp-ef8jqf1",
-          "bp-pzg56nv"
-        ]
+    {
+      "id": "bp-pzg56nv",
+      "title": "Enterprise SaaS AI Customer Engagement Platform",
+      "department": "Operations",
+      "description": "This blueprint proposes adopting a leading SaaS platform specializing in AI-driven customer support, providing a comprehensive solution from intelligent chatbots to agent-assist tools. This approach minimizes internal development effort and leverages vendor expertise for rapid deployment and continuous updates.",
+      "prototypePreview": {
+        "title": "Prototype concept",
+        "summary": "This blueprint proposes adopting a leading SaaS platform specializing in AI-driven customer support, providing a comprehensive solution from intelligent chatbots to agent-assist tools.",
+        "screens": []
       },
-      {
-        "id": "bp-pzg56nv-budget",
-        "type": "budget",
-        "severity": "high",
-        "description": "Running the first two blueprints in parallel would duplicate platform spend and exceed the Q2 remaining budget envelope of $3.3M.",
-        "resolution": "Share core platform services and consolidate vendor contracts. Sequence capex spend across quarters.",
-        "affectedBlueprints": [
-          "bp-ef8jqf1",
-          "bp-pzg56nv"
-        ]
-      }
-    ],
-    "scoringInsights": [
-      {
-        "dimension": "Budget",
-        "status": "positive",
-        "summary": "The estimated CAPEX of $180k is well within the remaining $850k CAPEX budget, and OPEX is manageable within overall spending.",
-        "score": 82
+      "architecture": [
+        "User Interface: Omni-channel Customer Engagement Portal (Vendor SaaS UI)",
+        "SaaS Platform Core: AI-powered Chatbot & NLU Engine (Zendesk/ServiceNow AI)",
+        "Knowledge Management: Centralized & Dynamic Knowledge Base (Vendor KB)",
+        "Integration Layer: CRM & Ticketing System Connectors (Vendor API, Meridian Connect)",
+        "Data Sync & ETL: Secure Data Ingestion Pipeline (AWS Glue/Azure Data Factory)",
+        "Security & Compliance: Data Encryption & Access Control (Vendor Security Features, SSO)",
+        "Analytics & Reporting: Performance & User Behavior Dashboards (Vendor Analytics)"
+      ],
+      "techStack": [
+        "ServiceNow Customer Service Management (CSM)",
+        "Zendesk Suite with AI",
+        "Meridian Connect",
+        "SAML/OAuth (SSO)"
+      ],
+      "financeModel": {
+        "capex": "$180k",
+        "opex": "$45k/mo",
+        "roi": "250%",
+        "paybackPeriod": "15 months",
+        "totalCost": "$720k",
+        "capexValue": 180000,
+        "opexMonthlyValue": 45000,
+        "roiValue": 250,
+        "paybackMonths": 15,
+        "totalCostYearOneValue": 720000
       },
-      {
-        "dimension": "Project Pipeline",
-        "status": "positive",
-        "summary": "This approach requires minimal direct involvement from the highly allocated Engineering team, freeing up internal resources.",
-        "score": 75
+      "scores": {
+        "feasibility": 90,
+        "businessImpact": 80,
+        "effort": 65,
+        "riskConflict": 80,
+        "total": 80
       },
-      {
-        "dimension": "Product Portfolio",
-        "status": "neutral",
-        "summary": "While it integrates, it doesn't directly leverage or enhance core Meridian products, potentially leading to some feature overlap.",
-        "score": 60
-      },
-      {
-        "dimension": "Past Rejections",
-        "status": "positive",
-        "summary": "Avoids the high-risk, high-cost, and compliance-heavy aspects of previously rejected large-scale internal platform builds.",
-        "score": 85
-      },
-      {
-        "dimension": "Market Research",
-        "status": "positive",
-        "summary": "Aligns with the 'Platform Consolidation' trend and leverages established AI capabilities from market leaders like ServiceNow.",
-        "score": 80
-      },
-      {
-        "dimension": "HR & Execution",
-        "status": "positive",
-        "summary": "Significantly reduces the burden on internal Engineering and ML teams, aligning well with current high allocation and skill gaps.",
-        "score": 85
-      },
-      {
-        "dimension": "Legal & Compliance",
-        "status": "warning",
-        "summary": "Requires thorough vendor assessment for SOC 2, GDPR, and AI Ethics compliance, and legal review of multi-year SaaS contracts.",
-        "score": 70
-      }
-    ],
-    "timeline": [
-      {
-        "name": "Phase 1 — Vendor Selection & Core Setup",
-        "duration": "8 weeks",
-        "deliverables": [
-          "RFP and vendor selection",
-          "Contract negotiation and legal review",
-          "Initial platform configuration and SSO integration"
-        ]
-      },
-      {
-        "name": "Phase 2 — Integration & Pilot Launch",
-        "duration": "10 weeks",
-        "deliverables": [
-          "Integration with existing ticketing/CRM via Meridian Connect",
-          "Pilot self-service chatbot for common FAQs",
-          "Initial data migration and knowledge base population"
-        ]
-      },
-      {
-        "name": "Phase 3 — Full Rollout & Optimization",
-        "duration": "8 weeks",
-        "deliverables": [
-          "Expand to full customer base",
-          "Onboard customer support agents to assist tools",
-          "Continuous training and performance monitoring"
-        ]
-      }
-    ],
-    "color": "var(--color-success)",
-    "accentColor": "var(--color-success)"
-  },
-  {
-    "id": "bp-l8pinjh",
-    "title": "Hybrid Knowledge Orchestration & Agent Augmentation",
-    "department": "Operations",
-    "description": "This blueprint empowers support agents with an intelligent knowledge orchestration layer, combining internal workflow automation (Meridian Workflow Engine) with a dedicated external AI knowledge management solution. It aims to reduce repetitive agent tasks by providing instant access to relevant information and automated response suggestions.",
-    "prototypePreview": {
-      "title": "Prototype concept",
-      "summary": "This blueprint empowers support agents with an intelligent knowledge orchestration layer, combining internal workflow automation (Meridian Workflow Engine) with a dedicated external AI knowledge management solution.",
-      "screens": []
+      "conflictIds": [
+        "bp-ef8jqf1-timeline",
+        "bp-pzg56nv-budget"
+      ],
+      "scoringInsights": [
+        {
+          "dimension": "Budget",
+          "status": "positive",
+          "summary": "The estimated CAPEX of $180k is well within the remaining $850k CAPEX budget, and OPEX is manageable within overall spending.",
+          "score": 82
+        },
+        {
+          "dimension": "Project Pipeline",
+          "status": "positive",
+          "summary": "This approach requires minimal direct involvement from the highly allocated Engineering team, freeing up internal resources.",
+          "score": 75
+        },
+        {
+          "dimension": "Product Portfolio",
+          "status": "neutral",
+          "summary": "While it integrates, it doesn't directly leverage or enhance core Meridian products, potentially leading to some feature overlap.",
+          "score": 60
+        },
+        {
+          "dimension": "Past Rejections",
+          "status": "positive",
+          "summary": "Avoids the high-risk, high-cost, and compliance-heavy aspects of previously rejected large-scale internal platform builds.",
+          "score": 85
+        },
+        {
+          "dimension": "Market Research",
+          "status": "positive",
+          "summary": "Aligns with the 'Platform Consolidation' trend and leverages established AI capabilities from market leaders like ServiceNow.",
+          "score": 80
+        },
+        {
+          "dimension": "HR & Execution",
+          "status": "positive",
+          "summary": "Significantly reduces the burden on internal Engineering and ML teams, aligning well with current high allocation and skill gaps.",
+          "score": 85
+        },
+        {
+          "dimension": "Legal & Compliance",
+          "status": "warning",
+          "summary": "Requires thorough vendor assessment for SOC 2, GDPR, and AI Ethics compliance, and legal review of multi-year SaaS contracts.",
+          "score": 70
+        }
+      ],
+      "timeline": [
+        {
+          "name": "Phase 1 - Vendor Selection & Core Setup",
+          "duration": "8 weeks",
+          "deliverables": [
+            "RFP and vendor selection",
+            "Contract negotiation and legal review",
+            "Initial platform configuration and SSO integration"
+          ]
+        },
+        {
+          "name": "Phase 2 - Integration & Pilot Launch",
+          "duration": "10 weeks",
+          "deliverables": [
+            "Integration with existing ticketing/CRM via Meridian Connect",
+            "Pilot self-service chatbot for common FAQs",
+            "Initial data migration and knowledge base population"
+          ]
+        },
+        {
+          "name": "Phase 3 - Full Rollout & Optimization",
+          "duration": "8 weeks",
+          "deliverables": [
+            "Expand to full customer base",
+            "Onboard customer support agents to assist tools",
+            "Continuous training and performance monitoring"
+          ]
+        }
+      ],
+      "color": "var(--color-success)",
+      "accentColor": "var(--color-success)"
     },
-    "architecture": [
-      "Agent Interface: Unified Agent Desktop (Existing Ticketing System UI + Custom Widget)",
-      "Orchestration Layer: Contextual Workflow Automation (Meridian Workflow Engine)",
-      "Knowledge AI Layer: External Knowledge Base & NLQ (Coveo, Algolia with AI)",
-      "Content Ingestion: Internal & External Data Connectors (Meridian Connect, Custom Scrapers)",
-      "Data Preprocessing: Document Parsing & Embedding (Python, SpaCy)",
-      "Search & Retrieval: Vector Search Index (Managed Service or open source like Milvus)",
-      "Analytics & Feedback: Agent Performance & Knowledge Gap Analysis (Meridian Analytics Hub)"
-    ],
-    "techStack": [
-      "Meridian Workflow Engine",
-      "Meridian Analytics Hub",
-      "Meridian Connect",
-      "Coveo/Algolia (with AI search)",
-      "Python",
-      "FastAPI",
-      "Milvus/Weaviate (if self-hosted)"
-    ],
-    "financeModel": {
-      "capex": "$280k",
-      "opex": "$20k/mo",
-      "roi": "275%",
-      "paybackPeriod": "10 months",
-      "totalCost": "$520k",
-      "capexValue": 280000,
-      "opexMonthlyValue": 20000,
-      "roiValue": 275,
-      "paybackMonths": 10,
-      "totalCostYearOneValue": 520000
-    },
-    "scores": {
-      "feasibility": 80,
-      "businessImpact": 85,
-      "effort": 75,
-      "riskConflict": 70,
-      "total": 79
-    },
-    "conflicts": [
-      {
-        "id": "bp-l8pinjh-headcount",
-        "type": "headcount",
-        "severity": "medium",
-        "description": "The third blueprint requires ML engineering capacity currently allocated to the AI ticketing project until July.",
-        "resolution": "Assign after July milestone or bring in contract ML engineer for initial phase.",
-        "affectedBlueprints": [
-          "bp-l8pinjh"
-        ]
-      }
-    ],
-    "scoringInsights": [
-      {
-        "dimension": "Budget",
-        "status": "positive",
-        "summary": "The estimated CAPEX of $280k is well within the remaining $850k CAPEX budget and Operations' unallocated contingency.",
-        "score": 82
+    {
+      "id": "bp-l8pinjh",
+      "title": "Hybrid Knowledge Orchestration & Agent Augmentation",
+      "department": "Operations",
+      "description": "This blueprint empowers support agents with an intelligent knowledge orchestration layer, combining internal workflow automation (Meridian Workflow Engine) with a dedicated external AI knowledge management solution. It aims to reduce repetitive agent tasks by providing instant access to relevant information and automated response suggestions.",
+      "prototypePreview": {
+        "title": "Prototype concept",
+        "summary": "This blueprint empowers support agents with an intelligent knowledge orchestration layer, combining internal workflow automation (Meridian Workflow Engine) with a dedicated external AI knowledge management solution.",
+        "screens": []
       },
-      {
-        "dimension": "Project Pipeline",
-        "status": "neutral",
-        "summary": "Requires some Engineering effort for integration and custom development, potentially impacting partially allocated teams like Strategy & Data.",
-        "score": 65
+      "architecture": [
+        "Agent Interface: Unified Agent Desktop (Existing Ticketing System UI + Custom Widget)",
+        "Orchestration Layer: Contextual Workflow Automation (Meridian Workflow Engine)",
+        "Knowledge AI Layer: External Knowledge Base & NLQ (Coveo, Algolia with AI)",
+        "Content Ingestion: Internal & External Data Connectors (Meridian Connect, Custom Scrapers)",
+        "Data Preprocessing: Document Parsing & Embedding (Python, SpaCy)",
+        "Search & Retrieval: Vector Search Index (Managed Service or open source like Milvus)",
+        "Analytics & Feedback: Agent Performance & Knowledge Gap Analysis (Meridian Analytics Hub)"
+      ],
+      "techStack": [
+        "Meridian Workflow Engine",
+        "Meridian Analytics Hub",
+        "Meridian Connect",
+        "Coveo/Algolia (with AI search)",
+        "Python",
+        "FastAPI",
+        "Milvus/Weaviate (if self-hosted)"
+      ],
+      "financeModel": {
+        "capex": "$280k",
+        "opex": "$20k/mo",
+        "roi": "275%",
+        "paybackPeriod": "10 months",
+        "totalCost": "$520k",
+        "capexValue": 280000,
+        "opexMonthlyValue": 20000,
+        "roiValue": 275,
+        "paybackMonths": 10,
+        "totalCostYearOneValue": 520000
       },
-      {
-        "dimension": "Product Portfolio",
-        "status": "positive",
-        "summary": "Deeply integrates with and enhances the Meridian Workflow Engine and Meridian Analytics Hub, strengthening the core platform.",
-        "score": 78
+      "scores": {
+        "feasibility": 80,
+        "businessImpact": 85,
+        "effort": 75,
+        "riskConflict": 70,
+        "total": 79
       },
-      {
-        "dimension": "Past Rejections",
-        "status": "positive",
-        "summary": "Avoids large-scale, high-risk internal builds, focusing instead on augmenting existing systems with targeted external AI.",
-        "score": 85
-      },
-      {
-        "dimension": "Market Research",
-        "status": "positive",
-        "summary": "Addresses the demand for AI decision-assist layers and leverages existing platform strengths, aligning with consolidation trends.",
-        "score": 80
-      },
-      {
-        "dimension": "HR & Execution",
-        "status": "neutral",
-        "summary": "Requires a mix of Engineering, Data, and Operations expertise, which might strain partially allocated resources but less than a full build.",
-        "score": 70
-      },
-      {
-        "dimension": "Legal & Compliance",
-        "status": "warning",
-        "summary": "Requires careful data privacy assessment (DPIA) for data shared with external AI KB and ensuring compliance with AI Ethics policies.",
-        "score": 70
-      }
-    ],
-    "timeline": [
-      {
-        "name": "Phase 1 — Knowledge Base & Integration MVP",
-        "duration": "7 weeks",
-        "deliverables": [
-          "Select and integrate external AI knowledge base",
-          "Synchronize core knowledge articles",
-          "Develop basic agent search widget for ticketing system"
-        ]
-      },
-      {
-        "name": "Phase 2 — Workflow Augmentation & Smart Suggestions",
-        "duration": "9 weeks",
-        "deliverables": [
-          "Implement Meridian Workflow for contextual routing",
-          "Add AI-powered response suggestions to agents",
-          "Establish agent feedback loop for content improvement"
-        ]
-      },
-      {
-        "name": "Phase 3 — Performance Tuning & Expansion",
-        "duration": "8 weeks",
-        "deliverables": [
-          "Optimize knowledge retrieval and suggestion accuracy",
-          "Expand content sources (e.g., product docs, community forums)",
-          "Integrate agent performance analytics into Analytics Hub"
-        ]
-      }
-    ],
-    "color": "var(--color-warning)",
-    "accentColor": "var(--color-warning)"
-  }
-]
+      "conflictIds": [
+        "bp-l8pinjh-headcount"
+      ],
+      "scoringInsights": [
+        {
+          "dimension": "Budget",
+          "status": "positive",
+          "summary": "The estimated CAPEX of $280k is well within the remaining $850k CAPEX budget and Operations' unallocated contingency.",
+          "score": 82
+        },
+        {
+          "dimension": "Project Pipeline",
+          "status": "neutral",
+          "summary": "Requires some Engineering effort for integration and custom development, potentially impacting partially allocated teams like Strategy & Data.",
+          "score": 65
+        },
+        {
+          "dimension": "Product Portfolio",
+          "status": "positive",
+          "summary": "Deeply integrates with and enhances the Meridian Workflow Engine and Meridian Analytics Hub, strengthening the core platform.",
+          "score": 78
+        },
+        {
+          "dimension": "Past Rejections",
+          "status": "positive",
+          "summary": "Avoids large-scale, high-risk internal builds, focusing instead on augmenting existing systems with targeted external AI.",
+          "score": 85
+        },
+        {
+          "dimension": "Market Research",
+          "status": "positive",
+          "summary": "Addresses the demand for AI decision-assist layers and leverages existing platform strengths, aligning with consolidation trends.",
+          "score": 80
+        },
+        {
+          "dimension": "HR & Execution",
+          "status": "neutral",
+          "summary": "Requires a mix of Engineering, Data, and Operations expertise, which might strain partially allocated resources but less than a full build.",
+          "score": 70
+        },
+        {
+          "dimension": "Legal & Compliance",
+          "status": "warning",
+          "summary": "Requires careful data privacy assessment (DPIA) for data shared with external AI KB and ensuring compliance with AI Ethics policies.",
+          "score": 70
+        }
+      ],
+      "timeline": [
+        {
+          "name": "Phase 1 - Knowledge Base & Integration MVP",
+          "duration": "7 weeks",
+          "deliverables": [
+            "Select and integrate external AI knowledge base",
+            "Synchronize core knowledge articles",
+            "Develop basic agent search widget for ticketing system"
+          ]
+        },
+        {
+          "name": "Phase 2 - Workflow Augmentation & Smart Suggestions",
+          "duration": "9 weeks",
+          "deliverables": [
+            "Implement Meridian Workflow for contextual routing",
+            "Add AI-powered response suggestions to agents",
+            "Establish agent feedback loop for content improvement"
+          ]
+        },
+        {
+          "name": "Phase 3 - Performance Tuning & Expansion",
+          "duration": "8 weeks",
+          "deliverables": [
+            "Optimize knowledge retrieval and suggestion accuracy",
+            "Expand content sources (e.g., product docs, community forums)",
+            "Integrate agent performance analytics into Analytics Hub"
+          ]
+        }
+      ],
+      "color": "var(--color-warning)",
+      "accentColor": "var(--color-warning)"
+    }
+  ]
+}

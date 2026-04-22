@@ -13,6 +13,8 @@ const COLOR_TOKENS = [
   { color: 'var(--color-success)', accentColor: 'var(--color-success)' },
   { color: 'var(--color-warning)', accentColor: 'var(--color-warning)' },
 ];
+const MOCK_BLUEPRINTS_SCHEMA_VERSION = 2;
+const MOCK_PROTOTYPE_FALLBACK_SOURCE = 'data/interactive_prototype_mock_data.jsx';
 
 function createId(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
@@ -119,6 +121,7 @@ Return ONLY a valid JSON object — no markdown, no explanation, no code fences.
       "title": "Concise blueprint name",
       "department": "Primary owning department",
       "description": "2-3 sentence executive summary grounded in the company context",
+      "prototypeSourceJsx": "Complete self-contained .jsx file source exporting a default React component. No markdown fences. Keep all state, mock data, and styles inside the file. Make it interactive with filters, tabs, panel state, or buttons. No external CDN links.",
       "prototypeCode": "Complete self-contained HTML document with inline CSS and vanilla JS demoing the solution UI. Dark theme (#0a0a0f background). No external CDN links. Realistic mock data for this specific use case. Interactive (tabs, buttons). At least 400px tall.",
       "architecture": ["Layer Name: Component description (Technology)"],
       "techStack": ["Specific tool or platform"],
@@ -131,7 +134,8 @@ Return ONLY a valid JSON object — no markdown, no explanation, no code fences.
 }
 
 ${BASE_RULES}
-6. prototypeCode must be a complete valid HTML document`;
+6. prototypeSourceJsx must be a valid self-contained .jsx file that exports a default React component
+7. prototypeCode, if included, must be a complete valid HTML document representing the same prototype`;
 
 // Gemini free tier has limited TPM — omit prototypeCode to stay under token budget (~3k tokens vs ~12k)
 const SYSTEM_PROMPT_GEMINI = `You are a senior enterprise solutions architect. Analyze the business problem and company data, then generate exactly 3 distinct solution blueprints.
@@ -143,6 +147,7 @@ Return ONLY a valid JSON object — no markdown, no explanation, no code fences.
       "title": "Concise blueprint name",
       "department": "Primary owning department",
       "description": "2-3 sentence executive summary grounded in the company context",
+      "prototypeSourceJsx": "Complete self-contained .jsx file source exporting a default React component. No markdown fences. Keep all state, mock data, and styles inside the file. Make it interactive with filters, tabs, panel state, or buttons. No external CDN links.",
       "architecture": ["Layer Name: Component description (Technology)"],
       "techStack": ["Specific tool or platform"],
       "financeModel": { "capexValue": 200000, "opexMonthlyValue": 15000, "roiValue": 250, "paybackMonths": 12 },
@@ -159,6 +164,7 @@ interface AIBlueprint {
   title: string;
   department: string;
   description: string;
+  prototypeSourceJsx?: string;
   prototypeCode?: string;
   architecture: string[];
   techStack: string[];
@@ -204,6 +210,7 @@ function normalizeAIBlueprint(raw: Partial<AIBlueprint>, index: number): AIBluep
     title: raw.title ?? `Solution Blueprint ${index + 1}`,
     department: raw.department ?? ['Engineering', 'Operations', 'Strategy & Data'][index % 3],
     description: raw.description ?? 'A strategic solution addressing the identified business problem.',
+    prototypeSourceJsx: raw.prototypeSourceJsx,
     prototypeCode: raw.prototypeCode,
     architecture: raw.architecture ?? ['Presentation Layer', 'API Layer', 'Business Logic', 'Data Layer', 'Infrastructure'],
     techStack: raw.techStack ?? ['React', 'Node.js', 'PostgreSQL', 'Redis', 'Kubernetes'],
@@ -263,6 +270,7 @@ function aiToBlueprintType(ai: AIBlueprint, index: number, ids: string[], confli
     prototypePreview: {
       title: 'Prototype concept',
       summary: ai.description.split('.')[0] + '.',
+      prototypeSourceJsx: ai.prototypeSourceJsx,
       prototypeCode: ai.prototypeCode,
       screens: [],
     },
@@ -278,6 +286,20 @@ function aiToBlueprintType(ai: AIBlueprint, index: number, ids: string[], confli
 }
 
 const MOCK_BLUEPRINTS_PATH = path.join(process.cwd(), 'data', 'mock-blueprints.json');
+
+interface StoredBlueprintWithConflictIds extends Omit<Blueprint, 'conflicts'> {
+  conflictIds: string[];
+}
+
+interface StoredBlueprintCache {
+  meta: {
+    schemaVersion: number;
+    savedAt: string;
+    prototypeFallbackSource: string;
+  };
+  conflicts: Conflict[];
+  blueprints: StoredBlueprintWithConflictIds[];
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -319,9 +341,87 @@ function isStoredBlueprint(value: unknown): value is Blueprint {
   );
 }
 
+function isStoredBlueprintWithConflictIds(value: unknown): value is StoredBlueprintWithConflictIds {
+  return (
+    isRecord(value) &&
+    typeof value.id === 'string' &&
+    typeof value.title === 'string' &&
+    typeof value.department === 'string' &&
+    typeof value.description === 'string' &&
+    typeof value.color === 'string' &&
+    typeof value.accentColor === 'string' &&
+    Array.isArray(value.architecture) &&
+    Array.isArray(value.techStack) &&
+    Array.isArray(value.timeline) &&
+    Array.isArray(value.scoringInsights) &&
+    Array.isArray(value.conflictIds) &&
+    isRecord(value.prototypePreview) &&
+    Array.isArray(value.prototypePreview.screens) &&
+    isRecord(value.financeModel) &&
+    typeof value.financeModel.capexValue === 'number' &&
+    typeof value.financeModel.opexMonthlyValue === 'number' &&
+    typeof value.financeModel.roiValue === 'number' &&
+    typeof value.financeModel.paybackMonths === 'number' &&
+    typeof value.financeModel.totalCostYearOneValue === 'number' &&
+    isRecord(value.scores) &&
+    typeof value.scores.feasibility === 'number' &&
+    typeof value.scores.businessImpact === 'number' &&
+    typeof value.scores.effort === 'number' &&
+    typeof value.scores.riskConflict === 'number' &&
+    typeof value.scores.total === 'number'
+  );
+}
+
+function isStoredBlueprintCache(value: unknown): value is StoredBlueprintCache {
+  return (
+    isRecord(value) &&
+    isRecord(value.meta) &&
+    typeof value.meta.schemaVersion === 'number' &&
+    typeof value.meta.savedAt === 'string' &&
+    typeof value.meta.prototypeFallbackSource === 'string' &&
+    Array.isArray(value.conflicts) &&
+    Array.isArray(value.blueprints) &&
+    value.blueprints.every(isStoredBlueprintWithConflictIds)
+  );
+}
+
+function toStoredBlueprintCache(blueprints: Blueprint[]): StoredBlueprintCache {
+  const conflictsById = new Map<string, Conflict>();
+
+  for (const blueprint of blueprints) {
+    for (const conflict of blueprint.conflicts) {
+      conflictsById.set(conflict.id, conflict);
+    }
+  }
+
+  return {
+    meta: {
+      schemaVersion: MOCK_BLUEPRINTS_SCHEMA_VERSION,
+      savedAt: new Date().toISOString(),
+      prototypeFallbackSource: MOCK_PROTOTYPE_FALLBACK_SOURCE,
+    },
+    conflicts: Array.from(conflictsById.values()),
+    blueprints: blueprints.map(({ conflicts, ...blueprint }) => ({
+      ...blueprint,
+      conflictIds: conflicts.map(conflict => conflict.id),
+    })),
+  };
+}
+
+function inflateStoredBlueprintCache(cache: StoredBlueprintCache): Blueprint[] {
+  const conflictsById = new Map(cache.conflicts.map(conflict => [conflict.id, conflict]));
+
+  return cache.blueprints.map(({ conflictIds, ...blueprint }) => ({
+    ...blueprint,
+    conflicts: conflictIds
+      .map(conflictId => conflictsById.get(conflictId))
+      .filter((conflict): conflict is Conflict => Boolean(conflict)),
+  }));
+}
+
 function saveMockBlueprints(blueprints: Blueprint[]) {
   try {
-    fs.writeFileSync(MOCK_BLUEPRINTS_PATH, JSON.stringify(blueprints, null, 2), 'utf-8');
+    fs.writeFileSync(MOCK_BLUEPRINTS_PATH, JSON.stringify(toStoredBlueprintCache(blueprints), null, 2), 'utf-8');
     console.log('[Mock] saved latest generated blueprints to mock-blueprints.json');
   } catch (err) {
     console.warn('[Mock] failed to save mock blueprints:', (err as Error).message);
@@ -332,6 +432,12 @@ function loadMockBlueprints(): Blueprint[] | null {
   try {
     const raw = fs.readFileSync(MOCK_BLUEPRINTS_PATH, 'utf-8');
     const parsed = JSON.parse(raw);
+
+    if (isStoredBlueprintCache(parsed)) {
+      const inflated = inflateStoredBlueprintCache(parsed);
+      return inflated.length > 0 ? inflated : null;
+    }
+
     if (!Array.isArray(parsed) || parsed.length === 0) return null;
 
     if (parsed.every(isStoredBlueprint)) {
