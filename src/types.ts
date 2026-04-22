@@ -61,6 +61,11 @@ export interface FinanceModel {
   totalCostYearOneValue: number;
 }
 
+export interface TechStackCategory {
+  category: string;
+  tools: string[];
+}
+
 export interface Scores {
   feasibility: number;
   businessImpact: number;
@@ -94,7 +99,7 @@ export interface Blueprint {
   description: string;
   prototypePreview: PrototypePreview;
   architecture: string[];
-  techStack: string[];
+  techStack: TechStackCategory[];
   financeModel: FinanceModel;
   scores: Scores;
   conflicts: Conflict[];
@@ -162,7 +167,7 @@ export interface MergeSuggestion {
 
 export interface TechnicalBlueprint {
   architecture: string[];
-  techStack: string[];
+  techStack: TechStackCategory[];
   phases: Phase[];
   integrations: string[];
 }

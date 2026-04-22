@@ -4,7 +4,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, ArrowUpRight, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import ArchitectureFlowchart from '../components/ArchitectureFlowchart';
 import PrototypePreview from '../components/PrototypePreview';
+import TechStackTable from '../components/TechStackTable';
 import { useApp } from '../context/AppContext';
 import { ROUTES } from '../lib/routes';
 import { Blueprint, ScoringInsight } from '../types';
@@ -162,85 +164,20 @@ function DetailModal({
                 )}
 
                 {activeTab === 'System Architecture' && (
-                  <div>
-                    <p className="text-[10px] font-mono uppercase tracking-wide mb-5" style={{ color: blueprint.accentColor }}>
-                      System architecture — data flow
-                    </p>
-                    <div className="flex flex-col items-stretch gap-0 max-w-2xl mx-auto">
-                      {blueprint.architecture.map((item, i) => {
-                        const colonIdx = item.indexOf(':');
-                        const layerLabel = colonIdx !== -1 ? item.slice(0, colonIdx).trim() : `Layer ${i + 1}`;
-                        const layerDetail = colonIdx !== -1 ? item.slice(colonIdx + 1).trim() : item;
-                        const isLast = i === blueprint.architecture.length - 1;
-                        return (
-                          <div key={item} className="flex flex-col items-stretch">
-                            <div
-                              className="flex items-start gap-3 p-3.5"
-                              style={{
-                                background: 'var(--color-bg-panel)',
-                                border: `1px solid ${blueprint.color}40`,
-                                borderLeft: `3px solid ${blueprint.color}`,
-                              }}
-                            >
-                              <div
-                                className="flex items-center justify-center text-[10px] font-mono font-bold shrink-0 mt-0.5"
-                                style={{
-                                  width: '22px',
-                                  height: '22px',
-                                  background: `${blueprint.color}25`,
-                                  color: blueprint.accentColor,
-                                  border: `1px solid ${blueprint.color}40`,
-                                }}
-                              >
-                                {String(i + 1).padStart(2, '0')}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-xs font-semibold mb-0.5 truncate" style={{ color: blueprint.accentColor }}>
-                                  {layerLabel}
-                                </p>
-                                <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                                  {layerDetail}
-                                </p>
-                              </div>
-                            </div>
-                            {!isLast && (
-                              <div className="flex flex-col items-center" style={{ height: '28px' }}>
-                                <div className="flex-1 w-px" style={{ background: `${blueprint.color}50` }} />
-                                <div
-                                  style={{
-                                    width: 0,
-                                    height: 0,
-                                    borderLeft: '6px solid transparent',
-                                    borderRight: '6px solid transparent',
-                                    borderTop: `7px solid ${blueprint.color}70`,
-                                  }}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <ArchitectureFlowchart
+                    architecture={blueprint.architecture}
+                    accentColor={blueprint.accentColor}
+                    color={blueprint.color}
+                    title="System architecture flow"
+                  />
                 )}
 
                 {activeTab === 'Tech Stack' && (
-                  <div>
-                    <p className="text-[10px] font-mono uppercase tracking-wide mb-4" style={{ color: blueprint.accentColor }}>
-                      Specific tools, platforms & vendors recommended
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {blueprint.techStack.map(tech => (
-                        <div
-                          key={tech}
-                          className="px-3 py-1.5 text-sm"
-                          style={{ background: 'var(--color-bg-panel)', border: `1px solid ${blueprint.color}40`, color: 'var(--color-text-primary)' }}
-                        >
-                          {tech}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <TechStackTable
+                    techStack={blueprint.techStack}
+                    accentColor={blueprint.accentColor}
+                    title="Categorized tools, platforms, and vendors"
+                  />
                 )}
 
                 {activeTab === 'Finance Model' && (

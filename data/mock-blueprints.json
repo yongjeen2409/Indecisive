@@ -1,6 +1,6 @@
 {
   "meta": {
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "savedAt": "2026-04-22T00:00:00.000Z",
     "prototypeFallbackSource": "data/interactive_prototype_mock_data.jsx"
   },
@@ -59,15 +59,41 @@
         "Data & Observability: Usage Analytics & Performance Monitoring (Snowflake, Datadog)"
       ],
       "techStack": [
-        "OpenAI GPT-4",
-        "Pinecone/Weaviate",
-        "React",
-        "Node.js",
-        "Python",
-        "Meridian Workflow Engine",
-        "Meridian Connect",
-        "Snowflake",
-        "Datadog"
+        {
+          "category": "Frontend / Experience",
+          "tools": [
+            "React",
+            "Next.js"
+          ]
+        },
+        {
+          "category": "Application services",
+          "tools": [
+            "Node.js",
+            "Python",
+            "Meridian Workflow Engine"
+          ]
+        },
+        {
+          "category": "AI and retrieval",
+          "tools": [
+            "OpenAI GPT-4",
+            "Pinecone/Weaviate"
+          ]
+        },
+        {
+          "category": "Integrations and data",
+          "tools": [
+            "Meridian Connect",
+            "Snowflake"
+          ]
+        },
+        {
+          "category": "Observability",
+          "tools": [
+            "Datadog"
+          ]
+        }
       ],
       "financeModel": {
         "capex": "$350k",
@@ -188,10 +214,25 @@
         "Analytics & Reporting: Performance & User Behavior Dashboards (Vendor Analytics)"
       ],
       "techStack": [
-        "ServiceNow Customer Service Management (CSM)",
-        "Zendesk Suite with AI",
-        "Meridian Connect",
-        "SAML/OAuth (SSO)"
+        {
+          "category": "Customer platform",
+          "tools": [
+            "ServiceNow Customer Service Management (CSM)",
+            "Zendesk Suite with AI"
+          ]
+        },
+        {
+          "category": "Identity and access",
+          "tools": [
+            "SAML/OAuth (SSO)"
+          ]
+        },
+        {
+          "category": "Integration layer",
+          "tools": [
+            "Meridian Connect"
+          ]
+        }
       ],
       "financeModel": {
         "capex": "$180k",
@@ -312,13 +353,28 @@
         "Analytics & Feedback: Agent Performance & Knowledge Gap Analysis (Meridian Analytics Hub)"
       ],
       "techStack": [
-        "Meridian Workflow Engine",
-        "Meridian Analytics Hub",
-        "Meridian Connect",
-        "Coveo/Algolia (with AI search)",
-        "Python",
-        "FastAPI",
-        "Milvus/Weaviate (if self-hosted)"
+        {
+          "category": "Workflow and analytics",
+          "tools": [
+            "Meridian Workflow Engine",
+            "Meridian Analytics Hub"
+          ]
+        },
+        {
+          "category": "Search and knowledge AI",
+          "tools": [
+            "Coveo/Algolia (with AI)",
+            "Milvus/Weaviate (if self-hosted)"
+          ]
+        },
+        {
+          "category": "API and data processing",
+          "tools": [
+            "Meridian Connect",
+            "Python",
+            "FastAPI"
+          ]
+        }
       ],
       "financeModel": {
         "capex": "$280k",

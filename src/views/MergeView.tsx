@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, GitMerge, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../context/AppContext';
+import { flattenTechStack } from '../lib/techStack';
 import { ROUTES } from '../lib/routes';
 
 function EscalationCard({
@@ -214,7 +215,7 @@ export default function MergeView() {
                             {record.blueprint.description}
                           </p>
                           <div className="flex flex-wrap gap-2">
-                            {record.blueprint.techStack.slice(0, 3).map(item => (
+                            {flattenTechStack(record.blueprint.techStack).slice(0, 3).map(item => (
                               <span
                                 key={item}
                                 className="text-[11px] px-2 py-0.5"

@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Code2, Copy, Download, FileText, Printer, Sparkles, Wallet } from 'lucide-react';
+import ArchitectureFlowchart from '../components/ArchitectureFlowchart';
+import TechStackTable from '../components/TechStackTable';
 import { useApp } from '../context/AppContext';
 
 function TypewriterText({ text, delay = 0 }: { text: string; delay?: number }) {
@@ -190,40 +192,20 @@ export default function OutputPage() {
           {activeTab === 'technical' ? (
             <div className="space-y-6">
               <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
-                <p className="text-xs font-mono mb-4" style={{ color: 'var(--color-accent)' }}>
-                  ARCHITECTURE LAYERS
-                </p>
-                <div className="grid md:grid-cols-2 gap-2">
-                  {mergedStrategy.technicalBlueprint.architecture.map(item => (
-                    <div
-                      key={item}
-                      className="flex items-center gap-2 p-2.5"
-                      style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
-                    >
-                      <div className="w-1.5 h-1.5" style={{ background: 'var(--color-accent)' }} />
-                      <span className="text-xs" style={{ color: 'var(--color-text-primary)' }}>
-                        {item}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <ArchitectureFlowchart
+                  architecture={mergedStrategy.technicalBlueprint.architecture}
+                  accentColor="var(--color-accent)"
+                  color="var(--color-accent)"
+                  title="Architecture flowchart"
+                />
               </div>
 
               <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
-                <p className="text-xs font-mono mb-4" style={{ color: 'var(--color-primary-bright)' }}>
-                  TECH STACK
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {mergedStrategy.technicalBlueprint.techStack.map(item => (
-                    <span
-                      key={item}
-                      className="px-3 py-1.5 text-xs font-mono"
-                      style={{ background: 'rgba(37, 99, 235, 0.15)', border: '1px solid rgba(37, 99, 235, 0.3)', color: 'var(--color-primary-glow)' }}
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
+                <TechStackTable
+                  techStack={mergedStrategy.technicalBlueprint.techStack}
+                  accentColor="var(--color-primary-bright)"
+                  title="Technical stack by category"
+                />
               </div>
 
               <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>

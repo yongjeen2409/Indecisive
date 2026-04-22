@@ -14,8 +14,10 @@ import {
   ScoringInsight,
   Submission,
   TechnicalBlueprint,
+  TechStackCategory,
   User,
 } from '../types';
+import { flattenTechStack, mergeTechStackCategories } from '../lib/techStack';
 
 const TODAY = '2026-04-21';
 
@@ -195,6 +197,13 @@ function buildPrototypeScreens(theme: ProblemTheme, label: string, blueprintTitl
   ];
 }
 
+function buildTechStackCategories(categories: Array<{ category: string; tools: string[] }>): TechStackCategory[] {
+  return categories.map(category => ({
+    category: category.category,
+    tools: category.tools,
+  }));
+}
+
 function buildConflicts(ids: string[], theme: ProblemTheme): Conflict[] {
   return [
     {
@@ -343,7 +352,11 @@ export function createDemoBlueprints(problemStatement: string): Blueprint[] {
         screens: buildPrototypeScreens(theme, 'hub', 'orchestration hub'),
       },
       architecture: ['Event-driven service backbone', 'Unified dependency graph', ...theme.architectureFocus],
-      techStack: ['React workspace', 'Workflow rules engine', ...theme.technologyFocus],
+      techStack: buildTechStackCategories([
+        { category: 'Experience layer', tools: ['React workspace'] },
+        { category: 'Workflow orchestration', tools: ['Workflow rules engine', 'workflow orchestration'] },
+        { category: 'Platform foundation', tools: ['Kubernetes', 'API gateway'] },
+      ]),
       financeModel: buildFinanceModel(210000, 18000, 228, 11),
       scores: buildScores(76, 88, 69, 63),
       conflicts: conflicts.filter(conflict => conflict.affectedBlueprints.includes(ids[0])),
@@ -362,7 +375,11 @@ export function createDemoBlueprints(problemStatement: string): Blueprint[] {
         screens: buildPrototypeScreens(theme, 'intelligence', 'intelligence layer'),
       },
       architecture: ['Semantic decision layer', 'Shared context retrieval', ...theme.architectureFocus],
-      techStack: ['Decision graph service', 'Analytics workspace', ...theme.technologyFocus],
+      techStack: buildTechStackCategories([
+        { category: 'Decision intelligence', tools: ['Decision graph service', 'analytics workspace'] },
+        { category: 'Data transformation', tools: ['dbt', 'stream processing'] },
+        { category: 'Presentation layer', tools: ['Executive insight cockpit'] },
+      ]),
       financeModel: buildFinanceModel(175000, 22000, 276, 10),
       scores: buildScores(82, 92, 73, 72),
       conflicts: conflicts.filter(conflict => conflict.affectedBlueprints.includes(ids[1])),
@@ -381,7 +398,11 @@ export function createDemoBlueprints(problemStatement: string): Blueprint[] {
         screens: buildPrototypeScreens(theme, 'studio', 'enablement studio'),
       },
       architecture: ['Template registry', 'Operational service catalog', ...theme.architectureFocus],
-      techStack: ['Internal portal', 'Automation toolkit', ...theme.technologyFocus],
+      techStack: buildTechStackCategories([
+        { category: 'Portal experience', tools: ['Internal portal', 'Retool'] },
+        { category: 'Automation layer', tools: ['Automation toolkit', 'n8n'] },
+        { category: 'Governance and audit', tools: ['audit logging'] },
+      ]),
       financeModel: buildFinanceModel(90000, 12000, 192, 7),
       scores: buildScores(89, 75, 86, 79),
       conflicts: conflicts.filter(conflict => conflict.affectedBlueprints.includes(ids[2])),
@@ -451,7 +472,7 @@ export function createMergeSuggestions(queue: EscalationRecord[]): MergeSuggesti
       const left = pending[index].blueprint;
       const right = pending[nextIndex].blueprint;
       const architecture = clamp(55 + overlapScore(left.architecture, right.architecture), 58, 96);
-      const techStack = clamp(52 + overlapScore(left.techStack, right.techStack), 57, 95);
+      const techStack = clamp(52 + overlapScore(flattenTechStack(left.techStack), flattenTechStack(right.techStack)), 57, 95);
       const timeline = clamp(
         Math.round((left.scores.feasibility + right.scores.feasibility) / 2 - Math.abs(left.scores.effort - right.scores.effort) / 2),
         56,
@@ -489,7 +510,7 @@ export function createMergeSuggestions(queue: EscalationRecord[]): MergeSuggesti
 
 function buildMergedTechnicalBlueprint(sourceBlueprints: Blueprint[]): TechnicalBlueprint {
   const architecture = Array.from(new Set(sourceBlueprints.flatMap(blueprint => blueprint.architecture))).slice(0, 6);
-  const techStack = Array.from(new Set(sourceBlueprints.flatMap(blueprint => blueprint.techStack))).slice(0, 7);
+  const techStack = mergeTechStackCategories(sourceBlueprints.map(blueprint => blueprint.techStack));
   const integrations = [
     'Jira decision workflow',
     'Confluence publishing',

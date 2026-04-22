@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import OpenAI from 'openai';
-import { Blueprint, Conflict, Phase, FinanceModel, Scores, ScoringInsight } from '../../../types';
+import { Blueprint, Conflict, Phase, FinanceModel, Scores, ScoringInsight, TechStackCategory } from '../../../types';
+import { normalizeTechStack } from '../../../lib/techStack';
 
 export const maxDuration = 300;
 const DEFAULT_ZAI_BASE_URL = 'https://api.z.ai/api/paas/v4/';
@@ -13,7 +14,7 @@ const COLOR_TOKENS = [
   { color: 'var(--color-success)', accentColor: 'var(--color-success)' },
   { color: 'var(--color-warning)', accentColor: 'var(--color-warning)' },
 ];
-const MOCK_BLUEPRINTS_SCHEMA_VERSION = 2;
+const MOCK_BLUEPRINTS_SCHEMA_VERSION = 3;
 const MOCK_PROTOTYPE_FALLBACK_SOURCE = 'data/interactive_prototype_mock_data.jsx';
 
 function createId(prefix: string) {
@@ -107,10 +108,11 @@ const SCORING_INSIGHTS_SCHEMA = `[
 
 const BASE_RULES = `Rules:
 1. All 3 blueprints must take fundamentally different approaches (build vs buy, AI-native vs incremental, internal vs external)
-2. Finance numbers grounded in company budget data — capex $50k-$800k range
+2. Finance numbers grounded in company budget data - capex $50k-$800k range
 3. Architecture must have 5-7 layers in top-to-bottom flow order, each formatted as "Layer Name: description (Technology)"
-4. Timeline must have exactly 3 phases
-5. scoringInsights must have exactly 7 items in the order shown — status must be "positive", "neutral", or "warning"`;
+4. techStack must be grouped into 3-6 meaningful categories, each with a specific category name and 1-4 concrete tools
+5. Timeline must have exactly 3 phases
+6. scoringInsights must have exactly 7 items in the order shown - status must be "positive", "neutral", or "warning"`;
 
 const SYSTEM_PROMPT = `You are a senior enterprise solutions architect. Analyze the business problem and company data, then generate exactly 3 distinct solution blueprints.
 
@@ -124,7 +126,7 @@ Return ONLY a valid JSON object — no markdown, no explanation, no code fences.
       "prototypeSourceJsx": "Complete self-contained .jsx file source exporting a default React component. No markdown fences. Keep all state, mock data, and styles inside the file. Make it interactive with filters, tabs, panel state, or buttons. No external CDN links.",
       "prototypeCode": "Complete self-contained HTML document with inline CSS and vanilla JS demoing the solution UI. Dark theme (#0a0a0f background). No external CDN links. Realistic mock data for this specific use case. Interactive (tabs, buttons). At least 400px tall.",
       "architecture": ["Layer Name: Component description (Technology)"],
-      "techStack": ["Specific tool or platform"],
+      "techStack": [{ "category": "Frontend / Experience", "tools": ["React", "Next.js"] }],
       "financeModel": { "capexValue": 200000, "opexMonthlyValue": 15000, "roiValue": 250, "paybackMonths": 12 },
       "timeline": [{ "name": "Phase 1 — Foundation", "duration": "4 weeks", "deliverables": ["Item 1", "Item 2", "Item 3"] }],
       "scores": { "feasibility": 80, "businessImpact": 85, "effort": 75, "riskConflict": 70 },
@@ -134,8 +136,8 @@ Return ONLY a valid JSON object — no markdown, no explanation, no code fences.
 }
 
 ${BASE_RULES}
-6. prototypeSourceJsx must be a valid self-contained .jsx file that exports a default React component
-7. prototypeCode, if included, must be a complete valid HTML document representing the same prototype`;
+7. prototypeSourceJsx must be a valid self-contained .jsx file that exports a default React component
+8. prototypeCode, if included, must be a complete valid HTML document representing the same prototype`;
 
 // Gemini free tier has limited TPM — omit prototypeCode to stay under token budget (~3k tokens vs ~12k)
 const SYSTEM_PROMPT_GEMINI = `You are a senior enterprise solutions architect. Analyze the business problem and company data, then generate exactly 3 distinct solution blueprints.
@@ -149,7 +151,7 @@ Return ONLY a valid JSON object — no markdown, no explanation, no code fences.
       "description": "2-3 sentence executive summary grounded in the company context",
       "prototypeSourceJsx": "Complete self-contained .jsx file source exporting a default React component. No markdown fences. Keep all state, mock data, and styles inside the file. Make it interactive with filters, tabs, panel state, or buttons. No external CDN links.",
       "architecture": ["Layer Name: Component description (Technology)"],
-      "techStack": ["Specific tool or platform"],
+      "techStack": [{ "category": "Frontend / Experience", "tools": ["React", "Next.js"] }],
       "financeModel": { "capexValue": 200000, "opexMonthlyValue": 15000, "roiValue": 250, "paybackMonths": 12 },
       "timeline": [{ "name": "Phase 1 — Foundation", "duration": "4 weeks", "deliverables": ["Item 1", "Item 2", "Item 3"] }],
       "scores": { "feasibility": 80, "businessImpact": 85, "effort": 75, "riskConflict": 70 },
@@ -167,7 +169,7 @@ interface AIBlueprint {
   prototypeSourceJsx?: string;
   prototypeCode?: string;
   architecture: string[];
-  techStack: string[];
+  techStack: TechStackCategory[];
   financeModel: { capexValue: number; opexMonthlyValue: number; roiValue: number; paybackMonths: number };
   timeline: Phase[];
   scores: { feasibility: number; businessImpact: number; effort: number; riskConflict: number };
@@ -195,6 +197,7 @@ function extractJSON(text: string): string {
 function normalizeAIBlueprint(raw: Partial<AIBlueprint>, index: number): AIBlueprint {
   const scores = raw.scores ?? { feasibility: 75, businessImpact: 78, effort: 70, riskConflict: 65 };
   const financeModel = raw.financeModel ?? { capexValue: 200000, opexMonthlyValue: 18000, roiValue: 200, paybackMonths: 12 };
+  const normalizedTechStack = normalizeTechStack(raw.techStack, 'Core stack');
 
   const defaultInsights: ScoringInsight[] = [
     { dimension: 'Budget', status: 'neutral', summary: 'Within acceptable budget range for strategic initiative', score: 72 },
@@ -213,7 +216,13 @@ function normalizeAIBlueprint(raw: Partial<AIBlueprint>, index: number): AIBluep
     prototypeSourceJsx: raw.prototypeSourceJsx,
     prototypeCode: raw.prototypeCode,
     architecture: raw.architecture ?? ['Presentation Layer', 'API Layer', 'Business Logic', 'Data Layer', 'Infrastructure'],
-    techStack: raw.techStack ?? ['React', 'Node.js', 'PostgreSQL', 'Redis', 'Kubernetes'],
+    techStack: normalizedTechStack.length > 0
+      ? normalizedTechStack
+      : [
+          { category: 'Experience layer', tools: ['React', 'Next.js'] },
+          { category: 'Application layer', tools: ['Node.js', 'Python'] },
+          { category: 'Data and infrastructure', tools: ['PostgreSQL', 'Redis', 'Kubernetes'] },
+        ],
     financeModel,
     timeline: raw.timeline ?? [
       { name: 'Phase 1 — Foundation', duration: '4 weeks', deliverables: ['Initial setup', 'Team alignment', 'Architecture approved'] },
@@ -305,6 +314,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function isTechStackCategory(value: unknown): value is TechStackCategory {
+  return (
+    isRecord(value) &&
+    typeof value.category === 'string' &&
+    Array.isArray(value.tools) &&
+    value.tools.every(tool => typeof tool === 'string')
+  );
+}
+
+function isTechStackCategoryArray(value: unknown): value is TechStackCategory[] {
+  return Array.isArray(value) && value.every(isTechStackCategory);
+}
+
 function isStoredBlueprint(value: unknown): value is Blueprint {
   if (!isRecord(value)) return false;
 
@@ -320,7 +342,7 @@ function isStoredBlueprint(value: unknown): value is Blueprint {
     typeof value.color === 'string' &&
     typeof value.accentColor === 'string' &&
     Array.isArray(value.architecture) &&
-    Array.isArray(value.techStack) &&
+    isTechStackCategoryArray(value.techStack) &&
     Array.isArray(value.timeline) &&
     Array.isArray(value.conflicts) &&
     Array.isArray(value.scoringInsights) &&
@@ -413,6 +435,7 @@ function inflateStoredBlueprintCache(cache: StoredBlueprintCache): Blueprint[] {
 
   return cache.blueprints.map(({ conflictIds, ...blueprint }) => ({
     ...blueprint,
+    techStack: normalizeTechStack(blueprint.techStack, 'Core stack'),
     conflicts: conflictIds
       .map(conflictId => conflictsById.get(conflictId))
       .filter((conflict): conflict is Conflict => Boolean(conflict)),
@@ -486,14 +509,13 @@ async function callZAI(userContent: string): Promise<string> {
     return content;
   }
 
-  const data = Array.isArray(content)
-    ? content
-        .map(part => {
-          if (isRecord(part) && typeof part.text === 'string') return part.text;
-          return '';
-        })
-        .join('')
-    : '';
+  const contentParts: unknown[] = Array.isArray(content) ? content : [];
+  const data = contentParts
+    .map(part => {
+      if (isRecord(part) && typeof part.text === 'string') return part.text;
+      return '';
+    })
+    .join('');
   console.log('[ZAI] response received');
   return data;
 }
