@@ -1,6 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowRight,
   BarChart3,
@@ -13,8 +14,10 @@ import {
   Users,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import BlueprintDetailModal from '../components/BlueprintDetailModal';
 import { useApp } from '../context/AppContext';
 import { ROUTES, getLatestStaffRoute, isDeptHead, isDirector } from '../lib/routes';
+import { EscalationRecord } from '../types';
 
 export default function Dashboard() {
   const {
@@ -27,8 +30,11 @@ export default function Dashboard() {
     pendingEscalations,
     mergeSuggestions,
     mergedStrategy,
+    approveToDirector,
   } = useApp();
   const router = useRouter();
+  const [modalRecord, setModalRecord] = useState<EscalationRecord | null>(null);
+  const [directorModalRecord, setDirectorModalRecord] = useState<EscalationRecord | null>(null);
 
   if (!currentUser) {
     return null;
@@ -132,7 +138,7 @@ export default function Dashboard() {
                   {staffEscalations.slice(0, 4).map(record => (
                     <button
                       key={record.id}
-                      onClick={() => router.push(ROUTES.review)}
+                      onClick={() => setModalRecord(record)}
                       className="w-full p-4 text-left transition-all hover:border-blue-500/30"
                       style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
                     >
@@ -242,7 +248,7 @@ export default function Dashboard() {
                     {pendingEscalations.slice(0, 4).map(record => (
                       <button
                         key={record.id}
-                        onClick={() => router.push(ROUTES.merge)}
+                        onClick={() => setDirectorModalRecord(record)}
                         className="w-full p-4 text-left transition-all hover:border-blue-500/30"
                         style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
                       >
@@ -468,6 +474,26 @@ export default function Dashboard() {
           </>
         )}
       </div>
+
+      <AnimatePresence>
+        {modalRecord && (
+          <BlueprintDetailModal
+            record={modalRecord}
+            isForwarded={modalRecord.status !== 'pending'}
+            onApprove={() => approveToDirector(modalRecord.id)}
+            onClose={() => setModalRecord(null)}
+          />
+        )}
+        {directorModalRecord && (
+          <BlueprintDetailModal
+            record={directorModalRecord}
+            isForwarded={false}
+            onApprove={() => { setDirectorModalRecord(null); router.push(ROUTES.merge); }}
+            onClose={() => setDirectorModalRecord(null)}
+            approveLabel="Open Merge View"
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

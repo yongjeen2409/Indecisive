@@ -431,45 +431,7 @@ function createEscalationRecord(submittedBy: User, problemStatement: string, blu
 }
 
 export function createSeedEscalationQueue(): EscalationRecord[] {
-  return [
-    // Director queue — already approved by dept head
-    createEscalationRecord(
-      TEAM_SUBMITTERS[0],
-      'Our legacy delivery model is slowing releases and causing risk during major platform changes.',
-      0,
-      'Approved by department head after scoring review.',
-      'head_to_director',
-    ),
-    createEscalationRecord(
-      TEAM_SUBMITTERS[2],
-      'Business teams are making decisions with conflicting data and no shared view of constraints.',
-      1,
-      'Approved for merge with any cross-functional intelligence initiative.',
-      'head_to_director',
-    ),
-    createEscalationRecord(
-      TEAM_SUBMITTERS[1],
-      'Engineering is overloaded with manual internal requests, and operations needs a governed self-serve option.',
-      2,
-      'Approved — needs director sign-off for shared enablement capacity.',
-      'head_to_director',
-    ),
-    // Dept head queue — pending review
-    createEscalationRecord(
-      TEAM_SUBMITTERS[0],
-      'Customer onboarding takes 3 weeks due to manual document verification and no automated validation pipeline.',
-      1,
-      'Requesting dept head review on the intelligence layer approach.',
-      'staff_to_head',
-    ),
-    createEscalationRecord(
-      TEAM_SUBMITTERS[1],
-      'Our reporting infrastructure cannot keep pace with stakeholder demand for real-time operational metrics.',
-      2,
-      'Escalated after scoring — enablement studio ranked highest for our team capacity.',
-      'staff_to_head',
-    ),
-  ];
+  return [];
 }
 
 function overlapScore(left: string[], right: string[]) {

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle, ChevronDown, ChevronUp, SendHorizonal } from 'lucide-react';
+import BlueprintDetailModal from '../components/BlueprintDetailModal';
 import { useApp } from '../context/AppContext';
 import { EscalationRecord } from '../types';
 
@@ -14,12 +15,8 @@ function ScorePill({ label, value }: { label: string; value: number }) {
       className="p-3 text-center"
       style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
     >
-      <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>
-        {label}
-      </p>
-      <p className="font-display font-bold text-lg" style={{ color }}>
-        {value}
-      </p>
+      <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>{label}</p>
+      <p className="font-display font-bold text-lg" style={{ color }}>{value}</p>
     </div>
   );
 }
@@ -28,10 +25,12 @@ function EscalationCard({
   record,
   isForwarded,
   onApprove,
+  onViewDetails,
 }: {
   record: EscalationRecord;
   isForwarded: boolean;
   onApprove: () => void;
+  onViewDetails: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const { blueprint, submission, submittedBy } = record;
@@ -45,7 +44,7 @@ function EscalationCard({
       style={{
         background: isForwarded ? 'var(--color-bg-panel)' : 'var(--color-bg-card)',
         border: `1px solid ${isForwarded ? 'rgba(16,185,129,0.25)' : 'var(--color-border)'}`,
-        opacity: isForwarded ? 0.75 : 1,
+        opacity: isForwarded ? 0.8 : 1,
       }}
     >
       <div className="p-5">
@@ -89,9 +88,7 @@ function EscalationCard({
               <p className="font-display font-bold text-2xl" style={{ color: blueprint.color }}>
                 {blueprint.scores.total}
               </p>
-              <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-                total score
-              </p>
+              <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>total score</p>
             </div>
             <button
               onClick={() => setExpanded(!expanded)}
@@ -112,84 +109,24 @@ function EscalationCard({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div
-              className="px-5 pb-5 space-y-5"
-              style={{ borderTop: '1px solid var(--color-border)' }}
-            >
+            <div className="px-5 pb-5 space-y-4" style={{ borderTop: '1px solid var(--color-border)' }}>
               <div
                 className="p-4 mt-4"
                 style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
               >
-                <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                  Problem statement
-                </p>
+                <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>Problem statement</p>
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
                   {submission.problemStatement}
                 </p>
               </div>
 
               <div>
-                <p className="text-xs font-medium mb-3" style={{ color: 'var(--color-text-muted)' }}>
-                  Score breakdown
-                </p>
+                <p className="text-xs font-medium mb-3" style={{ color: 'var(--color-text-muted)' }}>Score breakdown</p>
                 <div className="grid grid-cols-4 gap-2">
                   <ScorePill label="Feasibility" value={blueprint.scores.feasibility} />
                   <ScorePill label="Impact" value={blueprint.scores.businessImpact} />
                   <ScorePill label="Effort" value={blueprint.scores.effort} />
                   <ScorePill label="Risk" value={blueprint.scores.riskConflict} />
-                </div>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs font-medium mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                    Architecture layers
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {blueprint.architecture.map(item => (
-                      <span
-                        key={item}
-                        className="text-xs px-2 py-1"
-                        style={{
-                          background: 'var(--color-bg-panel)',
-                          border: '1px solid var(--color-border)',
-                          color: 'var(--color-text-secondary)',
-                        }}
-                      >
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                    Finance snapshot
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { label: 'Capex', value: blueprint.financeModel.capex },
-                      { label: 'Opex', value: blueprint.financeModel.opex },
-                      { label: 'ROI', value: blueprint.financeModel.roi },
-                      { label: 'Payback', value: blueprint.financeModel.paybackPeriod },
-                    ].map(({ label, value }) => (
-                      <div
-                        key={label}
-                        className="p-2"
-                        style={{
-                          background: 'var(--color-bg-panel)',
-                          border: '1px solid var(--color-border)',
-                        }}
-                      >
-                        <p className="text-[10px] mb-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                          {label}
-                        </p>
-                        <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                          {value}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </div>
 
@@ -200,27 +137,37 @@ function EscalationCard({
                 <p className="text-xs italic" style={{ color: 'var(--color-text-muted)' }}>
                   &ldquo;{record.note}&rdquo;
                 </p>
-                {isForwarded ? (
-                  <div
-                    className="flex items-center gap-2 px-4 py-2 text-sm shrink-0"
-                    style={{ color: 'var(--color-success)' }}
-                  >
-                    <CheckCircle size={14} />
-                    Forwarded to Director
-                  </div>
-                ) : (
+                <div className="flex items-center gap-2 shrink-0">
                   <button
-                    onClick={onApprove}
-                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:scale-[1.02] shrink-0"
+                    onClick={onViewDetails}
+                    className="px-4 py-2 text-xs font-medium transition-all hover:opacity-80"
                     style={{
-                      background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
-                      boxShadow: '0 0 16px rgba(37,99,235,0.25)',
+                      background: `${blueprint.color}15`,
+                      border: `1px solid ${blueprint.color}40`,
+                      color: blueprint.accentColor,
                     }}
                   >
-                    Escalate to Director
-                    <SendHorizonal size={14} />
+                    View Full Details
                   </button>
-                )}
+                  {isForwarded ? (
+                    <div className="flex items-center gap-2 px-4 py-2 text-sm" style={{ color: 'var(--color-success)' }}>
+                      <CheckCircle size={14} />
+                      Forwarded to Director
+                    </div>
+                  ) : (
+                    <button
+                      onClick={onApprove}
+                      className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:scale-[1.02]"
+                      style={{
+                        background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
+                        boxShadow: '0 0 16px rgba(37,99,235,0.25)',
+                      }}
+                    >
+                      Escalate to Director
+                      <SendHorizonal size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -232,6 +179,7 @@ function EscalationCard({
 
 export default function DeptHeadReview() {
   const { staffEscalations, approveToDirector } = useApp();
+  const [modalRecord, setModalRecord] = useState<EscalationRecord | null>(null);
 
   const pendingCount = staffEscalations.filter(r => r.status === 'pending').length;
   const forwardedCount = staffEscalations.filter(r => r.status !== 'pending').length;
@@ -243,10 +191,7 @@ export default function DeptHeadReview() {
           <p className="font-mono text-xs mb-3" style={{ color: 'var(--color-accent)' }}>
             DEPT HEAD REVIEW
           </p>
-          <h1
-            className="font-display font-bold text-3xl mb-2"
-            style={{ color: 'var(--color-text-primary)' }}
-          >
+          <h1 className="font-display font-bold text-3xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
             Staff escalation review
           </h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>
@@ -271,12 +216,8 @@ export default function DeptHeadReview() {
               className="p-5"
               style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
             >
-              <p className="font-display font-bold text-3xl mb-1" style={{ color }}>
-                {value}
-              </p>
-              <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                {label}
-              </p>
+              <p className="font-display font-bold text-3xl mb-1" style={{ color }}>{value}</p>
+              <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{label}</p>
             </div>
           ))}
         </motion.div>
@@ -295,8 +236,7 @@ export default function DeptHeadReview() {
                 No escalations yet
               </p>
               <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                Once staff users escalate a blueprint from the scoring step, it will appear here for your
-                review.
+                Once staff users escalate a blueprint from the scoring step, it will appear here for your review.
               </p>
             </div>
           ) : (
@@ -318,12 +258,24 @@ export default function DeptHeadReview() {
                   record={record}
                   isForwarded={record.status !== 'pending'}
                   onApprove={() => approveToDirector(record.id)}
+                  onViewDetails={() => setModalRecord(record)}
                 />
               ))}
             </div>
           )}
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {modalRecord && (
+          <BlueprintDetailModal
+            record={modalRecord}
+            isForwarded={modalRecord.status !== 'pending'}
+            onApprove={() => approveToDirector(modalRecord.id)}
+            onClose={() => setModalRecord(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
