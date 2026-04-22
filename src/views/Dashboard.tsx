@@ -11,13 +11,47 @@ import {
   Layers3,
   Plus,
   Sparkles,
-  Users,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import BlueprintDetailModal from '../components/BlueprintDetailModal';
 import { useApp } from '../context/AppContext';
 import { ROUTES, getLatestStaffRoute, isDeptHead, isDirector } from '../lib/routes';
 import { EscalationRecord } from '../types';
+
+function getSubmissionPreview(problemStatement: string, maxLength = 150) {
+  if (problemStatement.length <= maxLength) {
+    return problemStatement;
+  }
+
+  return `${problemStatement.slice(0, maxLength - 3).trim()}...`;
+}
+
+function getStaffSubmissionStatusMeta(status: EscalationRecord['status']) {
+  switch (status) {
+    case 'forwarded':
+      return {
+        label: 'Forwarded to Director',
+        background: 'rgba(16,185,129,0.12)',
+        border: '1px solid rgba(16,185,129,0.28)',
+        color: 'var(--color-success)',
+      };
+    case 'merged':
+      return {
+        label: 'Included in merged strategy',
+        background: 'rgba(245,158,11,0.12)',
+        border: '1px solid rgba(245,158,11,0.28)',
+        color: 'var(--color-warning)',
+      };
+    case 'pending':
+    default:
+      return {
+        label: 'Awaiting department head review',
+        background: 'rgba(37,99,235,0.12)',
+        border: '1px solid rgba(37,99,235,0.28)',
+        color: 'var(--color-accent)',
+      };
+  }
+}
 
 export default function Dashboard() {
   const {
@@ -26,6 +60,7 @@ export default function Dashboard() {
     retrievedContext,
     submissionStatus,
     selectedBlueprint,
+    escalationQueue,
     staffEscalations,
     pendingEscalations,
     mergeSuggestions,
@@ -35,6 +70,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [modalRecord, setModalRecord] = useState<EscalationRecord | null>(null);
   const [directorModalRecord, setDirectorModalRecord] = useState<EscalationRecord | null>(null);
+  const [staffHistoryRecord, setStaffHistoryRecord] = useState<EscalationRecord | null>(null);
 
   if (!currentUser) {
     return null;
@@ -43,6 +79,9 @@ export default function Dashboard() {
   const deptHeadMode = isDeptHead(currentUser.role);
   const directorMode = isDirector(currentUser.role);
   const latestStaffRoute = getLatestStaffRoute(submissionStatus);
+  const myEscalatedSubmissions = escalationQueue.filter(
+    record => record.level === 'staff_to_head' && record.submittedBy.id === currentUser.id,
+  );
   const contextCounts = retrievedContext
     ? [
         { label: 'Jira tickets', value: retrievedContext.jiraTickets.length },
@@ -450,25 +489,71 @@ export default function Dashboard() {
                 style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
               >
                 <div className="flex items-center gap-2 mb-4">
-                  <Users size={16} style={{ color: 'var(--color-accent)' }} />
+                  <FileText size={16} style={{ color: 'var(--color-accent)' }} />
                   <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                    Staff workflow guide
+                    Past submissions
                   </h2>
                 </div>
-                <div className="space-y-3">
-                  {[
-                    'Submit a business problem in plain text.',
-                    'Review retrieved context and AI-generated blueprints.',
-                    'Acknowledge conflicts before opening the ranking table.',
-                    'Escalate one preferred blueprint to a superior.',
-                  ].map(step => (
-                    <div key={step} className="p-3" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                      <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                        {step}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-sm mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+                  Reopen any blueprint you already escalated and review the original submission record.
+                </p>
+
+                {myEscalatedSubmissions.length > 0 ? (
+                  <div className="space-y-3">
+                    {myEscalatedSubmissions.slice(0, 3).map(record => {
+                      const statusMeta = getStaffSubmissionStatusMeta(record.status);
+
+                      return (
+                        <button
+                          key={record.id}
+                          onClick={() => setStaffHistoryRecord(record)}
+                          aria-label={`Review ${record.blueprint.title} submission`}
+                          className="w-full p-4 text-left transition-all hover:border-blue-500/30"
+                          style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
+                        >
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <div>
+                              <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                                {record.blueprint.title}
+                              </p>
+                              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                                Escalated {record.escalatedAt} | {record.blueprint.department}
+                              </p>
+                            </div>
+                            <span
+                              className="text-[10px] font-mono px-2 py-1 shrink-0"
+                              style={{
+                                background: statusMeta.background,
+                                border: statusMeta.border,
+                                color: statusMeta.color,
+                              }}
+                            >
+                              {statusMeta.label}
+                            </span>
+                          </div>
+
+                          <div className="p-3" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                            <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                              Original problem statement
+                            </p>
+                            <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+                              {getSubmissionPreview(record.submission.problemStatement)}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                    <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                      No past submissions yet.
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                      Once you escalate a blueprint, it will stay here so you can review the full submission later.
+                    </p>
+                  </div>
+                )}
               </motion.div>
             </div>
           </>
@@ -491,6 +576,14 @@ export default function Dashboard() {
             onApprove={() => { setDirectorModalRecord(null); router.push(ROUTES.merge); }}
             onClose={() => setDirectorModalRecord(null)}
             approveLabel="Open Merge View"
+          />
+        )}
+        {staffHistoryRecord && (
+          <BlueprintDetailModal
+            record={staffHistoryRecord}
+            isForwarded={staffHistoryRecord.status !== 'pending'}
+            onClose={() => setStaffHistoryRecord(null)}
+            statusLabel={`Past submission review | ${getStaffSubmissionStatusMeta(staffHistoryRecord.status).label}`}
           />
         )}
       </AnimatePresence>

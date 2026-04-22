@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import OpenAI from 'openai';
 import { Blueprint, Conflict, Phase, FinanceModel, Scores, ScoringInsight } from '../../../types';
 
 export const maxDuration = 300;
+const DEFAULT_ZAI_BASE_URL = 'https://api.z.ai/api/paas/v4/';
+const DEFAULT_ZAI_MODEL = 'glm-5.1';
 
 const COLOR_TOKENS = [
   { color: 'var(--color-primary)', accentColor: 'var(--color-primary)' },
@@ -276,56 +279,117 @@ function aiToBlueprintType(ai: AIBlueprint, index: number, ids: string[], confli
 
 const MOCK_BLUEPRINTS_PATH = path.join(process.cwd(), 'data', 'mock-blueprints.json');
 
-function saveMockBlueprints(normalized: AIBlueprint[]) {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isStoredBlueprint(value: unknown): value is Blueprint {
+  if (!isRecord(value)) return false;
+
+  const prototypePreview = value.prototypePreview;
+  const financeModel = value.financeModel;
+  const scores = value.scores;
+
+  return (
+    typeof value.id === 'string' &&
+    typeof value.title === 'string' &&
+    typeof value.department === 'string' &&
+    typeof value.description === 'string' &&
+    typeof value.color === 'string' &&
+    typeof value.accentColor === 'string' &&
+    Array.isArray(value.architecture) &&
+    Array.isArray(value.techStack) &&
+    Array.isArray(value.timeline) &&
+    Array.isArray(value.conflicts) &&
+    Array.isArray(value.scoringInsights) &&
+    isRecord(prototypePreview) &&
+    Array.isArray(prototypePreview.screens) &&
+    isRecord(financeModel) &&
+    typeof financeModel.capexValue === 'number' &&
+    typeof financeModel.opexMonthlyValue === 'number' &&
+    typeof financeModel.roiValue === 'number' &&
+    typeof financeModel.paybackMonths === 'number' &&
+    typeof financeModel.totalCostYearOneValue === 'number' &&
+    isRecord(scores) &&
+    typeof scores.feasibility === 'number' &&
+    typeof scores.businessImpact === 'number' &&
+    typeof scores.effort === 'number' &&
+    typeof scores.riskConflict === 'number' &&
+    typeof scores.total === 'number'
+  );
+}
+
+function saveMockBlueprints(blueprints: Blueprint[]) {
   try {
-    fs.writeFileSync(MOCK_BLUEPRINTS_PATH, JSON.stringify(normalized, null, 2), 'utf-8');
-    console.log('[Mock] saved Gemini response to mock-blueprints.json');
+    fs.writeFileSync(MOCK_BLUEPRINTS_PATH, JSON.stringify(blueprints, null, 2), 'utf-8');
+    console.log('[Mock] saved latest generated blueprints to mock-blueprints.json');
   } catch (err) {
     console.warn('[Mock] failed to save mock blueprints:', (err as Error).message);
   }
 }
 
-function loadMockBlueprints(): AIBlueprint[] | null {
+function loadMockBlueprints(): Blueprint[] | null {
   try {
     const raw = fs.readFileSync(MOCK_BLUEPRINTS_PATH, 'utf-8');
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    return null;
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+
+    if (parsed.every(isStoredBlueprint)) {
+      return parsed;
+    }
+
+    const normalized = parsed
+      .slice(0, 3)
+      .map((item, index) => normalizeAIBlueprint(isRecord(item) ? item as Partial<AIBlueprint> : {}, index));
+
+    if (normalized.length === 0) return null;
+    return assembleBlueprints(normalized);
   } catch {
     return null;
   }
 }
 
 async function callZAI(userContent: string): Promise<string> {
-  const apiKey = process.env.ZAI_API_KEY;
-  if (!apiKey || apiKey === 'your_zai_api_key_here') throw new Error('ZAI_API_KEY not set');
+  const apiKey = process.env.ZAI_API_KEY?.trim();
+  if (!apiKey) throw new Error('ZAI_API_KEY not set');
 
-  const res = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'glm-4-plus',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userContent },
-      ],
-      temperature: 0.7,
-      max_tokens: 12000,
-    }),
-    signal: AbortSignal.timeout(90000),
+  const configuredBaseURL = process.env.ZAI_BASE_URL?.trim();
+  const baseURL = configuredBaseURL
+    ? (configuredBaseURL.endsWith('/') ? configuredBaseURL : `${configuredBaseURL}/`)
+    : DEFAULT_ZAI_BASE_URL;
+  const model = process.env.ZAI_MODEL?.trim() || DEFAULT_ZAI_MODEL;
+
+  const client = new OpenAI({
+    apiKey,
+    baseURL,
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`ZAI API error ${res.status}: ${err}`);
+  const completion = await client.chat.completions.create({
+    model,
+    messages: [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: userContent },
+    ],
+    temperature: 0.7,
+    max_tokens: 12000,
+  });
+
+  const content = completion.choices[0]?.message?.content;
+  if (typeof content === 'string') {
+    console.log('[ZAI] response received');
+    return content;
   }
 
-  const data = await res.json();
+  const data = Array.isArray(content)
+    ? content
+        .map(part => {
+          if (isRecord(part) && typeof part.text === 'string') return part.text;
+          return '';
+        })
+        .join('')
+    : '';
   console.log('[ZAI] response received');
-  return data.choices?.[0]?.message?.content ?? '';
+  return data;
 }
 
 async function callGemini(userContent: string): Promise<string> {
@@ -386,7 +450,11 @@ async function generateBlueprints(problem: string): Promise<Blueprint[]> {
   try {
     const rawText = await callZAI(userContent);
     const normalized = parseAIBlueprints(rawText);
-    if (normalized.length > 0) return assembleBlueprints(normalized);
+    if (normalized.length > 0) {
+      const blueprints = assembleBlueprints(normalized);
+      saveMockBlueprints(blueprints);
+      return blueprints;
+    }
   } catch (zaiErr) {
     console.warn('[ZAI] failed, trying Gemini:', (zaiErr as Error).message);
   }
@@ -396,8 +464,9 @@ async function generateBlueprints(problem: string): Promise<Blueprint[]> {
     const rawText = await callGemini(userContent);
     const normalized = parseAIBlueprints(rawText);
     if (normalized.length > 0) {
-      saveMockBlueprints(normalized);
-      return assembleBlueprints(normalized);
+      const blueprints = assembleBlueprints(normalized);
+      saveMockBlueprints(blueprints);
+      return blueprints;
     }
   } catch (geminiErr) {
     console.warn('[Gemini] failed, trying saved mock data:', (geminiErr as Error).message);
@@ -407,7 +476,7 @@ async function generateBlueprints(problem: string): Promise<Blueprint[]> {
   const cached = loadMockBlueprints();
   if (cached) {
     console.log('[Mock] using saved mock-blueprints.json');
-    return assembleBlueprints(cached);
+    return cached;
   }
 
   return [];

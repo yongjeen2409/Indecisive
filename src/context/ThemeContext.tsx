@@ -42,10 +42,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   if (!mounted) {
-    // Avoid hydration mismatch by rendering invisible or assuming light initially
-    // Since it's a wrapper, we just render children but without theme context initialized yet
-    // To prevent flicker, we usually use next-themes, but this is a simple fallback
-    return <div style={{ visibility: 'hidden' }}>{children}</div>;
+    // Keep the tree hidden until mount, but still provide theme context so
+    // components like the navbar can render safely during tests and initial paint.
+    return (
+      <ThemeContext.Provider value={{ theme, toggleTheme }}>
+        <div style={{ visibility: 'hidden' }}>{children}</div>
+      </ThemeContext.Provider>
+    );
   }
 
   return (

@@ -102,6 +102,15 @@ Run the test suite:
 npm test
 ```
 
+Set up local environment variables before using live blueprint generation:
+
+- `ZAI_API_KEY`: required primary provider key
+- `ZAI_BASE_URL`: optional Z.AI base URL, defaults to `https://api.z.ai/api/paas/v4/`
+- `ZAI_MODEL`: optional Z.AI model name, defaults to `glm-5.1`
+- `GEMINI_API_KEY`: optional secondary fallback key
+
+Use `.env.example` as the template for your local `.env.local`.
+
 Run tests in watch mode:
 
 ```bash

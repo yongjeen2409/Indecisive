@@ -38,7 +38,8 @@ export default function EscalatedPage() {
           </p>
           <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
             Leadership can compare this escalation with other pending blueprints and generate a
-            unified strategy from the strongest pair.
+            unified strategy from the strongest pair. You can reopen this submission later from
+            your dashboard.
           </p>
         </motion.div>
 
@@ -75,7 +76,7 @@ export default function EscalatedPage() {
             className="flex-1 py-3 text-sm font-medium transition-all"
             style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
           >
-            Back to dashboard
+            Review past submissions
           </button>
           <button
             onClick={() => {

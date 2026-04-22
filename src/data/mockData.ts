@@ -88,9 +88,6 @@ export const MOCK_USERS: User[] = [
   { id: 'u1', name: 'Alex Chen', role: 'staff', department: 'Engineering', avatar: 'AC' },
   { id: 'u2', name: 'Priya Sharma', role: 'lead', department: 'Product', avatar: 'PS' },
   { id: 'u3', name: 'Marcus Webb', role: 'director', department: 'Technology', avatar: 'MW' },
-  { id: 'u4', name: 'Sofia Reyes', role: 'executive', department: 'Executive Office', avatar: 'SR' },
-  { id: 'u5', name: 'Jamie Patel', role: 'staff', department: 'Operations', avatar: 'JP' },
-  { id: 'u6', name: 'Nina Brooks', role: 'staff', department: 'Data', avatar: 'NB' },
 ];
 
 const TEAM_SUBMITTERS = MOCK_USERS.filter(user => user.role === 'staff');
@@ -237,7 +234,7 @@ export function createRetrievedContext(problemStatement: string): RetrievedConte
       { id: 'Indecisive-208', title: `Reduce friction caused by ${theme.constraint}`, status: 'Open', priority: 'High', assignee: 'Priya Sharma' },
       { id: 'Indecisive-311', title: `Create phased rollout plan for ${theme.desiredOutcome}`, status: 'Review', priority: 'Medium', assignee: 'Marcus Webb' },
       { id: 'Indecisive-412', title: `Map dependencies for "${summary}"`, status: 'Open', priority: 'High', assignee: 'Jamie Patel' },
-      { id: 'Indecisive-418', title: `Prepare finance model tied to ${theme.executiveAngle}`, status: 'Blocked', priority: 'Medium', assignee: 'Sofia Reyes' },
+      { id: 'Indecisive-418', title: `Prepare finance model tied to ${theme.executiveAngle}`, status: 'Blocked', priority: 'Medium', assignee: 'Marcus Webb' },
     ],
     confluenceDocs: [
       { id: 'c1', title: `${sentenceCase(theme.shortLabel)} architecture options`, space: 'Technology', lastUpdated: '2026-04-16', relevance: 95 },

@@ -15,12 +15,14 @@ export default function BlueprintDetailModal({
   onApprove,
   onClose,
   approveLabel = 'Escalate to Director',
+  statusLabel,
 }: {
   record: EscalationRecord;
   isForwarded: boolean;
-  onApprove: () => void;
+  onApprove?: () => void;
   onClose: () => void;
   approveLabel?: string;
+  statusLabel?: string;
 }) {
   const [activeTab, setActiveTab] = useState<Tab>('Prototype Concept');
   const { blueprint, submission } = record;
@@ -275,14 +277,19 @@ export default function BlueprintDetailModal({
           <p className="text-xs italic" style={{ color: 'var(--color-text-muted)' }}>
             &ldquo;{record.note}&rdquo;
           </p>
-          {isForwarded ? (
+          {!onApprove ? (
+            <div className="flex items-center gap-2 px-4 py-2 text-sm shrink-0" style={{ color: isForwarded ? 'var(--color-success)' : 'var(--color-accent)' }}>
+              <CheckCircle size={14} />
+              {statusLabel ?? (isForwarded ? 'Forwarded to Director' : 'Read-only review')}
+            </div>
+          ) : isForwarded ? (
             <div className="flex items-center gap-2 px-4 py-2 text-sm shrink-0" style={{ color: 'var(--color-success)' }}>
               <CheckCircle size={14} />
-              Forwarded to Director
+              {statusLabel ?? 'Forwarded to Director'}
             </div>
           ) : (
             <button
-              onClick={() => { onApprove(); onClose(); }}
+              onClick={() => { onApprove?.(); onClose(); }}
               className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:scale-[1.02] shrink-0"
               style={{
                 background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
