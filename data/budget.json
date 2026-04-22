@@ -1,0 +1,23 @@
+{
+  "totalBudget": 14500000,
+  "allocated": 11200000,
+  "remaining": 3300000,
+  "fiscalYear": "2026",
+  "currency": "USD",
+  "lastUpdated": "2026-04-01",
+  "departments": [
+    { "name": "Engineering", "budget": 4800000, "spent": 3750000, "headcount": 85 },
+    { "name": "Product", "budget": 1600000, "spent": 1280000, "headcount": 22 },
+    { "name": "Operations", "budget": 1200000, "spent": 890000, "headcount": 30 },
+    { "name": "Strategy & Data", "budget": 980000, "spent": 740000, "headcount": 14 },
+    { "name": "Marketing", "budget": 1100000, "spent": 920000, "headcount": 18 },
+    { "name": "HR", "budget": 650000, "spent": 510000, "headcount": 12 },
+    { "name": "Legal & Compliance", "budget": 520000, "spent": 390000, "headcount": 8 },
+    { "name": "Finance", "budget": 350000, "spent": 270000, "headcount": 6 }
+  ],
+  "capexBudget": 2800000,
+  "capexUsed": 1950000,
+  "opexBudget": 11700000,
+  "opexUsed": 9250000,
+  "notes": "Q2 budget review flagged Engineering overage risk. Operations has unallocated contingency of $310k approved for strategic initiatives."
+}

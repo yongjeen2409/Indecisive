@@ -1,0 +1,76 @@
+{
+  "products": [
+    {
+      "id": "prod-001",
+      "name": "Meridian Workflow Engine",
+      "category": "Core Platform",
+      "launchDate": "2021-03-15",
+      "status": "Active",
+      "description": "No-code workflow automation platform for enterprise business processes. 1,200 active enterprise clients.",
+      "monthlyActiveUsers": 48000,
+      "revenueContribution": "62%",
+      "techStack": ["React", "Node.js", "PostgreSQL", "Redis", "Kubernetes"],
+      "npsScore": 52
+    },
+    {
+      "id": "prod-002",
+      "name": "Meridian Analytics Hub",
+      "category": "Analytics",
+      "launchDate": "2022-09-01",
+      "status": "Active",
+      "description": "Self-serve analytics and reporting for operational data. Integrates with Workflow Engine.",
+      "monthlyActiveUsers": 12000,
+      "revenueContribution": "18%",
+      "techStack": ["Metabase", "dbt", "Snowflake", "Python"],
+      "npsScore": 44
+    },
+    {
+      "id": "prod-003",
+      "name": "Meridian Connect",
+      "category": "Integration",
+      "launchDate": "2023-04-12",
+      "status": "Active",
+      "description": "iPaaS layer with 200+ pre-built connectors. Enables workflow engine to integrate with third-party tools.",
+      "monthlyActiveUsers": 8500,
+      "revenueContribution": "12%",
+      "techStack": ["Node.js", "Kafka", "AWS Lambda", "OpenAPI"],
+      "npsScore": 48
+    },
+    {
+      "id": "prod-004",
+      "name": "Meridian Vault",
+      "category": "Document Management",
+      "launchDate": "2023-11-20",
+      "status": "Active",
+      "description": "Secure document storage with versioning, approvals, and audit trails for compliance-heavy industries.",
+      "monthlyActiveUsers": 5200,
+      "revenueContribution": "5%",
+      "techStack": ["React", "S3", "PostgreSQL", "AES-256"],
+      "npsScore": 61
+    },
+    {
+      "id": "prod-005",
+      "name": "Meridian Scheduler",
+      "category": "Workforce Management",
+      "launchDate": "2024-06-01",
+      "status": "Active",
+      "description": "AI-assisted shift scheduling and capacity planning for operations teams.",
+      "monthlyActiveUsers": 3100,
+      "revenueContribution": "3%",
+      "techStack": ["React", "Python", "FastAPI", "OR-Tools"],
+      "npsScore": 55
+    },
+    {
+      "id": "prod-006",
+      "name": "Meridian Insights (Legacy)",
+      "category": "Analytics",
+      "launchDate": "2019-07-01",
+      "status": "Deprecated",
+      "description": "First-generation reporting tool. Being phased out in favour of Analytics Hub by Q3 2026.",
+      "monthlyActiveUsers": 1800,
+      "revenueContribution": "0%",
+      "techStack": ["Angular", "MySQL", "Django"],
+      "npsScore": 22
+    }
+  ]
+}

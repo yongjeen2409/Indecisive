@@ -1,0 +1,134 @@
+{
+  "totalHeadcount": 195,
+  "openRoles": 12,
+  "lastUpdated": "2026-04-15",
+  "employees": [
+    {
+      "id": "emp-001",
+      "name": "Alex Chen",
+      "role": "Staff Software Engineer",
+      "department": "Engineering",
+      "skills": ["React", "TypeScript", "Node.js", "PostgreSQL", "Kubernetes", "system design"],
+      "seniority": "senior",
+      "availability": "allocated",
+      "currentProject": "proj-005"
+    },
+    {
+      "id": "emp-002",
+      "name": "Priya Sharma",
+      "role": "Product Lead",
+      "department": "Product",
+      "skills": ["product strategy", "data analysis", "user research", "roadmap planning", "SQL"],
+      "seniority": "lead",
+      "availability": "partial",
+      "currentProject": "proj-005"
+    },
+    {
+      "id": "emp-003",
+      "name": "Marcus Webb",
+      "role": "Director of Technology",
+      "department": "Engineering",
+      "skills": ["architecture", "cloud infrastructure", "team leadership", "AWS", "vendor management"],
+      "seniority": "director",
+      "availability": "allocated",
+      "currentProject": "proj-003"
+    },
+    {
+      "id": "emp-004",
+      "name": "Sofia Reyes",
+      "role": "Chief Operating Officer",
+      "department": "Executive Office",
+      "skills": ["executive leadership", "P&L management", "organisational design", "strategic planning"],
+      "seniority": "executive",
+      "availability": "advisory-only",
+      "currentProject": null
+    },
+    {
+      "id": "emp-005",
+      "name": "Jamie Patel",
+      "role": "Operations Analyst",
+      "department": "Operations",
+      "skills": ["process mapping", "Salesforce", "data analysis", "project coordination", "SQL"],
+      "seniority": "staff",
+      "availability": "allocated",
+      "currentProject": "proj-001"
+    },
+    {
+      "id": "emp-006",
+      "name": "Nina Brooks",
+      "role": "Data Engineer",
+      "department": "Strategy & Data",
+      "skills": ["Python", "dbt", "Snowflake", "Airflow", "data modelling", "Spark"],
+      "seniority": "staff",
+      "availability": "partial",
+      "currentProject": "proj-002"
+    },
+    {
+      "id": "emp-007",
+      "name": "Lin Wei",
+      "role": "ML Engineer",
+      "department": "Engineering",
+      "skills": ["Python", "PyTorch", "LLM fine-tuning", "MLflow", "FastAPI", "vector databases"],
+      "seniority": "senior",
+      "availability": "allocated",
+      "currentProject": "proj-001"
+    },
+    {
+      "id": "emp-008",
+      "name": "Deepa Nair",
+      "role": "Platform Engineer",
+      "department": "Engineering",
+      "skills": ["Kubernetes", "Terraform", "AWS", "CI/CD", "observability", "Prometheus"],
+      "seniority": "senior",
+      "availability": "allocated",
+      "currentProject": "proj-003"
+    },
+    {
+      "id": "emp-009",
+      "name": "Carlos Mendez",
+      "role": "Backend Engineer",
+      "department": "Engineering",
+      "skills": ["Java", "Spring Boot", "PostgreSQL", "Kafka", "REST APIs", "microservices"],
+      "seniority": "mid",
+      "availability": "allocated",
+      "currentProject": "proj-001"
+    },
+    {
+      "id": "emp-010",
+      "name": "Arun Kapoor",
+      "role": "Analytics Engineer",
+      "department": "Strategy & Data",
+      "skills": ["SQL", "Looker", "dbt", "Python", "data visualisation", "Metabase"],
+      "seniority": "mid",
+      "availability": "partial",
+      "currentProject": "proj-002"
+    },
+    {
+      "id": "emp-011",
+      "name": "Sarah Whitfield",
+      "role": "Compliance Manager",
+      "department": "Legal & Compliance",
+      "skills": ["SOC 2", "GDPR", "ISO 27001", "risk assessment", "policy writing", "vendor auditing"],
+      "seniority": "senior",
+      "availability": "partial",
+      "currentProject": "proj-007"
+    },
+    {
+      "id": "emp-012",
+      "name": "Chloe Kim",
+      "role": "UX Engineer",
+      "department": "Product",
+      "skills": ["Figma", "React", "design systems", "user testing", "accessibility", "CSS"],
+      "seniority": "mid",
+      "availability": "partial",
+      "currentProject": "proj-005"
+    }
+  ],
+  "skillGaps": [
+    { "skill": "AI/ML Engineering", "severity": "high", "openRoles": 3 },
+    { "skill": "Data Platform Engineering", "severity": "high", "openRoles": 2 },
+    { "skill": "Security Engineering", "severity": "medium", "openRoles": 1 },
+    { "skill": "Product Design (Senior)", "severity": "medium", "openRoles": 2 }
+  ],
+  "teamCapacityNotes": "Engineering capacity at 87% allocation. Operations and Data teams have 20-30% available bandwidth. Two senior engineers rotation-available Q3 2026 after infra migration milestone."
+}

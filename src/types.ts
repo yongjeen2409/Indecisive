@@ -43,6 +43,7 @@ export interface PrototypePreview {
   title: string;
   summary: string;
   screens: PrototypeScreen[];
+  prototypeCode?: string;
 }
 
 export interface FinanceModel {

@@ -1,0 +1,105 @@
+{
+  "marketSize": 47200000000,
+  "marketSizeLabel": "$47.2B",
+  "growthRate": 0.187,
+  "growthRateLabel": "18.7% CAGR",
+  "segment": "B2B Workflow Automation & Enterprise Process Management",
+  "reportDate": "2026-Q1",
+  "trends": [
+    {
+      "id": "trend-001",
+      "title": "AI-Native Automation",
+      "description": "67% of enterprise buyers now require AI/ML capabilities as baseline in workflow automation RFPs. Agentic AI (autonomous multi-step task completion) is the fastest-growing sub-segment at 34% YoY.",
+      "relevance": "high",
+      "timeHorizon": "0-18 months"
+    },
+    {
+      "id": "trend-002",
+      "title": "Compliance-as-a-Feature",
+      "description": "EU AI Act, DORA, and updated SOC 2 requirements are driving procurement cycles. Vendors with built-in compliance reporting see 2.3x faster sales cycles in regulated industries.",
+      "relevance": "high",
+      "timeHorizon": "0-12 months"
+    },
+    {
+      "id": "trend-003",
+      "title": "Platform Consolidation",
+      "description": "Enterprises are reducing point solution count by 30% on average. Buyers prefer fewer, deeper integrations over many shallow ones. Bundled platforms gaining share over best-of-breed.",
+      "relevance": "high",
+      "timeHorizon": "6-24 months"
+    },
+    {
+      "id": "trend-004",
+      "title": "SMB Market Expansion",
+      "description": "Mid-market ($50M-$500M revenue) is the fastest-growing buyer segment, currently underserved by enterprise-priced tools. 3x more deals available vs. enterprise segment by volume.",
+      "relevance": "medium",
+      "timeHorizon": "12-36 months"
+    },
+    {
+      "id": "trend-005",
+      "title": "Real-Time Data Fabric",
+      "description": "Event-driven architectures and real-time operational analytics are becoming table stakes. Batch-only reporting platforms losing deals to real-time alternatives.",
+      "relevance": "medium",
+      "timeHorizon": "6-18 months"
+    }
+  ],
+  "competitors": [
+    {
+      "name": "ServiceNow",
+      "marketShare": 0.19,
+      "strengths": ["Deep ITSM integration", "Strong compliance tooling", "Large partner ecosystem"],
+      "weaknesses": ["Very high implementation cost", "Complex UX", "Slow innovation cycle"],
+      "pricing": "Enterprise only, $150-$400/user/year"
+    },
+    {
+      "name": "Monday.com",
+      "marketShare": 0.08,
+      "strengths": ["Excellent UX", "Rapid deployment", "Strong SMB adoption"],
+      "weaknesses": ["Limited enterprise security", "Weak AI capabilities", "No built-in compliance"],
+      "pricing": "Freemium, $9-$19/user/month"
+    },
+    {
+      "name": "Atlassian (Jira/Confluence)",
+      "marketShare": 0.14,
+      "strengths": ["Dev team penetration", "Rich ecosystem", "Project management depth"],
+      "weaknesses": ["Operations/non-dev teams resist adoption", "Data silos between products"],
+      "pricing": "Free to $17.50/user/month"
+    },
+    {
+      "name": "Zapier/Make",
+      "marketShare": 0.05,
+      "strengths": ["Ease of use", "Huge integration library", "Low cost"],
+      "weaknesses": ["Not enterprise grade", "No SLA guarantees", "Limited governance"],
+      "pricing": "Free to $29/month consumer-grade"
+    },
+    {
+      "name": "UiPath",
+      "marketShare": 0.09,
+      "strengths": ["RPA depth", "AI document processing", "Strong ROI cases"],
+      "weaknesses": ["Steep learning curve", "High license cost", "Overkill for simple workflows"],
+      "pricing": "Enterprise, $420k+ annual contracts"
+    }
+  ],
+  "opportunities": [
+    {
+      "id": "opp-001",
+      "title": "AI decision-assist layer for workflow automation",
+      "description": "No competitor offers native AI reasoning over workflow context with explainable outputs. First-mover advantage window estimated 12-18 months.",
+      "estimatedRevenuePotential": "$8-12M ARR within 24 months",
+      "confidence": "high"
+    },
+    {
+      "id": "opp-002",
+      "title": "Compliance automation bundle for regulated industries",
+      "description": "Financial services and healthcare segments are willing to pay 40% premium for built-in compliance reporting. Current gap in market for sub-$50k/year solutions.",
+      "estimatedRevenuePotential": "$4-6M ARR within 18 months",
+      "confidence": "high"
+    },
+    {
+      "id": "opp-003",
+      "title": "Embedded analytics for non-technical operators",
+      "description": "Operations teams want contextual analytics within workflow tools, not separate BI dashboards. Reduce churn risk for existing Analytics Hub customers.",
+      "estimatedRevenuePotential": "$2-3M ARR expansion within 12 months",
+      "confidence": "medium"
+    }
+  ]
+}

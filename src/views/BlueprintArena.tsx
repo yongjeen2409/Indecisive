@@ -163,25 +163,63 @@ function DetailModal({
 
                 {activeTab === 'System Architecture' && (
                   <div>
-                    <p className="text-[10px] font-mono uppercase tracking-wide mb-4" style={{ color: blueprint.accentColor }}>
-                      High-level technical design
+                    <p className="text-[10px] font-mono uppercase tracking-wide mb-5" style={{ color: blueprint.accentColor }}>
+                      System architecture — data flow
                     </p>
-                    <div className="space-y-2">
-                      {blueprint.architecture.map((item, i) => (
-                        <div
-                          key={item}
-                          className="flex items-center gap-3 p-3"
-                          style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
-                        >
-                          <div
-                            className="w-5 h-5 flex items-center justify-center text-[10px] font-mono font-bold shrink-0"
-                            style={{ background: `${blueprint.color}25`, color: blueprint.accentColor, border: `1px solid ${blueprint.color}40` }}
-                          >
-                            {String(i + 1).padStart(2, '0')}
+                    <div className="flex flex-col items-stretch gap-0 max-w-2xl mx-auto">
+                      {blueprint.architecture.map((item, i) => {
+                        const colonIdx = item.indexOf(':');
+                        const layerLabel = colonIdx !== -1 ? item.slice(0, colonIdx).trim() : `Layer ${i + 1}`;
+                        const layerDetail = colonIdx !== -1 ? item.slice(colonIdx + 1).trim() : item;
+                        const isLast = i === blueprint.architecture.length - 1;
+                        return (
+                          <div key={item} className="flex flex-col items-stretch">
+                            <div
+                              className="flex items-start gap-3 p-3.5"
+                              style={{
+                                background: 'var(--color-bg-panel)',
+                                border: `1px solid ${blueprint.color}40`,
+                                borderLeft: `3px solid ${blueprint.color}`,
+                              }}
+                            >
+                              <div
+                                className="flex items-center justify-center text-[10px] font-mono font-bold shrink-0 mt-0.5"
+                                style={{
+                                  width: '22px',
+                                  height: '22px',
+                                  background: `${blueprint.color}25`,
+                                  color: blueprint.accentColor,
+                                  border: `1px solid ${blueprint.color}40`,
+                                }}
+                              >
+                                {String(i + 1).padStart(2, '0')}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-semibold mb-0.5 truncate" style={{ color: blueprint.accentColor }}>
+                                  {layerLabel}
+                                </p>
+                                <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+                                  {layerDetail}
+                                </p>
+                              </div>
+                            </div>
+                            {!isLast && (
+                              <div className="flex flex-col items-center" style={{ height: '28px' }}>
+                                <div className="flex-1 w-px" style={{ background: `${blueprint.color}50` }} />
+                                <div
+                                  style={{
+                                    width: 0,
+                                    height: 0,
+                                    borderLeft: '6px solid transparent',
+                                    borderRight: '6px solid transparent',
+                                    borderTop: `7px solid ${blueprint.color}70`,
+                                  }}
+                                />
+                              </div>
+                            )}
                           </div>
-                          <span className="text-sm" style={{ color: 'var(--color-text-primary)' }}>{item}</span>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

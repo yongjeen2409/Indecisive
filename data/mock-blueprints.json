@@ -1,0 +1,327 @@
+[
+  {
+    "title": "AI-Native Customer Chatbot",
+    "department": "Engineering",
+    "description": "Develop an advanced, text-based AI chatbot integrated with the existing support system and knowledge base. This solution will leverage our in-house AI capabilities to provide instant, accurate answers to repetitive customer queries, significantly reducing manual agent workload and improving customer satisfaction.",
+    "architecture": [
+      "User Interface Layer: Customer-facing web widget (React/TypeScript)",
+      "API Gateway Layer: Secure API endpoints for chatbot interaction (Node.js/FastAPI)",
+      "Conversational AI Layer: Orchestration of LLM calls, intent recognition, dialogue management (Python/LangChain)",
+      "Knowledge Retrieval Layer: RAG system for contextual information from knowledge base and ticket history (Vector Database/Elasticsearch)",
+      "LLM Inference Layer: Fine-tuned large language model for question answering (OpenAI API/Hugging Face Transformers)",
+      "Data & Integration Layer: Sync with customer support system, CRM, and internal knowledge base (Meridian Connect/Kafka)",
+      "Observability & Feedback Layer: Monitoring, logging, human-in-the-loop feedback for model improvement (Prometheus/Grafana/Internal Tool)"
+    ],
+    "techStack": [
+      "React",
+      "Node.js",
+      "Python",
+      "LangChain",
+      "Vector Database (e.g., Pinecone/Weaviate)",
+      "OpenAI API",
+      "Meridian Connect",
+      "PostgreSQL",
+      "Kubernetes",
+      "MLflow",
+      "Prometheus",
+      "Grafana"
+    ],
+    "financeModel": {
+      "capexValue": 450000,
+      "opexMonthlyValue": 25000,
+      "roiValue": 300,
+      "paybackMonths": 9
+    },
+    "timeline": [
+      {
+        "name": "Phase 1 — Foundation & Data Prep",
+        "duration": "8 weeks",
+        "deliverables": [
+          "Refined requirements and architecture design",
+          "Secure data pipelines for knowledge base and historical tickets",
+          "Initial LLM fine-tuning environment setup"
+        ]
+      },
+      {
+        "name": "Phase 2 — Core Chatbot Development",
+        "duration": "12 weeks",
+        "deliverables": [
+          "Conversational AI logic and RAG system implemented",
+          "User interface and API gateway developed",
+          "Initial internal testing completed"
+        ]
+      },
+      {
+        "name": "Phase 3 — Pilot, Refinement & Rollout",
+        "duration": "8 weeks",
+        "deliverables": [
+          "Internal pilot with support agents",
+          "A/B testing and model performance iteration",
+          "Legal/compliance review and phased customer rollout"
+        ]
+      }
+    ],
+    "scores": {
+      "feasibility": 75,
+      "businessImpact": 90,
+      "effort": 85,
+      "riskConflict": 70
+    },
+    "scoringInsights": [
+      {
+        "dimension": "Budget",
+        "status": "positive",
+        "summary": "The project's estimated Capex of $450,000 is well within the remaining $850,000 Capex budget.",
+        "score": 82
+      },
+      {
+        "dimension": "Project Pipeline",
+        "status": "neutral",
+        "summary": "This project can leverage the 'AI-Assisted Support Ticketing' (proj-001) initiative but must manage shared engineering resources.",
+        "score": 65
+      },
+      {
+        "dimension": "Product Portfolio",
+        "status": "positive",
+        "summary": "Integrating with Meridian Workflow Engine and Meridian Connect aligns with platform consolidation trends and enhances existing product value.",
+        "score": 78
+      },
+      {
+        "dimension": "Past Rejections",
+        "status": "positive",
+        "summary": "This text-based AI solution aligns with the approved alternative to the rejected voice assistant, mitigating prior privacy concerns.",
+        "score": 85
+      },
+      {
+        "dimension": "Market Research",
+        "status": "positive",
+        "summary": "Aligns perfectly with the 'AI-Native Automation' trend and the 'AI decision-assist layer' market opportunity, positioning us as a first-mover.",
+        "score": 80
+      },
+      {
+        "dimension": "HR & Execution",
+        "status": "warning",
+        "summary": "Engineering capacity is at 87% allocation, and there's a high skill gap in AI/ML Engineering, potentially impacting project timelines.",
+        "score": 70
+      },
+      {
+        "dimension": "Legal & Compliance",
+        "status": "warning",
+        "summary": "Extensive legal review, DPIA, and adherence to AI Ethics policy for data consent, explainability, and human oversight will be critical.",
+        "score": 70
+      }
+    ]
+  },
+  {
+    "title": "SaaS AI Customer Engagement Platform",
+    "department": "Operations",
+    "description": "Implement a comprehensive SaaS AI customer engagement platform to automate responses to repetitive queries, manage knowledge base articles, and provide agents with AI-assisted tools. This approach minimizes internal development effort and quickly deploys a proven solution, leveraging vendor expertise.",
+    "architecture": [
+      "Customer Interface Layer: Vendor's native web widget/SDK (SaaS Platform UI)",
+      "SaaS Platform Core: AI-powered chatbot, knowledge base management, agent assist tools (Vendor Platform)",
+      "Integration Layer: Connectors for CRM, support ticketing, and internal data sources (SaaS Connectors/Meridian Connect)",
+      "Data Sync & Ingestion Layer: Securely feed knowledge articles and customer data to the SaaS platform (API/SFTP)",
+      "Analytics & Reporting Layer: Performance dashboards, conversation analytics (SaaS Analytics/Metabase)",
+      "Security & Compliance Layer: Data encryption, access control, audit trails (SaaS Security Features)"
+    ],
+    "techStack": [
+      "Zendesk (AI Editions)",
+      "Salesforce",
+      "Meridian Connect",
+      "Metabase",
+      "Okta"
+    ],
+    "financeModel": {
+      "capexValue": 180000,
+      "opexMonthlyValue": 30000,
+      "roiValue": 250,
+      "paybackMonths": 15
+    },
+    "timeline": [
+      {
+        "name": "Phase 1 — Vendor Selection & Contract",
+        "duration": "6 weeks",
+        "deliverables": [
+          "Requirements gathering and vendor evaluation",
+          "Security & legal review (DPIA, DPA)",
+          "Contract negotiation and signing"
+        ]
+      },
+      {
+        "name": "Phase 2 — Setup & Integration",
+        "duration": "10 weeks",
+        "deliverables": [
+          "Platform configuration and knowledge base import",
+          "Integration with existing ticketing and CRM systems",
+          "Initial agent training"
+        ]
+      },
+      {
+        "name": "Phase 3 — Pilot & Rollout",
+        "duration": "8 weeks",
+        "deliverables": [
+          "Internal pilot with support team and feedback collection",
+          "Iterative refinement and phased customer rollout",
+          "Establishment of ongoing governance"
+        ]
+      }
+    ],
+    "scores": {
+      "feasibility": 90,
+      "businessImpact": 80,
+      "effort": 65,
+      "riskConflict": 75
+    },
+    "scoringInsights": [
+      {
+        "dimension": "Budget",
+        "status": "positive",
+        "summary": "The estimated Capex of $180,000 is well within the remaining $850,000 Capex budget, and Opex is manageable.",
+        "score": 88
+      },
+      {
+        "dimension": "Project Pipeline",
+        "status": "neutral",
+        "summary": "This project is largely independent of active engineering projects, minimizing resource conflicts but not leveraging existing AI work.",
+        "score": 75
+      },
+      {
+        "dimension": "Product Portfolio",
+        "status": "neutral",
+        "summary": "While it provides a solution, it doesn't directly enhance or integrate deeply with our core Meridian Workflow Engine, potentially leading to a siloed experience.",
+        "score": 68
+      },
+      {
+        "dimension": "Past Rejections",
+        "status": "positive",
+        "summary": "This approach avoids the high cost and long payback periods associated with past rejected large-scale internal builds like the Blockchain system.",
+        "score": 90
+      },
+      {
+        "dimension": "Market Research",
+        "status": "positive",
+        "summary": "Aligns with the market trend of 'AI-Native Automation' and provides access to advanced features quickly, though it may not be a unique 'decision-assist layer'.",
+        "score": 85
+      },
+      {
+        "dimension": "HR & Execution",
+        "status": "positive",
+        "summary": "This solution requires less engineering headcount, leveraging the available bandwidth in Operations and Data teams for implementation and configuration.",
+        "score": 80
+      },
+      {
+        "dimension": "Legal & Compliance",
+        "status": "warning",
+        "summary": "Thorough vendor assessment and DPA negotiation are critical to ensure compliance with GDPR, SOC 2, and our AI Ethics policy regarding third-party data processing.",
+        "score": 65
+      }
+    ]
+  },
+  {
+    "title": "Enhanced Knowledge Base & Workflow Automation",
+    "department": "Operations",
+    "description": "Systematically restructure and expand the customer knowledge base, implement AI-powered search for agents, and develop guided resolution workflows using Meridian Workflow Engine. This solution aims to empower both customers and agents with better information and automation without heavy reliance on generative AI.",
+    "architecture": [
+      "Customer Self-Service Portal: Improved search, structured FAQs, guided troubleshooting (React/CMS)",
+      "Knowledge Base Management: Centralized content creation, versioning, and publishing (Confluence/Internal Tool)",
+      "Workflow Automation Engine: Rule-based ticket routing, auto-response templates, guided agent scripts (Meridian Workflow Engine)",
+      "Contextual Search & Retrieval: Semantic search over knowledge base for agents and customers (Elasticsearch/Solr)",
+      "Integration Layer: Connect with support ticketing system and CRM for seamless data flow (Meridian Connect)",
+      "Feedback & Analytics Layer: User feedback on knowledge articles, search query analysis, resolution time tracking (Metabase/Internal Log Analysis)"
+    ],
+    "techStack": [
+      "Meridian Workflow Engine",
+      "Meridian Connect",
+      "Elasticsearch",
+      "Confluence",
+      "React",
+      "PostgreSQL",
+      "Metabase"
+    ],
+    "financeModel": {
+      "capexValue": 90000,
+      "opexMonthlyValue": 8000,
+      "roiValue": 180,
+      "paybackMonths": 18
+    },
+    "timeline": [
+      {
+        "name": "Phase 1 — Knowledge Audit & Restructuring",
+        "duration": "6 weeks",
+        "deliverables": [
+          "Inventory of existing content and identification of repetitive questions",
+          "Restructured knowledge base architecture",
+          "Establishment of content governance"
+        ]
+      },
+      {
+        "name": "Phase 2 — Workflow & Search Implementation",
+        "duration": "10 weeks",
+        "deliverables": [
+          "Key automation workflows developed in Meridian Workflow Engine",
+          "Enhanced search functionality implemented",
+          "Integration with support channels completed"
+        ]
+      },
+      {
+        "name": "Phase 3 — Agent Enablement & Expansion",
+        "duration": "8 weeks",
+        "deliverables": [
+          "Support agents trained on new tools and workflows",
+          "Feedback gathered and iteration on content and automation rules",
+          "Expansion of scope to more query types"
+        ]
+      }
+    ],
+    "scores": {
+      "feasibility": 95,
+      "businessImpact": 75,
+      "effort": 70,
+      "riskConflict": 60
+    },
+    "scoringInsights": [
+      {
+        "dimension": "Budget",
+        "status": "positive",
+        "summary": "The estimated Capex of $90,000 is well within the available $310k Operations contingency budget and overall company Capex.",
+        "score": 92
+      },
+      {
+        "dimension": "Project Pipeline",
+        "status": "positive",
+        "summary": "This project leverages existing internal platforms and requires minimal new engineering resources, avoiding conflicts with other active projects.",
+        "score": 85
+      },
+      {
+        "dimension": "Product Portfolio",
+        "status": "positive",
+        "summary": "Deepens the use of our core 'Meridian Workflow Engine' and 'Meridian Connect,' demonstrating internal product value and aligning with platform consolidation.",
+        "score": 88
+      },
+      {
+        "dimension": "Past Rejections",
+        "status": "positive",
+        "summary": "This incremental approach avoids the high cost and risk of large, unproven initiatives like the AR/VR onboarding experience.",
+        "score": 90
+      },
+      {
+        "dimension": "Market Research",
+        "status": "neutral",
+        "summary": "While it improves efficiency, this solution doesn't fully align with the 'AI-Native Automation' trend, potentially leaving us behind competitors in advanced capabilities.",
+        "score": 60
+      },
+      {
+        "dimension": "HR & Execution",
+        "status": "positive",
+        "summary": "This solution primarily utilizes available bandwidth in Operations and Data teams, with minimal additional burden on the highly allocated Engineering department.",
+        "score": 85
+      },
+      {
+        "dimension": "Legal & Compliance",
+        "status": "positive",
+        "summary": "This approach has low legal and compliance risk as it primarily enhances existing systems and processes, not introducing new high-risk technologies like generative AI.",
+        "score": 95
+      }
+    ]
+  }
+]

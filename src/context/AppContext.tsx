@@ -45,6 +45,7 @@ interface AppContextValue extends AppState {
   logout: () => void;
   startSubmission: (problemStatement: string, attachments: Attachment[]) => void;
   completeAnalysis: () => void;
+  completeAnalysisWithBlueprints: (blueprints: Blueprint[]) => void;
   selectBlueprint: (blueprintId: string) => void;
   openConflictReview: () => void;
   acknowledgeConflicts: () => void;
@@ -59,6 +60,7 @@ type Action =
   | { type: 'logout' }
   | { type: 'startSubmission'; payload: { problemStatement: string; attachments: Attachment[] } }
   | { type: 'completeAnalysis' }
+  | { type: 'completeAnalysisWithBlueprints'; payload: { blueprints: Blueprint[] } }
   | { type: 'selectBlueprint'; payload: { blueprintId: string } }
   | { type: 'openConflictReview' }
   | { type: 'acknowledgeConflicts' }
@@ -177,6 +179,14 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         blueprints: createDemoBlueprints(state.activeSubmission.problemStatement),
+        submissionStatus: 'blueprints',
+      };
+    }
+    case 'completeAnalysisWithBlueprints': {
+      if (!state.activeSubmission) return state;
+      return {
+        ...state,
+        blueprints: action.payload.blueprints,
         submissionStatus: 'blueprints',
       };
     }
@@ -307,6 +317,8 @@ export function AppProvider({
       startSubmission: (problemStatement: string, attachments: Attachment[]) =>
         dispatch({ type: 'startSubmission', payload: { problemStatement, attachments } }),
       completeAnalysis: () => dispatch({ type: 'completeAnalysis' }),
+      completeAnalysisWithBlueprints: (blueprints: Blueprint[]) =>
+        dispatch({ type: 'completeAnalysisWithBlueprints', payload: { blueprints } }),
       selectBlueprint: (blueprintId: string) => dispatch({ type: 'selectBlueprint', payload: { blueprintId } }),
       openConflictReview: () => dispatch({ type: 'openConflictReview' }),
       acknowledgeConflicts: () => dispatch({ type: 'acknowledgeConflicts' }),

@@ -1,0 +1,108 @@
+{
+  "projects": [
+    {
+      "id": "proj-001",
+      "title": "AI-Assisted Support Ticketing",
+      "status": "In Progress",
+      "department": "Engineering",
+      "budget": 320000,
+      "startDate": "2026-01-15",
+      "estimatedEndDate": "2026-07-30",
+      "team": ["Jamie Patel", "Lin Wei", "Carlos Mendez"],
+      "description": "LLM-powered triage and auto-resolution for tier-1 support tickets. 60% automation target.",
+      "completionPercent": 45,
+      "blockers": ["Model fine-tuning data pipeline delayed", "Legal review on data retention pending"]
+    },
+    {
+      "id": "proj-002",
+      "title": "Customer Analytics Dashboard v3",
+      "status": "In Progress",
+      "department": "Strategy & Data",
+      "budget": 185000,
+      "startDate": "2026-02-01",
+      "estimatedEndDate": "2026-06-15",
+      "team": ["Nina Brooks", "Arun Kapoor"],
+      "description": "Unified customer health scoring and churn prediction. Replaces 4 siloed BI tools.",
+      "completionPercent": 70,
+      "blockers": []
+    },
+    {
+      "id": "proj-003",
+      "title": "Multi-Region Infrastructure Migration",
+      "status": "In Progress",
+      "department": "Engineering",
+      "budget": 890000,
+      "startDate": "2025-11-01",
+      "estimatedEndDate": "2026-08-31",
+      "team": ["Alex Chen", "Deepa Nair", "Marcus Webb", "Tomasz Kowalski"],
+      "description": "Migrating core platform to AWS multi-region active-active. Critical for EU expansion.",
+      "completionPercent": 60,
+      "blockers": ["DNS cutover requires 72h maintenance window approval"]
+    },
+    {
+      "id": "proj-004",
+      "title": "Internal Data Catalog",
+      "status": "Planning",
+      "department": "Strategy & Data",
+      "budget": 120000,
+      "startDate": "2026-05-01",
+      "estimatedEndDate": "2026-09-30",
+      "team": ["Nina Brooks"],
+      "description": "Centralised metadata registry using DataHub for all internal datasets.",
+      "completionPercent": 5,
+      "blockers": ["Awaiting headcount approval for data steward role"]
+    },
+    {
+      "id": "proj-005",
+      "title": "Developer Experience Portal",
+      "status": "In Progress",
+      "department": "Engineering",
+      "budget": 210000,
+      "startDate": "2026-02-15",
+      "estimatedEndDate": "2026-07-01",
+      "team": ["Alex Chen", "Priya Sharma", "Chloe Kim"],
+      "description": "Backstage-based internal developer portal. Centralises service ownership, runbooks, and deployment pipelines.",
+      "completionPercent": 55,
+      "blockers": []
+    },
+    {
+      "id": "proj-006",
+      "title": "Sales Automation Suite",
+      "status": "Review",
+      "department": "Operations",
+      "budget": 145000,
+      "startDate": "2026-01-01",
+      "estimatedEndDate": "2026-05-31",
+      "team": ["Jamie Patel", "Ravi Subramaniam"],
+      "description": "Salesforce workflow automation for deal progression and renewal prediction.",
+      "completionPercent": 88,
+      "blockers": []
+    },
+    {
+      "id": "proj-007",
+      "title": "Compliance Reporting Platform",
+      "status": "In Progress",
+      "department": "Legal & Compliance",
+      "budget": 280000,
+      "startDate": "2026-01-20",
+      "estimatedEndDate": "2026-09-30",
+      "team": ["Sarah Whitfield", "Alex Chen"],
+      "description": "Automated SOC 2 evidence collection and GDPR data subject request handling.",
+      "completionPercent": 30,
+      "blockers": ["External auditor availability gap in Q3"]
+    },
+    {
+      "id": "proj-008",
+      "title": "Smart Contract Analyzer",
+      "status": "Planning",
+      "department": "Strategy & Data",
+      "budget": 95000,
+      "startDate": "2026-06-01",
+      "estimatedEndDate": "2026-11-30",
+      "team": [],
+      "description": "AI-powered review and risk-scoring tool for vendor contracts. Reduces legal review time by 50%.",
+      "completionPercent": 0,
+      "blockers": ["Headcount not yet assigned", "Tooling selection in progress"]
+    }
+  ]
+}

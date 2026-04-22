@@ -1,0 +1,70 @@
+{
+  "rejected": [
+    {
+      "id": "rej-001",
+      "title": "Blockchain-Based Audit Trail System",
+      "reason": "Vendor lock-in risk and no measurable ROI over existing database audit logging. Implementation cost estimated at $1.8M with 3+ year payback. Legal flagged smart contract compliance gaps.",
+      "date": "2025-08-12",
+      "submittedBy": "Tomasz Kowalski",
+      "department": "Engineering",
+      "estimatedBudget": 1800000,
+      "rejectedBy": "executive",
+      "notes": "Revisit only if regulatory requirement mandates distributed audit trail."
+    },
+    {
+      "id": "rej-002",
+      "title": "AR/VR Customer Onboarding Experience",
+      "reason": "No clear ROI signal from customer research. Hardware adoption too low in target enterprise segment. Estimated 2-year lead time before viable user base.",
+      "date": "2025-05-20",
+      "submittedBy": "Priya Sharma",
+      "department": "Product",
+      "estimatedBudget": 650000,
+      "rejectedBy": "director",
+      "notes": "Good long-term bet but not Q1/Q2 2026 priority. Revisit 2027."
+    },
+    {
+      "id": "rej-003",
+      "title": "Internal Social Network (Meridian Connect+)",
+      "reason": "Duplicate of Slack integration already in place. Employee survey showed 78% preference to stay on existing tools. Engineering estimate was 8 months.",
+      "date": "2024-11-03",
+      "submittedBy": "Jamie Patel",
+      "department": "Operations",
+      "estimatedBudget": 420000,
+      "rejectedBy": "director",
+      "notes": "Invest in Slack integration quality instead."
+    },
+    {
+      "id": "rej-004",
+      "title": "Cryptocurrency Payment Integration",
+      "reason": "Legal and compliance team flagged FATF travel rule exposure, AML policy gaps, and accounting complexity. Tax treatment unclear across 12 operating jurisdictions.",
+      "date": "2025-01-15",
+      "submittedBy": "Ravi Subramaniam",
+      "department": "Operations",
+      "estimatedBudget": 280000,
+      "rejectedBy": "executive",
+      "notes": "Blocked by Legal. Re-evaluate if regulatory clarity improves by 2027."
+    },
+    {
+      "id": "rej-005",
+      "title": "Centralised AI Voice Assistant for Internal Operations",
+      "reason": "Privacy concerns with audio recording in shared office spaces. GDPR Article 9 exposure identified. Employee consent framework would take 6+ months to establish.",
+      "date": "2025-09-30",
+      "submittedBy": "Lin Wei",
+      "department": "Engineering",
+      "estimatedBudget": 360000,
+      "rejectedBy": "director",
+      "notes": "Text-based AI assistant approved as alternative. See AI ticketing project."
+    },
+    {
+      "id": "rej-006",
+      "title": "Monolith-to-Microservices Big Bang Rewrite",
+      "reason": "Risk of 12+ month feature freeze was unacceptable. Past big-bang rewrites across industry have 70%+ failure rate. Strangler fig pattern approved as alternative.",
+      "date": "2024-07-22",
+      "submittedBy": "Marcus Webb",
+      "department": "Engineering",
+      "estimatedBudget": 3200000,
+      "rejectedBy": "executive",
+      "notes": "Incremental modernisation via infra migration project instead."
+    }
+  ]
+}

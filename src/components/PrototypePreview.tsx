@@ -11,9 +11,52 @@ export default function PrototypePreview({
   preview: PrototypePreviewType;
   accentColor: string;
 }) {
-  const [activeScreenId, setActiveScreenId] = useState(preview.screens[0]?.id);
-  const activeScreen =
-    preview.screens.find(screen => screen.id === activeScreenId) ?? preview.screens[0];
+  const [activeScreenId, setActiveScreenId] = useState(preview.screens[0]?.id ?? '');
+
+  if (preview.prototypeCode) {
+    return (
+      <div>
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <p className="text-xs font-mono mb-1" style={{ color: accentColor }}>
+              {preview.title.toUpperCase()}
+            </p>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+              {preview.summary}
+            </p>
+          </div>
+          <div
+            className="px-2.5 py-1 text-[11px] font-medium shrink-0"
+            style={{ background: `${accentColor}18`, color: accentColor }}
+          >
+            Live sandbox
+          </div>
+        </div>
+        <iframe
+          srcDoc={preview.prototypeCode}
+          sandbox="allow-scripts"
+          className="w-full"
+          style={{
+            height: '440px',
+            border: `1px solid ${accentColor}30`,
+            background: '#0a0a0f',
+            display: 'block',
+          }}
+          title="Prototype preview"
+        />
+      </div>
+    );
+  }
+
+  if (preview.screens.length === 0) {
+    return (
+      <div className="p-4 text-center" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>No prototype preview available</p>
+      </div>
+    );
+  }
+
+  const activeScreen = preview.screens.find(s => s.id === activeScreenId) ?? preview.screens[0];
 
   return (
     <div className="p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
@@ -80,7 +123,7 @@ export default function PrototypePreview({
           <div
             className="h-full"
             style={{
-              width: `${56 + preview.screens.findIndex(screen => screen.id === activeScreen.id) * 17}%`,
+              width: `${56 + preview.screens.findIndex(s => s.id === activeScreen.id) * 17}%`,
               background: `linear-gradient(90deg, ${accentColor}, ${accentColor}aa)`,
             }}
           />

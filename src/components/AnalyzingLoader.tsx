@@ -1,52 +1,89 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../context/AppContext';
 import { ROUTES } from '../lib/routes';
+import { Blueprint } from '../types';
 
 const STEPS = [
-  'Retrieving Jira tickets...',
-  'Scanning Confluence docs...',
-  'Loading past decisions...',
-  'Extracting constraints...',
-  'Detecting conflicts...',
-  'Generating blueprints...',
+  'Loading budget & financial data...',
+  'Scanning active project pipeline...',
+  'Reviewing product portfolio...',
+  'Checking past rejected proposals...',
+  'Analysing market intelligence...',
+  'Reviewing HR capacity & skills...',
+  'Checking legal & compliance policies...',
+  'Generating AI blueprints...',
 ];
 
 export default function AnalyzingLoader() {
-  const { activeSubmission, completeAnalysis } = useApp();
+  const { activeSubmission, completeAnalysis, completeAnalysisWithBlueprints } = useApp();
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const doneRef = useRef(false);
 
   useEffect(() => {
+    if (!activeSubmission || doneRef.current) return;
+
+    let aiBlueprints: Blueprint[] | null = null;
+    let minTimePassed = false;
+    let apiFetched = false;
+
+    function tryFinish() {
+      if (!minTimePassed || !apiFetched) return;
+      if (doneRef.current) return;
+      doneRef.current = true;
+
+      if (aiBlueprints && aiBlueprints.length > 0) {
+        completeAnalysisWithBlueprints(aiBlueprints);
+      } else {
+        completeAnalysis();
+      }
+      router.replace(ROUTES.blueprints);
+    }
+
+    const minTimer = window.setTimeout(() => {
+      minTimePassed = true;
+      tryFinish();
+    }, 3400);
+
+    fetch('/api/generate-blueprint', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ problem: activeSubmission.problemStatement }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data.blueprints) && data.blueprints.length > 0) {
+          aiBlueprints = data.blueprints;
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        apiFetched = true;
+        tryFinish();
+      });
+
     const stepTimer = window.setInterval(() => {
-      setStepIndex(current => (current < STEPS.length - 1 ? current + 1 : current));
-    }, 650);
+      setStepIndex(i => Math.min(i + 1, STEPS.length - 1));
+    }, 500);
 
     const progressTimer = window.setInterval(() => {
-      setProgress(current => {
-        if (current >= 100) {
-          window.clearInterval(progressTimer);
-          return 100;
-        }
-        return current + 2.8;
+      setProgress(p => {
+        if (p >= 92) return p;
+        return p + 1.8;
       });
-    }, 90);
-
-    const completionTimer = window.setTimeout(() => {
-      completeAnalysis();
-      router.replace(ROUTES.blueprints);
-    }, 3600);
+    }, 80);
 
     return () => {
+      window.clearTimeout(minTimer);
       window.clearInterval(stepTimer);
       window.clearInterval(progressTimer);
-      window.clearTimeout(completionTimer);
     };
-  }, [completeAnalysis, router]);
+  }, [activeSubmission?.id]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-6" style={{ background: 'var(--color-bg-deep)' }}>
@@ -59,8 +96,8 @@ export default function AnalyzingLoader() {
         </h1>
         <p className="max-w-xl text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
           {activeSubmission
-            ? `Indecisive is processing your submission: "${activeSubmission.problemStatement.slice(0, 110)}${activeSubmission.problemStatement.length > 110 ? '...' : ''}"`
-            : 'Indecisive is processing your submission and assembling the strongest cross-department options.'}
+            ? `Processing: "${activeSubmission.problemStatement.slice(0, 110)}${activeSubmission.problemStatement.length > 110 ? '...' : ''}"`
+            : 'Assembling cross-department options from 7 internal data sources.'}
         </p>
       </div>
 

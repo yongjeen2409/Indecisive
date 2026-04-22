@@ -1,0 +1,109 @@
+{
+  "policies": [
+    {
+      "id": "pol-001",
+      "title": "Data Retention & Deletion Policy",
+      "category": "Data Governance",
+      "version": "3.2",
+      "lastReviewed": "2026-02-01",
+      "description": "Governs how long different data classifications must be retained and processes for secure deletion.",
+      "restrictions": [
+        "Financial transaction data must be retained for 7 years minimum (tax compliance)",
+        "Personal data under GDPR must be deleted within 30 days of subject request",
+        "Operational logs retained 2 years, then archived to cold storage for 5 more years",
+        "AI training data derived from customer data requires explicit consent documentation"
+      ]
+    },
+    {
+      "id": "pol-002",
+      "title": "GDPR & Privacy Compliance Framework",
+      "category": "Privacy",
+      "version": "2.1",
+      "lastReviewed": "2026-01-15",
+      "description": "Mandatory requirements for processing personal data of EU/EEA data subjects.",
+      "restrictions": [
+        "All new features processing personal data require Data Protection Impact Assessment (DPIA)",
+        "Data transfers outside EEA require Standard Contractual Clauses (SCCs) in place",
+        "Consent must be freely given, specific, informed and unambiguous",
+        "Privacy by design is mandatory — personal data minimisation required at architecture stage",
+        "Automated decision-making with significant effects requires human review mechanism"
+      ]
+    },
+    {
+      "id": "pol-003",
+      "title": "SOC 2 Type II Compliance Requirements",
+      "category": "Security & Compliance",
+      "version": "1.4",
+      "lastReviewed": "2025-12-10",
+      "description": "Security controls required to maintain SOC 2 Type II certification for customer trust.",
+      "restrictions": [
+        "All production systems must have audit logging enabled with tamper-proof storage",
+        "Encryption at rest (AES-256) and in transit (TLS 1.3) mandatory for all customer data",
+        "Multi-factor authentication required for all production system access",
+        "Vendor assessments required before integrating third-party tools with customer data access",
+        "Penetration testing required quarterly for customer-facing systems"
+      ]
+    },
+    {
+      "id": "pol-004",
+      "title": "Open Source Software Policy",
+      "category": "IP & Licensing",
+      "version": "2.0",
+      "lastReviewed": "2025-10-20",
+      "description": "Rules for using open source software in products and internal tools.",
+      "restrictions": [
+        "Copyleft licenses (GPL, AGPL) prohibited in any code shipped to customers",
+        "All OSS dependencies must be registered in the approved software inventory",
+        "Security CVEs in dependencies must be patched within 14 days (critical) or 60 days (high)",
+        "AI model weights with non-commercial licenses cannot be deployed in production"
+      ]
+    },
+    {
+      "id": "pol-005",
+      "title": "Change Management & Production Deployment Policy",
+      "category": "Operations",
+      "version": "4.1",
+      "lastReviewed": "2026-03-01",
+      "description": "Controls for changes to production systems to prevent outages and maintain stability.",
+      "restrictions": [
+        "All production changes require approval from at least one senior engineer and one product owner",
+        "Database schema changes require 48-hour review period and rollback plan",
+        "No production deployments during freeze windows: last week of each quarter",
+        "Major architectural changes (new services, databases) require Architecture Review Board sign-off",
+        "Automated rollback must be tested and documented for all changes affecting revenue-critical paths"
+      ]
+    },
+    {
+      "id": "pol-006",
+      "title": "AI Ethics & Responsible Use Policy",
+      "category": "AI Governance",
+      "version": "1.0",
+      "lastReviewed": "2026-03-15",
+      "description": "Governance framework for developing and deploying AI/ML features in products and internal tools.",
+      "restrictions": [
+        "All AI features must undergo Ethics Review Board assessment before production deployment",
+        "AI-generated outputs affecting employment, credit, or legal status require human oversight",
+        "Training data must be audited for bias before model deployment",
+        "Customers must be clearly informed when they are interacting with AI systems",
+        "AI model decisions must be explainable on request — black-box-only deployments prohibited",
+        "AI features processing sensitive personal data require separate DPA with each customer"
+      ]
+    },
+    {
+      "id": "pol-007",
+      "title": "Budget Approval & Procurement Policy",
+      "category": "Finance",
+      "version": "2.3",
+      "lastReviewed": "2026-01-10",
+      "description": "Approval thresholds and procurement process for technology investments.",
+      "restrictions": [
+        "Expenditure up to $50k: Department head approval",
+        "Expenditure $50k-$250k: Director + Finance approval required",
+        "Expenditure $250k-$1M: COO + Finance approval required",
+        "Expenditure above $1M: Board approval required",
+        "Multi-year SaaS contracts above $100k/year require legal review",
+        "All new vendor relationships require security questionnaire completion"
+      ]
+    }
+  ]
+}
