@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "schemaVersion": 1,
+    "artifact": "tech-stacks",
+    "savedAt": "2026-04-23T00:00:00.000Z",
+    "sourceProvider": "mock"
+  },
+  "versions": [
+    {
+      "id": "support-self-service-ai",
+      "techStack": [
+        { "category": "Customer experience", "tools": ["React", "Next.js"] },
+        { "category": "Application services", "tools": ["Node.js", "Meridian Workflow Engine"] },
+        { "category": "AI retrieval", "tools": ["LLM", "Vector database", "Meridian Vault"] },
+        { "category": "Integrations", "tools": ["Meridian Connect", "Support desk API"] },
+        { "category": "Analytics", "tools": ["Meridian Analytics Hub", "Datadog"] }
+      ]
+    },
+    {
+      "id": "support-agent-assist",
+      "techStack": [
+        { "category": "Agent workspace", "tools": ["React", "Next.js"] },
+        { "category": "Copilot services", "tools": ["Node.js", "LLM", "Prompt templates"] },
+        { "category": "Workflow and policy", "tools": ["Meridian Workflow Engine", "Rules engine"] },
+        { "category": "Data integration", "tools": ["Meridian Connect", "Support desk API"] },
+        { "category": "Knowledge feedback", "tools": ["Meridian Vault", "Analytics Hub"] }
+      ]
+    },
+    {
+      "id": "support-knowledge-automation",
+      "techStack": [
+        { "category": "Data mining", "tools": ["Python", "Snowflake", "dbt"] },
+        { "category": "Content automation", "tools": ["LLM", "Template engine"] },
+        { "category": "Workflow approvals", "tools": ["Meridian Workflow Engine", "Meridian Vault"] },
+        { "category": "Publishing integrations", "tools": ["Meridian Connect", "Support desk API"] },
+        { "category": "Measurement", "tools": ["Meridian Analytics Hub", "Metabase"] }
+      ]
+    }
+  ]
+}

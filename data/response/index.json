@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "schemaVersion": 1,
+    "problemStatement": "Our customer support team spends 70% of their time answering repetitive questions. We need a solution to reduce manual responses.",
+    "savedAt": "2026-04-23T00:00:00.000Z",
+    "sourceProviders": ["mock", "zai", "gemini"],
+    "fallbackPurpose": "Artifact-based fallback for API failures"
+  },
+  "files": {
+    "prototypeConcepts": "data/response/prototype-concepts.json",
+    "systemArchitectures": "data/response/system-architectures.json",
+    "techStacks": "data/response/tech-stacks.json",
+    "financeModels": "data/response/finance-models.json",
+    "timelines": "data/response/timelines.json",
+    "decisionReasoning": "data/response/decision-reasoning.json"
+  },
+  "versions": [
+    {
+      "id": "support-self-service-ai",
+      "title": "AI Self-Service Support Portal",
+      "department": "Engineering",
+      "prototypeSourcePath": "data/response/prototype/support-self-service-ai.jsx",
+      "color": "var(--color-primary)",
+      "accentColor": "var(--color-primary)"
+    },
+    {
+      "id": "support-agent-assist",
+      "title": "Agent Assist Response Copilot",
+      "department": "Operations",
+      "prototypeSourcePath": "data/response/prototype/support-agent-assist.jsx",
+      "color": "var(--color-success)",
+      "accentColor": "var(--color-success)"
+    },
+    {
+      "id": "support-knowledge-automation",
+      "title": "Knowledge Automation Studio",
+      "department": "Strategy & Data",
+      "prototypeSourcePath": "data/response/prototype/support-knowledge-automation.jsx",
+      "color": "var(--color-warning)",
+      "accentColor": "var(--color-warning)"
+    }
+  ]
+}

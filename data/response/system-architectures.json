@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "schemaVersion": 1,
+    "artifact": "system-architectures",
+    "savedAt": "2026-04-23T00:00:00.000Z",
+    "sourceProvider": "mock"
+  },
+  "versions": [
+    {
+      "id": "support-self-service-ai",
+      "architecture": [
+        "Customer Experience Layer: Self-service support portal with topic search and guided answers (Next.js, React)",
+        "Conversation API Layer: Handles sessions, consent notices, and escalation requests (Node.js, API Gateway)",
+        "Retrieval Layer: Searches approved help articles, product docs, and ticket macros (Vector database, Meridian Vault)",
+        "AI Reasoning Layer: Generates grounded answers with confidence and cited sources (LLM, RAG guardrails)",
+        "Workflow Layer: Creates tickets only for low-confidence, billing, or sensitive cases (Meridian Workflow Engine)",
+        "Integration Layer: Syncs ticket outcomes and customer context (Meridian Connect, support desk API)",
+        "Observability Layer: Tracks deflection, answer quality, and escalation trends (Meridian Analytics Hub, Datadog)"
+      ]
+    },
+    {
+      "id": "support-agent-assist",
+      "architecture": [
+        "Agent Workspace Layer: Support cockpit with queue, draft, and approval controls (React, Next.js)",
+        "Ticket Context Layer: Pulls ticket history, customer tier, SLA, and sentiment (Support desk API, Meridian Connect)",
+        "Drafting Layer: Produces suggested replies and macro recommendations (LLM, prompt templates)",
+        "Policy Guardrail Layer: Blocks unsupported claims and routes sensitive cases for review (Rules engine, AI policy checks)",
+        "Approval Workflow Layer: Captures agent edits, approvals, and feedback signals (Meridian Workflow Engine)",
+        "Knowledge Feedback Layer: Promotes repeated edited drafts into article candidates (Meridian Vault, Analytics Hub)"
+      ]
+    },
+    {
+      "id": "support-knowledge-automation",
+      "architecture": [
+        "Ticket Mining Layer: Clusters repetitive tickets by topic, effort, and resolution pattern (Python, Snowflake)",
+        "Knowledge Drafting Layer: Converts best agent answers into article drafts and macros (LLM, template engine)",
+        "Approval Workflow Layer: Routes drafts to support, product, finance, or legal owners (Meridian Workflow Engine)",
+        "Content Repository Layer: Stores approved articles with audit trails and freshness metadata (Meridian Vault)",
+        "Publishing Layer: Pushes approved answers to help center and agent macro library (Meridian Connect, support desk API)",
+        "Measurement Layer: Monitors deflection, stale content, and manual-response reduction (Analytics Hub, dbt)"
+      ]
+    }
+  ]
+}

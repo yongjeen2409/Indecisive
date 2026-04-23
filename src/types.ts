@@ -45,6 +45,7 @@ export interface PrototypePreview {
   summary: string;
   screens: PrototypeScreen[];
   prototypeSourceJsx?: string;
+  prototypeSourcePath?: string;
   prototypeCode?: string;
 }
 

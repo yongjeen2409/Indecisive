@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "schemaVersion": 1,
+    "artifact": "decision-reasoning",
+    "savedAt": "2026-04-23T00:00:00.000Z",
+    "sourceProvider": "mock"
+  },
+  "versions": [
+    {
+      "id": "support-self-service-ai",
+      "scores": { "feasibility": 82, "businessImpact": 94, "effort": 72, "riskConflict": 73 },
+      "problemFit": {
+        "score": 95,
+        "summary": "Best direct fit because it can deflect repetitive customer questions before tickets reach agents."
+      },
+      "categoryScores": [
+        { "dimension": "Budget", "status": "positive", "summary": "Year-one cost is within the $3.3M remaining 2026 budget and $850k remaining CAPEX envelope.", "score": 84 },
+        { "dimension": "Project Pipeline", "status": "neutral", "summary": "Strong overlap with proj-001 AI-Assisted Support Ticketing, so sequencing must avoid duplicate engineering work.", "score": 68 },
+        { "dimension": "Product Portfolio", "status": "positive", "summary": "Extends Meridian Workflow Engine, Meridian Connect, Vault, and Analytics Hub rather than creating a disconnected product.", "score": 88 },
+        { "dimension": "Past Rejections", "status": "positive", "summary": "Avoids the rejected AI voice assistant pattern by staying text-based and using explicit escalation.", "score": 90 },
+        { "dimension": "Market Research", "status": "positive", "summary": "Matches AI-native automation and platform consolidation trends in the current market research.", "score": 91 },
+        { "dimension": "HR & Execution", "status": "warning", "summary": "Needs ML and platform engineering capacity while Engineering is already 87% allocated.", "score": 66 },
+        { "dimension": "Legal & Compliance", "status": "warning", "summary": "Requires DPIA, AI disclosure, source-grounding, audit logging, and human escalation for sensitive cases.", "score": 70 }
+      ]
+    },
+    {
+      "id": "support-agent-assist",
+      "scores": { "feasibility": 88, "businessImpact": 86, "effort": 80, "riskConflict": 82 },
+      "problemFit": {
+        "score": 86,
+        "summary": "Strong fit because it reduces manual drafting time while keeping agents responsible for final answers."
+      },
+      "categoryScores": [
+        { "dimension": "Budget", "status": "positive", "summary": "Year-one cost is moderate and can fit within the remaining budget with shared Operations and Engineering ownership.", "score": 86 },
+        { "dimension": "Project Pipeline", "status": "positive", "summary": "Complements proj-001 by improving agent workflows without requiring a separate customer-facing launch first.", "score": 82 },
+        { "dimension": "Product Portfolio", "status": "positive", "summary": "Uses Meridian Connect and Workflow Engine to connect ticket context, approvals, and feedback.", "score": 84 },
+        { "dimension": "Past Rejections", "status": "positive", "summary": "Does not repeat rejected voice assistant, blockchain, or big-bang rewrite ideas.", "score": 92 },
+        { "dimension": "Market Research", "status": "positive", "summary": "Aligns with AI-native automation demand while reducing adoption risk for support operations.", "score": 84 },
+        { "dimension": "HR & Execution", "status": "neutral", "summary": "Can start with Operations, Product, and part-time Engineering support, but ML review capacity is still constrained.", "score": 76 },
+        { "dimension": "Legal & Compliance", "status": "positive", "summary": "Human approval lowers automated decision risk and supports SOC 2 auditability.", "score": 84 }
+      ]
+    },
+    {
+      "id": "support-knowledge-automation",
+      "scores": { "feasibility": 92, "businessImpact": 78, "effort": 88, "riskConflict": 88 },
+      "problemFit": {
+        "score": 78,
+        "summary": "Good indirect fit because it reduces repetitive work by improving approved answer coverage before full automation."
+      },
+      "categoryScores": [
+        { "dimension": "Budget", "status": "positive", "summary": "Lowest year-one cost and well below the remaining CAPEX and total budget limits.", "score": 94 },
+        { "dimension": "Project Pipeline", "status": "positive", "summary": "Supports proj-001 by improving source content quality and reducing fine-tuning data pressure.", "score": 86 },
+        { "dimension": "Product Portfolio", "status": "positive", "summary": "Naturally uses Meridian Vault for governed content and Analytics Hub for deflection measurement.", "score": 82 },
+        { "dimension": "Past Rejections", "status": "positive", "summary": "Avoids rejected high-risk patterns and follows the approved incremental modernization approach.", "score": 94 },
+        { "dimension": "Market Research", "status": "neutral", "summary": "Supports AI automation readiness but is less differentiated than a customer-facing AI experience.", "score": 74 },
+        { "dimension": "HR & Execution", "status": "positive", "summary": "Can be executed by Strategy & Data, Operations, and partial Product support with limited ML dependency.", "score": 88 },
+        { "dimension": "Legal & Compliance", "status": "positive", "summary": "Approval workflow, audit trail, and content ownership align well with GDPR, SOC 2, and AI governance policies.", "score": 90 }
+      ]
+    }
+  ]
+}

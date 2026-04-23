@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "schemaVersion": 1,
+    "artifact": "finance-models",
+    "savedAt": "2026-04-23T00:00:00.000Z",
+    "sourceProvider": "mock",
+    "budgetContext": {
+      "currency": "USD",
+      "fiscalYear": "2026",
+      "remainingBudget": 3300000,
+      "remainingCapex": 850000,
+      "operationsContingency": 310000
+    }
+  },
+  "versions": [
+    {
+      "id": "support-self-service-ai",
+      "financeModel": {
+        "capexValue": 420000,
+        "opexMonthlyValue": 28000,
+        "roiValue": 310,
+        "paybackMonths": 8
+      },
+      "assumptions": [
+        "Targets 55-65% automated resolution for repetitive FAQ traffic.",
+        "Uses existing Meridian products to avoid a new platform rebuild.",
+        "Requires COO and Finance approval because CAPEX exceeds $250k."
+      ]
+    },
+    {
+      "id": "support-agent-assist",
+      "financeModel": {
+        "capexValue": 260000,
+        "opexMonthlyValue": 18000,
+        "roiValue": 240,
+        "paybackMonths": 10
+      },
+      "assumptions": [
+        "Reduces average handling time before fully automating customer-facing answers.",
+        "Can be funded through Operations contingency plus shared engineering support.",
+        "Requires COO and Finance approval because CAPEX exceeds $250k."
+      ]
+    },
+    {
+      "id": "support-knowledge-automation",
+      "financeModel": {
+        "capexValue": 155000,
+        "opexMonthlyValue": 9000,
+        "roiValue": 185,
+        "paybackMonths": 7
+      },
+      "assumptions": [
+        "Starts with existing ticket exports and knowledge workflows.",
+        "Lowest first-year cost and lowest implementation risk.",
+        "Requires Director and Finance approval because CAPEX is between $50k and $250k."
+      ]
+    }
+  ]
+}

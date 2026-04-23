@@ -104,10 +104,13 @@ npm test
 
 Set up local environment variables before using live blueprint generation:
 
-- `ZAI_API_KEY`: required primary provider key
+- `ILMU_API_KEY`: recommended primary provider key
+- `ILMU_BASE_URL`: optional ILMU OpenAI-compatible base URL, defaults to `https://api.ilmu.ai/v1`
+- `ILMU_MODEL`: optional ILMU model name, defaults to `ilmu-glm-5.1`
+- `ZAI_API_KEY`: optional fallback provider key if you have a separate Z.AI key
 - `ZAI_BASE_URL`: optional Z.AI base URL, defaults to `https://api.z.ai/api/paas/v4/`
 - `ZAI_MODEL`: optional Z.AI model name, defaults to `glm-5.1`
-- `GEMINI_API_KEY`: optional secondary fallback key
+- `GEMINI_API_KEY`: optional final fallback key
 
 Use `.env.example` as the template for your local `.env.local`.
 

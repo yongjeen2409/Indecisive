@@ -1,10 +1,20 @@
 'use client';
 
+import type { ComponentType } from 'react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Expand, X } from 'lucide-react';
 import InteractivePrototypeMockData from '../../data/interactive_prototype_mock_data.jsx';
+import SupportAgentAssistPrototype from '../../data/response/prototype/support-agent-assist.jsx';
+import SupportKnowledgeAutomationPrototype from '../../data/response/prototype/support-knowledge-automation.jsx';
+import SupportSelfServiceAIPrototype from '../../data/response/prototype/support-self-service-ai.jsx';
 import { PrototypePreview as PrototypePreviewType } from '../types';
+
+const PROTOTYPE_COMPONENTS: Record<string, ComponentType<{ embedded?: boolean }>> = {
+  'data/response/prototype/support-self-service-ai.jsx': SupportSelfServiceAIPrototype,
+  'data/response/prototype/support-agent-assist.jsx': SupportAgentAssistPrototype,
+  'data/response/prototype/support-knowledge-automation.jsx': SupportKnowledgeAutomationPrototype,
+};
 
 function PrototypeHeader({
   accentColor,
@@ -153,6 +163,10 @@ function PrototypeBody({
     );
   }
 
+  const PrototypeComponent = preview.prototypeSourcePath
+    ? PROTOTYPE_COMPONENTS[preview.prototypeSourcePath]
+    : null;
+
   if (preview.screens.length === 0) {
     return (
       <div
@@ -164,7 +178,11 @@ function PrototypeBody({
           overflowY: fullscreen ? 'auto' : 'hidden',
         }}
       >
-        <InteractivePrototypeMockData embedded={!fullscreen} />
+        {PrototypeComponent ? (
+          <PrototypeComponent embedded={!fullscreen} />
+        ) : (
+          <InteractivePrototypeMockData embedded={!fullscreen} />
+        )}
       </div>
     );
   }
@@ -198,7 +216,7 @@ export default function PrototypePreview({
 
   const badgeLabel = preview.prototypeCode
     ? 'Live sandbox'
-    : preview.screens.length === 0
+    : preview.prototypeSourcePath || preview.screens.length === 0
       ? 'Interactive demo'
       : 'Interactive demo';
 

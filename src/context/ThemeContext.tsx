@@ -16,18 +16,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const savedTheme = localStorage.getItem('theme') as Theme | null;
-    
-    if (savedTheme) {
-      setTheme(savedTheme);
-      if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      }
-    } else {
-      document.documentElement.classList.add('dark');
-    }
-    // Strictly dark by default
+    const frame = window.requestAnimationFrame(() => {
+      const savedTheme = localStorage.getItem('theme');
+      const nextTheme: Theme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'dark';
+
+      setTheme(nextTheme);
+      setMounted(true);
+      document.documentElement.classList.toggle('dark', nextTheme === 'dark');
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   const toggleTheme = () => {

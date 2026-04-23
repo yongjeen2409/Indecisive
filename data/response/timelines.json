@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "schemaVersion": 1,
+    "artifact": "timelines",
+    "savedAt": "2026-04-23T00:00:00.000Z",
+    "sourceProvider": "mock"
+  },
+  "versions": [
+    {
+      "id": "support-self-service-ai",
+      "timeline": [
+        { "name": "Phase 1 - Knowledge and Guardrails", "duration": "5 weeks", "deliverables": ["Audit top 50 repetitive support questions", "Approve answer source policy", "Build RAG prototype against approved content"] },
+        { "name": "Phase 2 - Portal MVP", "duration": "7 weeks", "deliverables": ["Launch customer-facing FAQ assistant", "Integrate escalation to support desk", "Instrument confidence and deflection metrics"] },
+        { "name": "Phase 3 - Scale and Optimize", "duration": "8 weeks", "deliverables": ["Expand to billing and plan topics", "Run answer quality review loop", "Publish executive ROI dashboard"] }
+      ]
+    },
+    {
+      "id": "support-agent-assist",
+      "timeline": [
+        { "name": "Phase 1 - Agent Workflow Mapping", "duration": "4 weeks", "deliverables": ["Map repetitive response workflows", "Define approval rules", "Connect ticket context sources"] },
+        { "name": "Phase 2 - Copilot Pilot", "duration": "6 weeks", "deliverables": ["Release draft assistant to pilot agents", "Capture edit and approval feedback", "Tune macro suggestions"] },
+        { "name": "Phase 3 - Operations Rollout", "duration": "6 weeks", "deliverables": ["Roll out to full support team", "Activate quality monitoring", "Promote repeated drafts to knowledge candidates"] }
+      ]
+    },
+    {
+      "id": "support-knowledge-automation",
+      "timeline": [
+        { "name": "Phase 1 - Ticket Cluster Baseline", "duration": "3 weeks", "deliverables": ["Cluster 90 days of repetitive tickets", "Rank topics by manual effort", "Assign content owners"] },
+        { "name": "Phase 2 - Approval Studio MVP", "duration": "5 weeks", "deliverables": ["Generate article drafts", "Launch approval workflow", "Publish first macro bundle"] },
+        { "name": "Phase 3 - Deflection Loop", "duration": "6 weeks", "deliverables": ["Sync approved content to support channels", "Track stale content risk", "Report manual-response reduction"] }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "schemaVersion": 1,
+    "artifact": "prototype-concepts",
+    "problemStatement": "Our customer support team spends 70% of their time answering repetitive questions. We need a solution to reduce manual responses.",
+    "savedAt": "2026-04-23T00:00:00.000Z",
+    "sourceProvider": "mock"
+  },
+  "versions": [
+    {
+      "id": "support-self-service-ai",
+      "title": "AI Self-Service Support Portal",
+      "department": "Engineering",
+      "description": "Build a customer-facing self-service portal that answers repetitive questions with approved knowledge base content and escalates low-confidence or sensitive issues to agents. This directly targets the 70% repetitive-answer workload while extending the existing AI-Assisted Support Ticketing project instead of duplicating it.",
+      "summary": "A customer portal for instant approved FAQ answers, confidence routing, and human escalation.",
+      "prototypeSourcePath": "data/response/prototype/support-self-service-ai.jsx",
+      "providerSources": ["zai", "gemini", "mock"]
+    },
+    {
+      "id": "support-agent-assist",
+      "title": "Agent Assist Response Copilot",
+      "department": "Operations",
+      "description": "Deploy an internal agent copilot that drafts replies, suggests approved macros, and flags exceptions for human review. This reduces manual typing without taking full customer-facing automation risk on billing, privacy, and compliance-sensitive cases.",
+      "summary": "An internal support cockpit for AI-drafted responses, policy guardrails, and faster agent handling.",
+      "prototypeSourcePath": "data/response/prototype/support-agent-assist.jsx",
+      "providerSources": ["zai", "gemini", "mock"]
+    },
+    {
+      "id": "support-knowledge-automation",
+      "title": "Knowledge Automation Studio",
+      "department": "Strategy & Data",
+      "description": "Create a governed workflow that clusters repetitive tickets, drafts knowledge articles from best agent answers, and publishes approved content to customer self-service and agent macros. This is the lowest-risk path because it improves the knowledge supply chain before broad automation.",
+      "summary": "A workflow studio that turns repeated support answers into approved help content and reusable macros.",
+      "prototypeSourcePath": "data/response/prototype/support-knowledge-automation.jsx",
+      "providerSources": ["zai", "gemini", "mock"]
+    }
+  ]
+}
