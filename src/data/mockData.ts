@@ -445,6 +445,8 @@ function createEscalationRecord(submittedBy: User, problemStatement: string, blu
     note,
     status: level === 'head_to_director' ? 'forwarded' : 'pending',
     level,
+    ticket: null,
+    reviews: [],
   };
 }
 

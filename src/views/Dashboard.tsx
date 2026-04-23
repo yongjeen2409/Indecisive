@@ -11,9 +11,12 @@ import {
   Layers3,
   Plus,
   Sparkles,
+  TicketPlus,
 } from 'lucide-react';
+import { GitCommitHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import BlueprintDetailModal from '../components/BlueprintDetailModal';
+import { ROLE_LABELS, RoleAvatar } from '../components/RoleAvatar';
 import { useApp } from '../context/AppContext';
 import { ROUTES, getLatestStaffRoute, isDeptHead, isDirector } from '../lib/routes';
 import { EscalationRecord } from '../types';
@@ -42,6 +45,20 @@ function getStaffSubmissionStatusMeta(status: EscalationRecord['status']) {
         border: '1px solid rgba(245,158,11,0.28)',
         color: 'var(--color-warning)',
       };
+    case 'returned_to_head':
+      return {
+        label: 'Returned to department head for review',
+        background: 'rgba(234,179,8,0.12)',
+        border: '1px solid rgba(234,179,8,0.28)',
+        color: 'var(--color-warning)',
+      };
+    case 'returned_to_staff':
+      return {
+        label: 'Returned to staff for revision',
+        background: 'rgba(59,130,246,0.12)',
+        border: '1px solid rgba(59,130,246,0.28)',
+        color: 'var(--color-accent)',
+      };
     case 'pending':
     default:
       return {
@@ -66,11 +83,19 @@ export default function Dashboard() {
     mergeSuggestions,
     mergedStrategy,
     approveToDirector,
+    createEscalationTicket,
+    deEscalateToStaff,
+    deEscalateToDeptHead,
   } = useApp();
   const router = useRouter();
   const [modalRecord, setModalRecord] = useState<EscalationRecord | null>(null);
-  const [directorModalRecord, setDirectorModalRecord] = useState<EscalationRecord | null>(null);
+  const [directorModalRecordId, setDirectorModalRecordId] = useState<string | null>(null);
   const [staffHistoryRecord, setStaffHistoryRecord] = useState<EscalationRecord | null>(null);
+  const [reviewDraftByRecord, setReviewDraftByRecord] = useState<Record<string, string>>({});
+  const [deptTab, setDeptTab] = useState<'review' | 'forwarded' | 'all'>('review');
+  const [directorTab, setDirectorTab] = useState<'merges' | 'suggestions' | 'output'>('merges');
+  const [staffTab, setStaffTab] = useState<'new' | 'current' | 'history'>('current');
+  const directorModalRecord = escalationQueue.find(record => record.id === directorModalRecordId) ?? null;
 
   if (!currentUser) {
     return null;
@@ -115,47 +140,74 @@ export default function Dashboard() {
 
         {deptHeadMode ? (
           <>
+            {/* Tab strip */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className="grid md:grid-cols-3 gap-4"
+              className="flex gap-3"
             >
-              <button
-                onClick={() => router.push(ROUTES.review)}
-                className="p-5 text-left transition-all hover:scale-[1.02]"
-                style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.12), rgba(29,78,216,0.12))', border: '1px solid rgba(37,99,235,0.3)' }}
-              >
-                <ClipboardList size={18} className="mb-3" style={{ color: 'var(--color-accent)' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                  Review staff escalations
-                </p>
-                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  {staffEscalations.filter(r => r.status === 'pending').length} blueprint{staffEscalations.filter(r => r.status === 'pending').length === 1 ? '' : 's'} are waiting for your review.
-                </p>
-              </button>
-
-              <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
-                <GitMerge size={18} className="mb-3" style={{ color: 'var(--color-success)' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                  Forwarded to Director
-                </p>
-                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  {staffEscalations.filter(r => r.status !== 'pending').length} blueprint{staffEscalations.filter(r => r.status !== 'pending').length === 1 ? '' : 's'} approved and in the Director queue.
-                </p>
-              </div>
-
-              <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
-                <BarChart3 size={18} className="mb-3" style={{ color: 'var(--color-warning)' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                  Total escalations
-                </p>
-                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  {staffEscalations.length} solution{staffEscalations.length === 1 ? '' : 's'} submitted by your staff for review.
-                </p>
-              </div>
+              {([
+                {
+                  id: 'review' as const,
+                  icon: <ClipboardList size={18} />,
+                  label: 'Review staff escalations',
+                  sub: `${staffEscalations.filter(r => r.status === 'pending').length} blueprint${staffEscalations.filter(r => r.status === 'pending').length === 1 ? '' : 's'} waiting for review`,
+                  iconColor: 'var(--color-accent)',
+                  activeBg: 'linear-gradient(135deg, rgba(37,99,235,0.15), rgba(29,78,216,0.15))',
+                  activeBorder: '1px solid rgba(37,99,235,0.45)',
+                },
+                {
+                  id: 'forwarded' as const,
+                  icon: <GitMerge size={18} />,
+                  label: 'Forwarded to Director',
+                  sub: `${staffEscalations.filter(r => r.status === 'forwarded' || r.status === 'merged').length} blueprint${staffEscalations.filter(r => r.status === 'forwarded' || r.status === 'merged').length === 1 ? '' : 's'} in Director queue`,
+                  iconColor: 'var(--color-success)',
+                  activeBg: 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(5,150,105,0.12))',
+                  activeBorder: '1px solid rgba(16,185,129,0.4)',
+                },
+                {
+                  id: 'all' as const,
+                  icon: <BarChart3 size={18} />,
+                  label: 'Total escalations',
+                  sub: `${staffEscalations.length} solution${staffEscalations.length === 1 ? '' : 's'} submitted by staff`,
+                  iconColor: 'var(--color-warning)',
+                  activeBg: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.12))',
+                  activeBorder: '1px solid rgba(245,158,11,0.4)',
+                },
+              ] as const).map(tab => {
+                const isActive = deptTab === tab.id;
+                return (
+                  <motion.button
+                    key={tab.id}
+                    onClick={() => setDeptTab(tab.id)}
+                    animate={{ flex: isActive ? 3 : 1 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    className="p-5 text-left overflow-hidden min-w-0"
+                    style={{
+                      background: isActive ? tab.activeBg : 'var(--color-bg-card)',
+                      border: isActive ? tab.activeBorder : '1px solid var(--color-border)',
+                      transition: 'background 0.2s, border 0.2s',
+                    }}
+                  >
+                    <div style={{ color: tab.iconColor }} className="mb-3 shrink-0">{tab.icon}</div>
+                    <p className="font-display font-semibold text-sm mb-1 whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: 'var(--color-text-primary)' }}>
+                      {tab.label}
+                    </p>
+                    <motion.p
+                      animate={{ opacity: isActive ? 1 : 0, height: isActive ? 'auto' : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-xs overflow-hidden"
+                      style={{ color: 'var(--color-text-secondary)' }}
+                    >
+                      {tab.sub}
+                    </motion.p>
+                  </motion.button>
+                );
+              })}
             </motion.div>
 
+            {/* Tab content */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -163,399 +215,559 @@ export default function Dashboard() {
               className="p-6"
               style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
             >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                  Staff escalation queue
-                </h2>
-                <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
-                  {staffEscalations.filter(r => r.status === 'pending').length} pending
-                </span>
-              </div>
-
-              {staffEscalations.length > 0 ? (
-                <div className="space-y-3">
-                  {staffEscalations.slice(0, 4).map(record => (
-                    <button
-                      key={record.id}
-                      onClick={() => setModalRecord(record)}
-                      className="w-full p-4 text-left transition-all hover:border-blue-500/30"
-                      style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                            {record.blueprint.title}
-                          </p>
-                          <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                            {record.submittedBy.name} · {record.submittedBy.department} · score {record.blueprint.scores.total}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {record.status !== 'pending' && (
-                            <span className="text-[10px] px-2 py-0.5 font-mono" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)', border: '1px solid rgba(16,185,129,0.3)' }}>
-                              FORWARDED
-                            </span>
-                          )}
-                          <ArrowRight size={16} style={{ color: 'var(--color-text-muted)' }} />
-                        </div>
+              <AnimatePresence mode="wait">
+                {deptTab === 'review' && (
+                  <motion.div key="review" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                        Awaiting your review
+                      </h2>
+                      <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
+                        {staffEscalations.filter(r => r.status === 'pending').length} pending
+                      </span>
+                    </div>
+                    {staffEscalations.filter(r => r.status === 'pending' || r.status === 'returned_to_head').length > 0 ? (
+                      <div className="space-y-3">
+                        {staffEscalations.filter(r => r.status === 'pending' || r.status === 'returned_to_head').map(record => (
+                          <button
+                            key={record.id}
+                            onClick={() => setModalRecord(record)}
+                            className="w-full p-4 text-left transition-all hover:border-blue-500/30"
+                            style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              <div>
+                                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>{record.blueprint.title}</p>
+                                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                                  {record.submittedBy.name} · {record.submittedBy.department} · score {record.blueprint.scores.total}
+                                </p>
+                              </div>
+                              <ArrowRight size={16} style={{ color: 'var(--color-text-muted)' }} />
+                            </div>
+                          </button>
+                        ))}
                       </div>
+                    ) : (
+                      <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No pending escalations.</p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Once staff escalate a blueprint from the scoring step, it will appear here.</p>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => router.push(ROUTES.review)}
+                      className="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all hover:opacity-80"
+                      style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))', color: '#fff' }}
+                    >
+                      Open full review page
+                      <ArrowRight size={14} />
                     </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                  <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                    No escalations yet.
-                  </p>
-                  <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                    Once staff escalate a blueprint from the scoring step, it will appear here for review.
-                  </p>
-                </div>
-              )}
+                  </motion.div>
+                )}
+
+                {deptTab === 'forwarded' && (
+                  <motion.div key="forwarded" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                        Forwarded to Director
+                      </h2>
+                      <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
+                        {staffEscalations.filter(r => r.status === 'forwarded' || r.status === 'merged').length} forwarded
+                      </span>
+                    </div>
+                    {staffEscalations.filter(r => r.status === 'forwarded' || r.status === 'merged').length > 0 ? (
+                      <div className="space-y-3">
+                        {staffEscalations.filter(r => r.status === 'forwarded' || r.status === 'merged').map(record => (
+                          <button
+                            key={record.id}
+                            onClick={() => setModalRecord(record)}
+                            className="w-full p-4 text-left transition-all hover:border-green-500/30"
+                            style={{ background: 'var(--color-bg-panel)', border: '1px solid rgba(16,185,129,0.2)' }}
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              <div>
+                                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>{record.blueprint.title}</p>
+                                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                                  {record.submittedBy.name} · {record.submittedBy.department} · score {record.blueprint.scores.total}
+                                </p>
+                              </div>
+                              <span className="text-[10px] px-2 py-0.5 font-mono shrink-0" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)', border: '1px solid rgba(16,185,129,0.3)' }}>
+                                {record.status === 'merged' ? 'MERGED' : 'FORWARDED'}
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No forwarded blueprints yet.</p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Approve a staff escalation to forward it to the Director queue.</p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {deptTab === 'all' && (
+                  <motion.div key="all" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                        All escalations
+                      </h2>
+                      <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
+                        {staffEscalations.length} total
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 mb-5">
+                      {[
+                        { label: 'Pending review', value: staffEscalations.filter(r => r.status === 'pending' || r.status === 'returned_to_head').length, color: 'var(--color-warning)' },
+                        { label: 'Forwarded', value: staffEscalations.filter(r => r.status === 'forwarded' || r.status === 'merged').length, color: 'var(--color-success)' },
+                        { label: 'Returned to staff', value: staffEscalations.filter(r => r.status === 'returned_to_staff').length, color: 'var(--color-accent)' },
+                      ].map(({ label, value, color }) => (
+                        <div key={label} className="p-4 text-center" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                          <p className="font-display font-bold text-3xl mb-1" style={{ color }}>{value}</p>
+                          <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{label}</p>
+                        </div>
+                      ))}
+                    </div>
+                    {staffEscalations.length > 0 ? (
+                      <div className="space-y-3">
+                        {staffEscalations.map(record => (
+                          <button
+                            key={record.id}
+                            onClick={() => setModalRecord(record)}
+                            className="w-full p-4 text-left transition-all hover:border-blue-500/30"
+                            style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              <div>
+                                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>{record.blueprint.title}</p>
+                                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                                  {record.submittedBy.name} · {record.submittedBy.department} · score {record.blueprint.scores.total}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                {record.status !== 'pending' && (
+                                  <span className="text-[10px] px-2 py-0.5 font-mono" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)', border: '1px solid rgba(16,185,129,0.3)' }}>
+                                    {record.status.toUpperCase().replace('_', ' ')}
+                                  </span>
+                                )}
+                                <ArrowRight size={16} style={{ color: 'var(--color-text-muted)' }} />
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No escalations yet.</p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Once staff escalate a blueprint from the scoring step, it will appear here.</p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           </>
         ) : directorMode ? (
           <>
+            {/* Director tab strip */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className="grid md:grid-cols-3 gap-4"
+              className="flex gap-3"
             >
-              <button
-                onClick={() => router.push(ROUTES.merge)}
-                className="p-5 text-left transition-all hover:scale-[1.02]"
-                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-              >
-                <GitMerge size={18} className="mb-3" style={{ color: 'var(--color-accent)' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                  Pending merges
-                </p>
-                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  {pendingEscalations.length} escalations approved by dept heads, ready for merge.
-                </p>
-              </button>
-
-              <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
-                <Sparkles size={18} className="mb-3" style={{ color: 'var(--color-accent)' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                  GLM suggestions
-                </p>
-                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  {mergeSuggestions.length > 0
-                    ? `${mergeSuggestions.length} compatible blueprint pairs are ready for comparison.`
-                    : 'No merge suggestions yet. Department heads must forward blueprints first.'}
-                </p>
-              </div>
-
-              <button
-                onClick={() => router.push(mergedStrategy ? ROUTES.output : ROUTES.merge)}
-                className="p-5 text-left transition-all hover:scale-[1.02]"
-                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-              >
-                <FileText size={18} className="mb-3" style={{ color: 'var(--color-success)' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                  Latest strategy output
-                </p>
-                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  {mergedStrategy
-                    ? `${mergedStrategy.title} is ready for review.`
-                    : 'No unified strategy generated yet.'}
-                </p>
-              </button>
+              {([
+                {
+                  id: 'merges' as const,
+                  icon: <GitMerge size={18} />,
+                  label: 'Pending merges',
+                  sub: `${pendingEscalations.length} escalation${pendingEscalations.length === 1 ? '' : 's'} ready for merge`,
+                  iconColor: 'var(--color-accent)',
+                  activeBg: 'linear-gradient(135deg, rgba(37,99,235,0.15), rgba(29,78,216,0.15))',
+                  activeBorder: '1px solid rgba(37,99,235,0.45)',
+                },
+                {
+                  id: 'suggestions' as const,
+                  icon: <Sparkles size={18} />,
+                  label: 'GLM suggestions',
+                  sub: mergeSuggestions.length > 0
+                    ? `${mergeSuggestions.length} compatible pair${mergeSuggestions.length === 1 ? '' : 's'} ready`
+                    : 'No suggestions yet',
+                  iconColor: 'var(--color-accent)',
+                  activeBg: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(109,40,217,0.12))',
+                  activeBorder: '1px solid rgba(139,92,246,0.4)',
+                },
+                {
+                  id: 'output' as const,
+                  icon: <FileText size={18} />,
+                  label: 'Latest strategy output',
+                  sub: mergedStrategy ? `${mergedStrategy.title} ready` : 'No strategy generated yet',
+                  iconColor: 'var(--color-success)',
+                  activeBg: 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(5,150,105,0.12))',
+                  activeBorder: '1px solid rgba(16,185,129,0.4)',
+                },
+              ] as const).map(tab => {
+                const isActive = directorTab === tab.id;
+                return (
+                  <motion.button
+                    key={tab.id}
+                    onClick={() => setDirectorTab(tab.id)}
+                    animate={{ flex: isActive ? 3 : 1 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    className="p-5 text-left overflow-hidden min-w-0"
+                    style={{
+                      background: isActive ? tab.activeBg : 'var(--color-bg-card)',
+                      border: isActive ? tab.activeBorder : '1px solid var(--color-border)',
+                      transition: 'background 0.2s, border 0.2s',
+                    }}
+                  >
+                    <div style={{ color: tab.iconColor }} className="mb-3 shrink-0">{tab.icon}</div>
+                    <p className="font-display font-semibold text-sm mb-1 whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: 'var(--color-text-primary)' }}>
+                      {tab.label}
+                    </p>
+                    <motion.p
+                      animate={{ opacity: isActive ? 1 : 0, height: isActive ? 'auto' : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-xs overflow-hidden"
+                      style={{ color: 'var(--color-text-secondary)' }}
+                    >
+                      {tab.sub}
+                    </motion.p>
+                  </motion.button>
+                );
+              })}
             </motion.div>
 
-            <div className="grid lg:grid-cols-[1.2fr,0.8fr] gap-6">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.14 }}
-                className="p-6"
-                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                    Pending escalations
-                  </h2>
-                  <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
-                    {pendingEscalations.length} pending
-                  </span>
-                </div>
-
-                {pendingEscalations.length > 0 ? (
-                  <div className="space-y-3">
-                    {pendingEscalations.slice(0, 4).map(record => (
-                      <button
-                        key={record.id}
-                        onClick={() => setDirectorModalRecord(record)}
-                        className="w-full p-4 text-left transition-all hover:border-blue-500/30"
-                        style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
-                      >
-                        <div className="flex items-center justify-between gap-4">
-                          <div>
-                            <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                              {record.blueprint.title}
-                            </p>
-                            <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                              Escalated by {record.submittedBy.name} from {record.submittedBy.department}
-                            </p>
-                          </div>
-                          <ArrowRight size={16} style={{ color: 'var(--color-text-muted)' }} />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                    <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                      No escalations waiting for merge.
-                    </p>
-                    <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                      Once department heads approve and forward blueprints, they will appear here for merge.
-                    </p>
-                  </div>
-                )}
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="p-6"
-                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-              >
-                <h2 className="font-display font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>
-                  Best merge suggestion
-                </h2>
-                {mergeSuggestions[0] ? (
-                  <>
-                    <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--color-text-secondary)' }}>
-                      {mergeSuggestions[0].rationale}
-                    </p>
-                    <div className="grid grid-cols-2 gap-3 mb-5">
-                      {Object.entries(mergeSuggestions[0].compatibility).map(([label, value]) => (
-                        <div key={label} className="p-3" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                          <p className="text-xs capitalize mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                            {label}
-                          </p>
-                          <p className="font-display font-bold text-lg" style={{ color: 'var(--color-text-primary)' }}>
-                            {value}%
-                          </p>
-                        </div>
-                      ))}
+            {/* Director tab content */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.14 }}
+              className="p-6"
+              style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
+            >
+              <AnimatePresence mode="wait">
+                {directorTab === 'merges' && (
+                  <motion.div key="merges" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>Pending escalations</h2>
+                      <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
+                        {pendingEscalations.length} pending
+                      </span>
                     </div>
+                    {pendingEscalations.length > 0 ? (
+                      <div className="space-y-3">
+                        {pendingEscalations.map(record => (
+                          <button
+                            key={record.id}
+                            onClick={() => setDirectorModalRecordId(record.id)}
+                            className="w-full p-4 text-left transition-all hover:border-blue-500/30"
+                            style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              <div>
+                                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>{record.blueprint.title}</p>
+                                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                                  Escalated by {record.submittedBy.name} from {record.submittedBy.department}
+                                </p>
+                              </div>
+                              <ArrowRight size={16} style={{ color: 'var(--color-text-muted)' }} />
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No escalations waiting for merge.</p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Once department heads forward blueprints, they will appear here.</p>
+                      </div>
+                    )}
                     <button
+                      type="button"
                       onClick={() => router.push(ROUTES.merge)}
-                      className="w-full py-3 font-semibold text-white transition-all hover:scale-[1.02]"
-                      style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent))' }}
+                      className="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all hover:opacity-80"
+                      style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))', color: '#fff' }}
                     >
                       Open merge workspace
+                      <ArrowRight size={14} />
                     </button>
-                  </>
-                ) : (
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                    Indecisive needs at least two pending escalations before it can recommend a compatible merge pair.
-                  </p>
+                  </motion.div>
                 )}
-              </motion.div>
-            </div>
+
+                {directorTab === 'suggestions' && (
+                  <motion.div key="suggestions" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+                    <h2 className="font-display font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>Best merge suggestion</h2>
+                    {mergeSuggestions[0] ? (
+                      <>
+                        <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+                          {mergeSuggestions[0].rationale}
+                        </p>
+                        <div className="grid grid-cols-2 gap-3 mb-5">
+                          {Object.entries(mergeSuggestions[0].compatibility).map(([label, value]) => (
+                            <div key={label} className="p-3" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                              <p className="text-xs capitalize mb-1" style={{ color: 'var(--color-text-muted)' }}>{label}</p>
+                              <p className="font-display font-bold text-lg" style={{ color: 'var(--color-text-primary)' }}>{value}%</p>
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => router.push(ROUTES.merge)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-80"
+                          style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))' }}
+                        >
+                          Open merge workspace
+                          <ArrowRight size={14} />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                        <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                          Indecisive needs at least two pending escalations before it can recommend a compatible merge pair.
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {directorTab === 'output' && (
+                  <motion.div key="output" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+                    <h2 className="font-display font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>Latest strategy output</h2>
+                    {mergedStrategy ? (
+                      <div className="space-y-4">
+                        <div className="p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                          <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>Strategy title</p>
+                          <p className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>{mergedStrategy.title}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => router.push(ROUTES.output)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-80"
+                          style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))' }}
+                        >
+                          View full strategy
+                          <ArrowRight size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No unified strategy generated yet.</p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Complete a merge in the merge workspace to generate a strategy output.</p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           </>
         ) : (
           <>
+            {/* Staff tab strip */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className="grid md:grid-cols-3 gap-4"
+              className="flex gap-3"
             >
-              <button
-                onClick={() => router.push(ROUTES.submit)}
-                className="p-5 text-left transition-all hover:scale-[1.02]"
-                style={{ background: 'linear-gradient(135deg, #2563eb20, #1d4ed820)', border: '1px solid rgba(37, 99, 235, 0.3)' }}
-              >
-                <Plus size={18} className="mb-3" style={{ color: 'var(--color-primary-bright)' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                  Start a new problem
-                </p>
-                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  Open a fresh submission and let Indecisive build a new set of blueprints.
-                </p>
-              </button>
-
-              <button
-                onClick={() => router.push(latestStaffRoute)}
-                className="p-5 text-left transition-all hover:scale-[1.02]"
-                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-              >
-                <Layers3 size={18} className="mb-3" style={{ color: 'var(--color-accent)' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                  Continue current flow
-                </p>
-                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  {activeSubmission
-                    ? `Resume at the ${submissionStatus} stage for your active submission.`
-                    : 'No active submission yet. Indecisive will take you to the submission page.'}
-                </p>
-              </button>
-
-              <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
-                <BarChart3 size={18} className="mb-3" style={{ color: 'var(--color-success)' }} />
-                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                  Escalation queue
-                </p>
-                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                  Submit and escalate a blueprint to start the review pipeline.
-                </p>
-              </div>
+              {([
+                {
+                  id: 'new' as const,
+                  icon: <Plus size={18} />,
+                  label: 'Start a new problem',
+                  sub: 'Open a fresh submission and let Indecisive build blueprints.',
+                  iconColor: 'var(--color-primary-bright)',
+                  activeBg: 'linear-gradient(135deg, rgba(37,99,235,0.15), rgba(29,78,216,0.15))',
+                  activeBorder: '1px solid rgba(37,99,235,0.45)',
+                },
+                {
+                  id: 'current' as const,
+                  icon: <Layers3 size={18} />,
+                  label: 'Continue current flow',
+                  sub: activeSubmission
+                    ? `Resume at the ${submissionStatus} stage.`
+                    : 'No active submission yet.',
+                  iconColor: 'var(--color-accent)',
+                  activeBg: 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(79,70,229,0.12))',
+                  activeBorder: '1px solid rgba(99,102,241,0.4)',
+                },
+                {
+                  id: 'history' as const,
+                  icon: <BarChart3 size={18} />,
+                  label: 'Escalation history',
+                  sub: myEscalatedSubmissions.length > 0
+                    ? `${myEscalatedSubmissions.length} past submission${myEscalatedSubmissions.length === 1 ? '' : 's'}`
+                    : 'No escalations yet.',
+                  iconColor: 'var(--color-success)',
+                  activeBg: 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(5,150,105,0.12))',
+                  activeBorder: '1px solid rgba(16,185,129,0.4)',
+                },
+              ] as const).map(tab => {
+                const isActive = staffTab === tab.id;
+                return (
+                  <motion.button
+                    key={tab.id}
+                    onClick={() => setStaffTab(tab.id)}
+                    animate={{ flex: isActive ? 3 : 1 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    className="p-5 text-left overflow-hidden min-w-0"
+                    style={{
+                      background: isActive ? tab.activeBg : 'var(--color-bg-card)',
+                      border: isActive ? tab.activeBorder : '1px solid var(--color-border)',
+                      transition: 'background 0.2s, border 0.2s',
+                    }}
+                  >
+                    <div style={{ color: tab.iconColor }} className="mb-3 shrink-0">{tab.icon}</div>
+                    <p className="font-display font-semibold text-sm mb-1 whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: 'var(--color-text-primary)' }}>
+                      {tab.label}
+                    </p>
+                    <motion.p
+                      animate={{ opacity: isActive ? 1 : 0, height: isActive ? 'auto' : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-xs overflow-hidden"
+                      style={{ color: 'var(--color-text-secondary)' }}
+                    >
+                      {tab.sub}
+                    </motion.p>
+                  </motion.button>
+                );
+              })}
             </motion.div>
 
-            <div className="grid lg:grid-cols-[1.1fr,0.9fr] gap-6">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.14 }}
-                className="p-6"
-                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-              >
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                    Active submission
-                  </h2>
-                  <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
-                    {submissionStatus}
-                  </span>
-                </div>
+            {/* Staff tab content */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.14 }}
+              className="p-6"
+              style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
+            >
+              <AnimatePresence mode="wait">
+                {staffTab === 'new' && (
+                  <motion.div key="new" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+                    <h2 className="font-display font-semibold mb-3" style={{ color: 'var(--color-text-primary)' }}>Start a new problem</h2>
+                    <p className="text-sm mb-5" style={{ color: 'var(--color-text-secondary)' }}>
+                      Submit a problem statement and let Indecisive retrieve context, generate blueprints, and walk you through scoring.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => router.push(ROUTES.submit)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-80"
+                      style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))' }}
+                    >
+                      Open submission form
+                      <ArrowRight size={14} />
+                    </button>
+                  </motion.div>
+                )}
 
-                {activeSubmission ? (
-                  <div className="space-y-5">
-                    <div className="p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                      <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                        Problem statement
-                      </p>
-                      <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-primary)' }}>
-                        {activeSubmission.problemStatement}
-                      </p>
+                {staffTab === 'current' && (
+                  <motion.div key="current" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+                    <div className="flex items-center justify-between mb-5">
+                      <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>Active submission</h2>
+                      <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
+                        {submissionStatus}
+                      </span>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-3">
-                      {contextCounts.map(item => (
-                        <div key={item.label} className="p-4 text-center" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                          <p className="font-display font-bold text-2xl" style={{ color: 'var(--color-text-primary)' }}>
-                            {item.value}
-                          </p>
-                          <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                            {item.label}
-                          </p>
+                    {activeSubmission ? (
+                      <div className="space-y-5">
+                        <div className="p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                          <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>Problem statement</p>
+                          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-primary)' }}>{activeSubmission.problemStatement}</p>
                         </div>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center justify-between p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                      <div>
-                        <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                          Preferred blueprint
-                        </p>
-                        <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>
-                          {selectedBlueprint ? selectedBlueprint.title : 'Not selected yet'}
+                        <div className="grid grid-cols-3 gap-3">
+                          {contextCounts.map(item => (
+                            <div key={item.label} className="p-4 text-center" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                              <p className="font-display font-bold text-2xl" style={{ color: 'var(--color-text-primary)' }}>{item.value}</p>
+                              <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{item.label}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex items-center justify-between p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                          <div>
+                            <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>Preferred blueprint</p>
+                            <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>
+                              {selectedBlueprint ? selectedBlueprint.title : 'Not selected yet'}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => router.push(latestStaffRoute)}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-80"
+                            style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))' }}
+                          >
+                            Continue
+                            <ArrowRight size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No active submission yet.</p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                          Start a new problem to see retrieved context, generated blueprints, and ranking progress here.
                         </p>
                       </div>
-                      <button
-                        onClick={() => router.push(latestStaffRoute)}
-                        className="px-4 py-2 text-sm font-medium transition-all"
-                        style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
-                      >
-                        Continue
-                      </button>
+                    )}
+                  </motion.div>
+                )}
+
+                {staffTab === 'history' && (
+                  <motion.div key="history" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+                    <div className="flex items-center gap-2 mb-4">
+                      <FileText size={16} style={{ color: 'var(--color-accent)' }} />
+                      <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>Past submissions</h2>
                     </div>
-                  </div>
-                ) : (
-                  <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                    <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                      No active submission yet.
+                    <p className="text-sm mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+                      Reopen any blueprint you already escalated and review the original submission record.
                     </p>
-                    <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                      Start a new problem to see retrieved context, generated blueprints, conflicts,
-                      and ranking progress here.
-                    </p>
-                  </div>
-                )}
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="p-6"
-                style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-              >
-                <div className="flex items-center gap-2 mb-4">
-                  <FileText size={16} style={{ color: 'var(--color-accent)' }} />
-                  <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                    Past submissions
-                  </h2>
-                </div>
-                <p className="text-sm mb-4" style={{ color: 'var(--color-text-secondary)' }}>
-                  Reopen any blueprint you already escalated and review the original submission record.
-                </p>
-
-                {myEscalatedSubmissions.length > 0 ? (
-                  <div className="space-y-3">
-                    {myEscalatedSubmissions.slice(0, 3).map(record => {
-                      const statusMeta = getStaffSubmissionStatusMeta(record.status);
-
-                      return (
-                        <button
-                          key={record.id}
-                          onClick={() => setStaffHistoryRecord(record)}
-                          aria-label={`Review ${record.blueprint.title} submission`}
-                          className="w-full p-4 text-left transition-all hover:border-blue-500/30"
-                          style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
-                        >
-                          <div className="flex items-start justify-between gap-3 mb-3">
-                            <div>
-                              <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                                {record.blueprint.title}
-                              </p>
-                              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                                Escalated {record.escalatedAt} | {record.blueprint.department}
-                              </p>
-                            </div>
-                            <span
-                              className="text-[10px] font-mono px-2 py-1 shrink-0"
-                              style={{
-                                background: statusMeta.background,
-                                border: statusMeta.border,
-                                color: statusMeta.color,
-                              }}
+                    {myEscalatedSubmissions.length > 0 ? (
+                      <div className="space-y-3">
+                        {myEscalatedSubmissions.map(record => {
+                          const statusMeta = getStaffSubmissionStatusMeta(record.status);
+                          return (
+                            <button
+                              key={record.id}
+                              onClick={() => setStaffHistoryRecord(record)}
+                              aria-label={`Review ${record.blueprint.title} submission`}
+                              className="w-full p-4 text-left transition-all hover:border-blue-500/30"
+                              style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
                             >
-                              {statusMeta.label}
-                            </span>
-                          </div>
-
-                          <div className="p-3" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
-                            <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                              Original problem statement
-                            </p>
-                            <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                              {getSubmissionPreview(record.submission.problemStatement)}
-                            </p>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                    <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                      No past submissions yet.
-                    </p>
-                    <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                      Once you escalate a blueprint, it will stay here so you can review the full submission later.
-                    </p>
-                  </div>
+                              <div className="flex items-start justify-between gap-3 mb-3">
+                                <div>
+                                  <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>{record.blueprint.title}</p>
+                                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                                    Escalated {record.escalatedAt} | {record.blueprint.department}
+                                  </p>
+                                </div>
+                                <span
+                                  className="text-[10px] font-mono px-2 py-1 shrink-0"
+                                  style={{ background: statusMeta.background, border: statusMeta.border, color: statusMeta.color }}
+                                >
+                                  {statusMeta.label}
+                                </span>
+                              </div>
+                              <div className="p-3" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                                <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--color-text-muted)' }}>Original problem statement</p>
+                                <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+                                  {getSubmissionPreview(record.submission.problemStatement)}
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No past submissions yet.</p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                          Once you escalate a blueprint, it will stay here so you can review it later.
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
                 )}
-              </motion.div>
-            </div>
+              </AnimatePresence>
+            </motion.div>
           </>
         )}
       </div>
@@ -564,17 +776,244 @@ export default function Dashboard() {
         {modalRecord && (
           <BlueprintDetailModal
             record={modalRecord}
-            isForwarded={modalRecord.status !== 'pending'}
+            isForwarded={modalRecord.status === 'forwarded' || modalRecord.status === 'merged'}
             onApprove={() => approveToDirector(modalRecord.id)}
             onClose={() => setModalRecord(null)}
+            reviewPanel={(() => {
+              const isLocked = modalRecord.status === 'forwarded' || modalRecord.status === 'merged';
+              const reviews = modalRecord.reviews ?? [];
+              return (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <GitCommitHorizontal size={18} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+                    <p className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+                      Escalated on {modalRecord.escalatedAt}
+                    </p>
+                  </div>
+
+                  <div style={{ border: '1px solid var(--color-border)' }}>
+                    {/* Escalated row */}
+                    <div
+                      className="flex items-center justify-between gap-3 px-4 py-3"
+                      style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-bg-panel)' }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--color-text-primary)' }}>
+                          Escalated this blueprint
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <RoleAvatar initials={modalRecord.submittedBy.avatar} role={modalRecord.submittedBy.role} size={16} />
+                          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                            <span style={{ color: 'var(--color-text-secondary)' }}>{modalRecord.submittedBy.name}</span>
+                            <span className="ml-1" style={{ color: 'var(--color-text-muted)', fontSize: '10px' }}>
+                              ({ROLE_LABELS[modalRecord.submittedBy.role]})
+                            </span>
+                            {' '}escalated · {modalRecord.escalatedAt}
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className="text-[10px] font-mono px-2 py-0.5 shrink-0"
+                        style={{ background: `${modalRecord.blueprint.color}18`, color: modalRecord.blueprint.accentColor, border: `1px solid ${modalRecord.blueprint.color}35` }}
+                      >
+                        {modalRecord.submittedBy.department}
+                      </span>
+                    </div>
+
+                    {/* Ticket row */}
+                    {modalRecord.ticket && (
+                      <div
+                        className="flex items-center justify-between gap-3 px-4 py-3"
+                        style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-bg-panel)' }}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--color-text-primary)' }}>
+                            {modalRecord.ticket.title}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <RoleAvatar initials={modalRecord.ticket.createdByRole.slice(0, 2).toUpperCase()} role={modalRecord.ticket.createdByRole} size={16} />
+                            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                              <span style={{ color: 'var(--color-text-secondary)' }}>{ROLE_LABELS[modalRecord.ticket.createdByRole]}</span>
+                              {' '}generated ticket · {modalRecord.ticket.createdAt}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className="text-[10px] font-mono px-2 py-0.5 shrink-0"
+                          style={{ background: 'rgba(245,158,11,0.12)', color: 'var(--color-warning)', border: '1px solid rgba(245,158,11,0.3)' }}
+                        >
+                          {modalRecord.ticket.id}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Review rows */}
+                    {reviews.map((review, i) => (
+                      <div
+                        key={review.id}
+                        className="px-4 py-3"
+                        style={{ borderBottom: i < reviews.length - 1 || !isLocked ? '1px solid var(--color-border)' : undefined, background: 'var(--color-bg-panel)' }}
+                      >
+                        <p className="text-sm font-semibold leading-snug mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                          {review.note}
+                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <RoleAvatar initials={review.byRole.slice(0, 2).toUpperCase()} role={review.byRole} size={16} />
+                          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                            <span style={{ color: 'var(--color-text-secondary)' }}>{ROLE_LABELS[review.byRole]}</span>
+                            {' '}reviewed · {review.createdAt}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Forwarded row */}
+                    {isLocked && (
+                      <div className="flex items-center gap-3 px-4 py-3" style={{ background: 'rgba(16,185,129,0.06)' }}>
+                        <GitMerge size={14} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
+                        <div>
+                          <p className="text-sm font-semibold" style={{ color: 'var(--color-success)' }}>Forwarded to Director</p>
+                          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>no further action needed</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {!isLocked && (
+                    <div className="mt-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <RoleAvatar initials="DH" role="lead" size={16} />
+                        <p className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>Leave a review</p>
+                      </div>
+                      <div style={{ border: '1px solid var(--color-border)' }}>
+                        <textarea
+                          value={reviewDraftByRecord[modalRecord.id] ?? ''}
+                          onChange={event =>
+                            setReviewDraftByRecord(current => ({ ...current, [modalRecord.id]: event.target.value }))
+                          }
+                          rows={4}
+                          className="w-full p-3 text-sm"
+                          style={{ background: 'var(--color-bg-panel)', color: 'var(--color-text-primary)', resize: 'vertical', display: 'block' }}
+                          placeholder="Summarize what staff should revise before resubmission."
+                        />
+                        <div
+                          className="flex items-center justify-end px-3 py-2"
+                          style={{ borderTop: '1px solid var(--color-border)', background: 'var(--color-bg-deep)' }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const reviewNote = (reviewDraftByRecord[modalRecord.id] ?? '').trim();
+                              if (!reviewNote) return;
+                              deEscalateToStaff(modalRecord.id, reviewNote);
+                              setReviewDraftByRecord(current => ({ ...current, [modalRecord.id]: '' }));
+                              setModalRecord(null);
+                            }}
+                            disabled={!(reviewDraftByRecord[modalRecord.id] ?? '').trim()}
+                            className="px-4 py-1.5 text-xs font-semibold transition-all disabled:opacity-50 hover:opacity-80"
+                            style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+                          >
+                            De-escalate to Staff
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           />
         )}
         {directorModalRecord && (
           <BlueprintDetailModal
             record={directorModalRecord}
             isForwarded={false}
-            onApprove={() => { setDirectorModalRecord(null); router.push(ROUTES.merge); }}
-            onClose={() => setDirectorModalRecord(null)}
+            onApprove={() => { setDirectorModalRecordId(null); router.push(ROUTES.merge); }}
+            reviewPanel={
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-mono uppercase mb-1" style={{ color: 'var(--color-accent)' }}>
+                    Director Review
+                  </p>
+                  <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
+                    Generate a ticket, write a review, then return to department head.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {directorModalRecord.ticket ? `Ticket: ${directorModalRecord.ticket.id}` : 'No ticket yet'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => createEscalationTicket(directorModalRecord.id)}
+                    disabled={Boolean(directorModalRecord.ticket)}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-all hover:opacity-90"
+                    style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))' }}
+                  >
+                    <TicketPlus size={13} />
+                    {directorModalRecord.ticket ? 'Ticket generated' : 'Generate Ticket'}
+                  </button>
+                </div>
+
+                {directorModalRecord.ticket && (
+                  <div className="p-3" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                    <p className="text-[10px] font-mono uppercase mb-1" style={{ color: 'var(--color-text-muted)' }}>Ticket</p>
+                    <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>
+                      {directorModalRecord.ticket.id} · {directorModalRecord.ticket.title}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                      {directorModalRecord.ticket.status} · {directorModalRecord.ticket.createdAt}
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                    Review note
+                  </label>
+                  <textarea
+                    value={reviewDraftByRecord[directorModalRecord.id] ?? ''}
+                    onChange={event =>
+                      setReviewDraftByRecord(current => ({ ...current, [directorModalRecord.id]: event.target.value }))
+                    }
+                    rows={4}
+                    className="w-full p-3 text-sm"
+                    style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+                    placeholder="Summarize guidance for department head before re-escalation."
+                  />
+                </div>
+
+                {(directorModalRecord.reviews ?? []).length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-mono uppercase" style={{ color: 'var(--color-text-muted)' }}>Previous reviews</p>
+                    {(directorModalRecord.reviews ?? []).map(review => (
+                      <div key={review.id} className="p-3" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                        <p className="text-[10px] mb-1" style={{ color: 'var(--color-text-muted)' }}>{review.byRole} · {review.createdAt}</p>
+                        <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{review.note}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const reviewNote = (reviewDraftByRecord[directorModalRecord.id] ?? '').trim();
+                    if (!directorModalRecord.ticket || !reviewNote) return;
+                    deEscalateToDeptHead(directorModalRecord.id, reviewNote);
+                    setReviewDraftByRecord(current => ({ ...current, [directorModalRecord.id]: '' }));
+                    setDirectorModalRecordId(null);
+                  }}
+                  disabled={!directorModalRecord.ticket || !(reviewDraftByRecord[directorModalRecord.id] ?? '').trim()}
+                  className="px-4 py-2 text-xs font-semibold transition-all disabled:opacity-60"
+                  style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+                >
+                  De-escalate to Department Head
+                </button>
+              </div>
+            }
+            onClose={() => setDirectorModalRecordId(null)}
             approveLabel="Open Merge View"
           />
         )}
@@ -584,6 +1023,44 @@ export default function Dashboard() {
             isForwarded={staffHistoryRecord.status !== 'pending'}
             onClose={() => setStaffHistoryRecord(null)}
             statusLabel={`Past submission review | ${getStaffSubmissionStatusMeta(staffHistoryRecord.status).label}`}
+            reviewPanel={
+              (staffHistoryRecord.ticket || (staffHistoryRecord.reviews ?? []).length > 0) ? (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs font-mono uppercase mb-1" style={{ color: 'var(--color-accent)' }}>
+                      Review
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                      Feedback from your department head on this escalation.
+                    </p>
+                  </div>
+
+                  {staffHistoryRecord.ticket && (
+                    <div className="p-3" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                      <p className="text-[10px] font-mono uppercase mb-1" style={{ color: 'var(--color-text-muted)' }}>Ticket</p>
+                      <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>
+                        {staffHistoryRecord.ticket.id} · {staffHistoryRecord.ticket.title}
+                      </p>
+                      <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                        {staffHistoryRecord.ticket.status} · {staffHistoryRecord.ticket.createdAt}
+                      </p>
+                    </div>
+                  )}
+
+                  {(staffHistoryRecord.reviews ?? []).length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-mono uppercase" style={{ color: 'var(--color-text-muted)' }}>Review notes</p>
+                      {(staffHistoryRecord.reviews ?? []).map(review => (
+                        <div key={review.id} className="p-3" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+                          <p className="text-[10px] mb-1" style={{ color: 'var(--color-text-muted)' }}>{review.byRole} · {review.createdAt}</p>
+                          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{review.note}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : undefined
+            }
           />
         )}
       </AnimatePresence>

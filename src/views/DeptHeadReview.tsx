@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle, ChevronDown, ChevronUp, SendHorizonal } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronUp, GitCommitHorizontal, GitMerge, SendHorizonal, TicketCheck } from 'lucide-react';
 import BlueprintDetailModal from '../components/BlueprintDetailModal';
 import { useApp } from '../context/AppContext';
 import { EscalationRecord } from '../types';
+import { ROLE_LABELS, RoleAvatar } from '../components/RoleAvatar';
 
 function ScorePill({ label, value }: { label: string; value: number }) {
   const color =
@@ -178,11 +179,14 @@ function EscalationCard({
 }
 
 export default function DeptHeadReview() {
-  const { staffEscalations, approveToDirector } = useApp();
-  const [modalRecord, setModalRecord] = useState<EscalationRecord | null>(null);
+  const { staffEscalations, approveToDirector, deEscalateToStaff } = useApp();
+  const [modalRecordId, setModalRecordId] = useState<string | null>(null);
+  const [reviewDraftByRecord, setReviewDraftByRecord] = useState<Record<string, string>>({});
+  const modalRecord = staffEscalations.find(record => record.id === modalRecordId) ?? null;
 
-  const pendingCount = staffEscalations.filter(r => r.status === 'pending').length;
-  const forwardedCount = staffEscalations.filter(r => r.status !== 'pending').length;
+  const pendingCount = staffEscalations.filter(r => r.status === 'pending' || r.status === 'returned_to_head').length;
+  const forwardedCount = staffEscalations.filter(r => r.status === 'forwarded').length;
+  const returnedCount = staffEscalations.filter(r => r.status === 'returned_to_staff').length;
 
   return (
     <div className="page-shell" style={{ background: 'var(--color-bg-deep)' }}>
@@ -204,12 +208,13 @@ export default function DeptHeadReview() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.06 }}
-          className="grid grid-cols-3 gap-4"
+          className="grid grid-cols-2 md:grid-cols-4 gap-4"
         >
           {[
             { label: 'Total escalations', value: staffEscalations.length, color: 'var(--color-text-primary)' },
             { label: 'Awaiting review', value: pendingCount, color: 'var(--color-warning)' },
             { label: 'Forwarded to Director', value: forwardedCount, color: 'var(--color-success)' },
+            { label: 'Returned to Staff', value: returnedCount, color: 'var(--color-accent)' },
           ].map(({ label, value, color }) => (
             <div
               key={label}
@@ -256,9 +261,9 @@ export default function DeptHeadReview() {
                 <EscalationCard
                   key={record.id}
                   record={record}
-                  isForwarded={record.status !== 'pending'}
+                  isForwarded={record.status === 'forwarded' || record.status === 'merged'}
                   onApprove={() => approveToDirector(record.id)}
-                  onViewDetails={() => setModalRecord(record)}
+                  onViewDetails={() => setModalRecordId(record.id)}
                 />
               ))}
             </div>
@@ -270,9 +275,195 @@ export default function DeptHeadReview() {
         {modalRecord && (
           <BlueprintDetailModal
             record={modalRecord}
-            isForwarded={modalRecord.status !== 'pending'}
+            isForwarded={modalRecord.status === 'forwarded' || modalRecord.status === 'merged'}
             onApprove={() => approveToDirector(modalRecord.id)}
-            onClose={() => setModalRecord(null)}
+            reviewPanel={(() => {
+              const isLocked = modalRecord.status === 'forwarded' || modalRecord.status === 'merged';
+
+              // Build a flat list of timeline events
+              type TimelineEvent =
+                | { kind: 'escalated' }
+                | { kind: 'ticket' }
+                | { kind: 'review'; index: number }
+                | { kind: 'forwarded' };
+
+              const events: TimelineEvent[] = [
+                { kind: 'escalated' },
+                ...(modalRecord.ticket ? [{ kind: 'ticket' as const }] : []),
+                ...(modalRecord.reviews ?? []).map((_, i) => ({ kind: 'review' as const, index: i })),
+                ...(isLocked ? [{ kind: 'forwarded' as const }] : []),
+              ];
+
+              return (
+                <div>
+                  {/* Header — "Commits on Apr 23, 2026" style */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <GitCommitHorizontal size={18} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+                    <p className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+                      Escalated on {modalRecord.escalatedAt}
+                    </p>
+                  </div>
+
+                  {/* Commits-list box */}
+                  <div style={{ border: '1px solid var(--color-border)' }}>
+                    {events.map((ev, idx) => {
+                      const isLast = idx === events.length - 1;
+
+                      /* ── Escalated row ── */
+                      if (ev.kind === 'escalated') {
+                        return (
+                          <div
+                            key="escalated"
+                            className="flex items-center justify-between gap-3 px-4 py-3"
+                            style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-bg-panel)' }}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--color-text-primary)' }}>
+                                Escalated this blueprint
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <RoleAvatar initials={modalRecord.submittedBy.avatar} role={modalRecord.submittedBy.role} size={16} />
+                                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                                  <span style={{ color: 'var(--color-text-secondary)' }}>{modalRecord.submittedBy.name}</span>
+                                  <span className="ml-1" style={{ color: 'var(--color-text-muted)', fontSize: '10px' }}>
+                                    ({ROLE_LABELS[modalRecord.submittedBy.role]})
+                                  </span>
+                                  {' '}escalated · {modalRecord.escalatedAt}
+                                </p>
+                              </div>
+                            </div>
+                            <span
+                              className="text-[10px] font-mono px-2 py-0.5 shrink-0"
+                              style={{ background: `${modalRecord.blueprint.color}18`, color: modalRecord.blueprint.accentColor, border: `1px solid ${modalRecord.blueprint.color}35` }}
+                            >
+                              {modalRecord.submittedBy.department}
+                            </span>
+                          </div>
+                        );
+                      }
+
+                      /* ── Ticket row ── */
+                      if (ev.kind === 'ticket' && modalRecord.ticket) {
+                        return (
+                          <div
+                            key="ticket"
+                            className="flex items-center justify-between gap-3 px-4 py-3"
+                            style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-bg-panel)' }}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--color-text-primary)' }}>
+                                {modalRecord.ticket.title}
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <RoleAvatar initials={modalRecord.ticket.createdByRole.slice(0, 2).toUpperCase()} role={modalRecord.ticket.createdByRole} size={16} />
+                                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                                  <span style={{ color: 'var(--color-text-secondary)' }}>{ROLE_LABELS[modalRecord.ticket.createdByRole]}</span>
+                                  {' '}generated ticket · {modalRecord.ticket.createdAt}
+                                </p>
+                              </div>
+                            </div>
+                            <span
+                              className="text-[10px] font-mono px-2 py-0.5 shrink-0"
+                              style={{ background: 'rgba(245,158,11,0.12)', color: 'var(--color-warning)', border: '1px solid rgba(245,158,11,0.3)' }}
+                            >
+                              {modalRecord.ticket.id}
+                            </span>
+                          </div>
+                        );
+                      }
+
+                      /* ── Review row ── */
+                      if (ev.kind === 'review') {
+                        const review = (modalRecord.reviews ?? [])[ev.index];
+                        if (!review) return null;
+                        return (
+                          <div
+                            key={review.id}
+                            className="px-4 py-3"
+                            style={{ borderBottom: isLast ? undefined : '1px solid var(--color-border)', background: 'var(--color-bg-panel)' }}
+                          >
+                            <p className="text-sm font-semibold leading-snug mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                              {review.note}
+                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <RoleAvatar initials={review.byRole.slice(0, 2).toUpperCase()} role={review.byRole} size={16} />
+                              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                                <span style={{ color: 'var(--color-text-secondary)' }}>{ROLE_LABELS[review.byRole]}</span>
+                                {' '}reviewed · {review.createdAt}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      /* ── Forwarded row ── */
+                      if (ev.kind === 'forwarded') {
+                        return (
+                          <div
+                            key="forwarded"
+                            className="flex items-center gap-3 px-4 py-3"
+                            style={{ background: 'rgba(16,185,129,0.06)' }}
+                          >
+                            <GitMerge size={14} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
+                            <div>
+                              <p className="text-sm font-semibold" style={{ color: 'var(--color-success)' }}>
+                                Forwarded to Director
+                              </p>
+                              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>no further action needed</p>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return null;
+                    })}
+                  </div>
+
+                  {/* Leave a review */}
+                  {!isLocked && (
+                    <div className="mt-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <RoleAvatar initials="DH" role="lead" size={16} />
+                        <p className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>Leave a review</p>
+                      </div>
+                      <div style={{ border: '1px solid var(--color-border)' }}>
+                        <textarea
+                          value={reviewDraftByRecord[modalRecord.id] ?? ''}
+                          onChange={event =>
+                            setReviewDraftByRecord(current => ({ ...current, [modalRecord.id]: event.target.value }))
+                          }
+                          rows={4}
+                          className="w-full p-3 text-sm"
+                          style={{ background: 'var(--color-bg-panel)', color: 'var(--color-text-primary)', resize: 'vertical', display: 'block' }}
+                          placeholder="Summarize what staff should revise before resubmission."
+                        />
+                        <div
+                          className="flex items-center justify-end px-3 py-2"
+                          style={{ borderTop: '1px solid var(--color-border)', background: 'var(--color-bg-deep)' }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const reviewNote = (reviewDraftByRecord[modalRecord.id] ?? '').trim();
+                              if (!reviewNote) return;
+                              deEscalateToStaff(modalRecord.id, reviewNote);
+                              setReviewDraftByRecord(current => ({ ...current, [modalRecord.id]: '' }));
+                              setModalRecordId(null);
+                            }}
+                            disabled={!(reviewDraftByRecord[modalRecord.id] ?? '').trim()}
+                            className="px-4 py-1.5 text-xs font-semibold transition-all disabled:opacity-50 hover:opacity-80"
+                            style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
+                          >
+                            De-escalate to Staff
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+            onClose={() => setModalRecordId(null)}
           />
         )}
       </AnimatePresence>

@@ -6,8 +6,10 @@ export type ConflictType = 'budget' | 'timeline' | 'headcount' | 'technical';
 
 export type Severity = 'high' | 'medium' | 'low';
 
-export type EscalationStatus = 'pending' | 'forwarded' | 'merged';
+export type EscalationStatus = 'pending' | 'forwarded' | 'merged' | 'returned_to_staff' | 'returned_to_head';
 export type EscalationLevel = 'staff_to_head' | 'head_to_director';
+export type EscalationTicketStatus = 'open';
+export type EscalationReviewTarget = 'staff' | 'lead' | 'director';
 
 export interface User {
   id: string;
@@ -45,7 +47,6 @@ export interface PrototypePreview {
   summary: string;
   screens: PrototypeScreen[];
   prototypeSourceJsx?: string;
-  prototypeSourcePath?: string;
   prototypeCode?: string;
 }
 
@@ -149,6 +150,20 @@ export interface EscalationRecord {
   note: string;
   status: EscalationStatus;
   level: EscalationLevel;
+  ticket: {
+    id: string;
+    title: string;
+    status: EscalationTicketStatus;
+    createdAt: string;
+    createdByRole: Role;
+  } | null;
+  reviews: {
+    id: string;
+    byRole: Role;
+    target: EscalationReviewTarget;
+    note: string;
+    createdAt: string;
+  }[];
 }
 
 export interface MergeCompatibility {

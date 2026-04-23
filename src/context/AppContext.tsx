@@ -53,6 +53,9 @@ interface AppContextValue extends AppState {
   escalateSelectedBlueprint: () => void;
   resetSubmission: () => void;
   approveToDirector: (recordId: string) => void;
+  createEscalationTicket: (recordId: string) => void;
+  deEscalateToStaff: (recordId: string, reviewNote: string) => void;
+  deEscalateToDeptHead: (recordId: string, reviewNote: string) => void;
   selectMergePair: (blueprintIds: string[]) => void;
   completeMerge: () => void;
 }
@@ -69,6 +72,9 @@ type Action =
   | { type: 'escalateSelectedBlueprint' }
   | { type: 'resetSubmission' }
   | { type: 'approveToDirector'; payload: { recordId: string } }
+  | { type: 'createEscalationTicket'; payload: { recordId: string } }
+  | { type: 'deEscalateToStaff'; payload: { recordId: string; reviewNote: string } }
+  | { type: 'deEscalateToDeptHead'; payload: { recordId: string; reviewNote: string } }
   | { type: 'selectMergePair'; payload: { blueprintIds: string[] } }
   | { type: 'completeMerge' };
 
@@ -231,6 +237,8 @@ function reducer(state: AppState, action: Action): AppState {
           note: `Escalated from the ${state.currentUser.department} team after staff review.`,
           status: 'pending' as const,
           level: 'staff_to_head' as const,
+          ticket: null,
+          reviews: [],
         },
         ...state.escalationQueue,
       ];
@@ -243,10 +251,79 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'approveToDirector': {
       const escalationQueue = state.escalationQueue.map(record =>
-        record.id === action.payload.recordId
+        record.id === action.payload.recordId && (record.status === 'pending' || record.status === 'returned_to_head')
           ? { ...record, status: 'forwarded' as const }
           : record,
       );
+      return syncMergeSelection({ ...state, escalationQueue });
+    }
+    case 'createEscalationTicket': {
+      if (!state.currentUser) return state;
+      const currentUser = state.currentUser;
+      const escalationQueue = state.escalationQueue.map(record => {
+        if (record.id !== action.payload.recordId || record.ticket) return record;
+        return {
+          ...record,
+          ticket: {
+            id: createId('ticket'),
+            title: `Review ticket: ${record.blueprint.title}`,
+            status: 'open' as const,
+            createdAt: '2026-04-23',
+            createdByRole: currentUser.role,
+          },
+        };
+      });
+      return { ...state, escalationQueue };
+    }
+    case 'deEscalateToStaff': {
+      if (!state.currentUser || !action.payload.reviewNote.trim()) return state;
+      const currentUser = state.currentUser;
+      const escalationQueue = state.escalationQueue.map(record => {
+        if (record.id !== action.payload.recordId) return record;
+        if (record.status !== 'pending' && record.status !== 'returned_to_head') return record;
+
+        return {
+          ...record,
+          status: 'returned_to_staff' as const,
+          note: `Returned to staff by department head ${currentUser.name} for revision.`,
+          reviews: [
+            {
+              id: createId('review'),
+              byRole: currentUser.role,
+              target: 'staff' as const,
+              note: action.payload.reviewNote.trim(),
+              createdAt: '2026-04-23',
+            },
+            ...(record.reviews ?? []),
+          ],
+        };
+      });
+
+      return syncMergeSelection({ ...state, escalationQueue });
+    }
+    case 'deEscalateToDeptHead': {
+      if (!state.currentUser || !action.payload.reviewNote.trim()) return state;
+      const currentUser = state.currentUser;
+      const escalationQueue = state.escalationQueue.map(record => {
+        if (record.id !== action.payload.recordId || record.status !== 'forwarded') return record;
+
+        return {
+          ...record,
+          status: 'returned_to_head' as const,
+          note: `Returned to department head by director ${currentUser.name} for further review.`,
+          reviews: [
+            {
+              id: createId('review'),
+              byRole: currentUser.role,
+              target: 'lead' as const,
+              note: action.payload.reviewNote.trim(),
+              createdAt: '2026-04-23',
+            },
+            ...(record.reviews ?? []),
+          ],
+        };
+      });
+
       return syncMergeSelection({ ...state, escalationQueue });
     }
     case 'resetSubmission':
@@ -339,6 +416,12 @@ export function AppProvider({
       escalateSelectedBlueprint: () => dispatch({ type: 'escalateSelectedBlueprint' }),
       resetSubmission: () => dispatch({ type: 'resetSubmission' }),
       approveToDirector: (recordId: string) => dispatch({ type: 'approveToDirector', payload: { recordId } }),
+      createEscalationTicket: (recordId: string) =>
+        dispatch({ type: 'createEscalationTicket', payload: { recordId } }),
+      deEscalateToStaff: (recordId: string, reviewNote: string) =>
+        dispatch({ type: 'deEscalateToStaff', payload: { recordId, reviewNote } }),
+      deEscalateToDeptHead: (recordId: string, reviewNote: string) =>
+        dispatch({ type: 'deEscalateToDeptHead', payload: { recordId, reviewNote } }),
       selectMergePair: (blueprintIds: string[]) =>
         dispatch({ type: 'selectMergePair', payload: { blueprintIds } }),
       completeMerge: () => dispatch({ type: 'completeMerge' }),
