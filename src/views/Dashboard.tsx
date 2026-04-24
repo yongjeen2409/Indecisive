@@ -10,8 +10,6 @@ import {
   GitMerge,
   Layers3,
   Plus,
-  Sparkles,
-  TicketPlus,
 } from 'lucide-react';
 import { GitCommitHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -20,6 +18,8 @@ import { ROLE_LABELS, RoleAvatar } from '../components/RoleAvatar';
 import { useApp } from '../context/AppContext';
 import { ROUTES, getLatestStaffRoute, isDeptHead, isDirector } from '../lib/routes';
 import { EscalationRecord } from '../types';
+import DirectorPortal from './DirectorPortal';
+import ProblemChatModal from '../components/ProblemChatModal';
 
 function getSubmissionPreview(problemStatement: string, maxLength = 150) {
   if (problemStatement.length <= maxLength) {
@@ -79,23 +79,16 @@ export default function Dashboard() {
     selectedBlueprint,
     escalationQueue,
     staffEscalations,
-    pendingEscalations,
-    mergeSuggestions,
-    mergedStrategy,
     approveToDirector,
-    createEscalationTicket,
     deEscalateToStaff,
-    deEscalateToDeptHead,
   } = useApp();
   const router = useRouter();
   const [modalRecord, setModalRecord] = useState<EscalationRecord | null>(null);
-  const [directorModalRecordId, setDirectorModalRecordId] = useState<string | null>(null);
   const [staffHistoryRecord, setStaffHistoryRecord] = useState<EscalationRecord | null>(null);
   const [reviewDraftByRecord, setReviewDraftByRecord] = useState<Record<string, string>>({});
   const [deptTab, setDeptTab] = useState<'review' | 'forwarded' | 'all'>('review');
-  const [directorTab, setDirectorTab] = useState<'merges' | 'suggestions' | 'output'>('merges');
   const [staffTab, setStaffTab] = useState<'new' | 'current' | 'history'>('current');
-  const directorModalRecord = escalationQueue.find(record => record.id === directorModalRecordId) ?? null;
+  const [showOdisChat, setShowOdisChat] = useState(false);
 
   if (!currentUser) {
     return null;
@@ -368,198 +361,7 @@ export default function Dashboard() {
             </motion.div>
           </>
         ) : directorMode ? (
-          <>
-            {/* Director tab strip */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.08 }}
-              className="flex gap-3"
-            >
-              {([
-                {
-                  id: 'merges' as const,
-                  icon: <GitMerge size={18} />,
-                  label: 'Pending merges',
-                  sub: `${pendingEscalations.length} escalation${pendingEscalations.length === 1 ? '' : 's'} ready for merge`,
-                  iconColor: 'var(--color-accent)',
-                  activeBg: 'linear-gradient(135deg, rgba(37,99,235,0.15), rgba(29,78,216,0.15))',
-                  activeBorder: '1px solid rgba(37,99,235,0.45)',
-                },
-                {
-                  id: 'suggestions' as const,
-                  icon: <Sparkles size={18} />,
-                  label: 'GLM suggestions',
-                  sub: mergeSuggestions.length > 0
-                    ? `${mergeSuggestions.length} compatible pair${mergeSuggestions.length === 1 ? '' : 's'} ready`
-                    : 'No suggestions yet',
-                  iconColor: 'var(--color-accent)',
-                  activeBg: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(109,40,217,0.12))',
-                  activeBorder: '1px solid rgba(139,92,246,0.4)',
-                },
-                {
-                  id: 'output' as const,
-                  icon: <FileText size={18} />,
-                  label: 'Latest strategy output',
-                  sub: mergedStrategy ? `${mergedStrategy.title} ready` : 'No strategy generated yet',
-                  iconColor: 'var(--color-success)',
-                  activeBg: 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(5,150,105,0.12))',
-                  activeBorder: '1px solid rgba(16,185,129,0.4)',
-                },
-              ] as const).map(tab => {
-                const isActive = directorTab === tab.id;
-                return (
-                  <motion.button
-                    key={tab.id}
-                    onClick={() => setDirectorTab(tab.id)}
-                    animate={{ flex: isActive ? 3 : 1 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    className="p-5 text-left overflow-hidden min-w-0"
-                    style={{
-                      background: isActive ? tab.activeBg : 'var(--color-bg-card)',
-                      border: isActive ? tab.activeBorder : '1px solid var(--color-border)',
-                      transition: 'background 0.2s, border 0.2s',
-                    }}
-                  >
-                    <div style={{ color: tab.iconColor }} className="mb-3 shrink-0">{tab.icon}</div>
-                    <p className="font-display font-semibold text-sm mb-1 whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: 'var(--color-text-primary)' }}>
-                      {tab.label}
-                    </p>
-                    <motion.p
-                      animate={{ opacity: isActive ? 1 : 0, height: isActive ? 'auto' : 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="text-xs overflow-hidden"
-                      style={{ color: 'var(--color-text-secondary)' }}
-                    >
-                      {tab.sub}
-                    </motion.p>
-                  </motion.button>
-                );
-              })}
-            </motion.div>
-
-            {/* Director tab content */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.14 }}
-              className="p-6"
-              style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
-            >
-              <AnimatePresence mode="wait">
-                {directorTab === 'merges' && (
-                  <motion.div key="merges" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>Pending escalations</h2>
-                      <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
-                        {pendingEscalations.length} pending
-                      </span>
-                    </div>
-                    {pendingEscalations.length > 0 ? (
-                      <div className="space-y-3">
-                        {pendingEscalations.map(record => (
-                          <button
-                            key={record.id}
-                            onClick={() => setDirectorModalRecordId(record.id)}
-                            className="w-full p-4 text-left transition-all hover:border-blue-500/30"
-                            style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
-                          >
-                            <div className="flex items-center justify-between gap-4">
-                              <div>
-                                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>{record.blueprint.title}</p>
-                                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                                  Escalated by {record.submittedBy.name} from {record.submittedBy.department}
-                                </p>
-                              </div>
-                              <ArrowRight size={16} style={{ color: 'var(--color-text-muted)' }} />
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No escalations waiting for merge.</p>
-                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Once department heads forward blueprints, they will appear here.</p>
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => router.push(ROUTES.merge)}
-                      className="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all hover:opacity-80"
-                      style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))', color: '#fff' }}
-                    >
-                      Open merge workspace
-                      <ArrowRight size={14} />
-                    </button>
-                  </motion.div>
-                )}
-
-                {directorTab === 'suggestions' && (
-                  <motion.div key="suggestions" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
-                    <h2 className="font-display font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>Best merge suggestion</h2>
-                    {mergeSuggestions[0] ? (
-                      <>
-                        <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--color-text-secondary)' }}>
-                          {mergeSuggestions[0].rationale}
-                        </p>
-                        <div className="grid grid-cols-2 gap-3 mb-5">
-                          {Object.entries(mergeSuggestions[0].compatibility).map(([label, value]) => (
-                            <div key={label} className="p-3" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                              <p className="text-xs capitalize mb-1" style={{ color: 'var(--color-text-muted)' }}>{label}</p>
-                              <p className="font-display font-bold text-lg" style={{ color: 'var(--color-text-primary)' }}>{value}%</p>
-                            </div>
-                          ))}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => router.push(ROUTES.merge)}
-                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-80"
-                          style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))' }}
-                        >
-                          Open merge workspace
-                          <ArrowRight size={14} />
-                        </button>
-                      </>
-                    ) : (
-                      <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                        <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                          Indecisive needs at least two pending escalations before it can recommend a compatible merge pair.
-                        </p>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-
-                {directorTab === 'output' && (
-                  <motion.div key="output" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
-                    <h2 className="font-display font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>Latest strategy output</h2>
-                    {mergedStrategy ? (
-                      <div className="space-y-4">
-                        <div className="p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                          <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>Strategy title</p>
-                          <p className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>{mergedStrategy.title}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => router.push(ROUTES.output)}
-                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-80"
-                          style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))' }}
-                        >
-                          View full strategy
-                          <ArrowRight size={14} />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No unified strategy generated yet.</p>
-                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Complete a merge in the merge workspace to generate a strategy output.</p>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </>
+          <DirectorPortal />
         ) : (
           <>
             {/* Staff tab strip */}
@@ -648,15 +450,26 @@ export default function Dashboard() {
                     <p className="text-sm mb-5" style={{ color: 'var(--color-text-secondary)' }}>
                       Submit a problem statement and let Indecisive retrieve context, generate blueprints, and walk you through scoring.
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => router.push(ROUTES.submit)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-80"
-                      style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))' }}
-                    >
-                      Open submission form
-                      <ArrowRight size={14} />
-                    </button>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setShowOdisChat(true)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-80"
+                        style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-bright))' }}
+                      >
+                        Validate with ODIS
+                        <ArrowRight size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => router.push(ROUTES.submit)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all hover:opacity-80"
+                        style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
+                      >
+                        Open submission form
+                        <ArrowRight size={14} />
+                      </button>
+                    </div>
                   </motion.div>
                 )}
 
@@ -771,6 +584,12 @@ export default function Dashboard() {
           </>
         )}
       </div>
+
+      <AnimatePresence>
+        {showOdisChat && (
+          <ProblemChatModal onClose={() => setShowOdisChat(false)} />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {modalRecord && (
@@ -922,99 +741,6 @@ export default function Dashboard() {
                 </div>
               );
             })()}
-          />
-        )}
-        {directorModalRecord && (
-          <BlueprintDetailModal
-            record={directorModalRecord}
-            isForwarded={false}
-            onApprove={() => { setDirectorModalRecordId(null); router.push(ROUTES.merge); }}
-            reviewPanel={
-              <div className="space-y-4">
-                <div>
-                  <p className="text-xs font-mono uppercase mb-1" style={{ color: 'var(--color-accent)' }}>
-                    Director Review
-                  </p>
-                  <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
-                    Generate a ticket, write a review, then return to department head.
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                    {directorModalRecord.ticket ? `Ticket: ${directorModalRecord.ticket.id}` : 'No ticket yet'}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => createEscalationTicket(directorModalRecord.id)}
-                    disabled={Boolean(directorModalRecord.ticket)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60 transition-all hover:opacity-90"
-                    style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))' }}
-                  >
-                    <TicketPlus size={13} />
-                    {directorModalRecord.ticket ? 'Ticket generated' : 'Generate Ticket'}
-                  </button>
-                </div>
-
-                {directorModalRecord.ticket && (
-                  <div className="p-3" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                    <p className="text-[10px] font-mono uppercase mb-1" style={{ color: 'var(--color-text-muted)' }}>Ticket</p>
-                    <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>
-                      {directorModalRecord.ticket.id} · {directorModalRecord.ticket.title}
-                    </p>
-                    <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                      {directorModalRecord.ticket.status} · {directorModalRecord.ticket.createdAt}
-                    </p>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                    Review note
-                  </label>
-                  <textarea
-                    value={reviewDraftByRecord[directorModalRecord.id] ?? ''}
-                    onChange={event =>
-                      setReviewDraftByRecord(current => ({ ...current, [directorModalRecord.id]: event.target.value }))
-                    }
-                    rows={4}
-                    className="w-full p-3 text-sm"
-                    style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
-                    placeholder="Summarize guidance for department head before re-escalation."
-                  />
-                </div>
-
-                {(directorModalRecord.reviews ?? []).length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-mono uppercase" style={{ color: 'var(--color-text-muted)' }}>Previous reviews</p>
-                    {(directorModalRecord.reviews ?? []).map(review => (
-                      <div key={review.id} className="p-3" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                        <p className="text-[10px] mb-1" style={{ color: 'var(--color-text-muted)' }}>{review.byRole} · {review.createdAt}</p>
-                        <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{review.note}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const reviewNote = (reviewDraftByRecord[directorModalRecord.id] ?? '').trim();
-                    if (!directorModalRecord.ticket || !reviewNote) return;
-                    deEscalateToDeptHead(directorModalRecord.id, reviewNote);
-                    setReviewDraftByRecord(current => ({ ...current, [directorModalRecord.id]: '' }));
-                    setDirectorModalRecordId(null);
-                  }}
-                  disabled={!directorModalRecord.ticket || !(reviewDraftByRecord[directorModalRecord.id] ?? '').trim()}
-                  className="px-4 py-2 text-xs font-semibold transition-all disabled:opacity-60"
-                  style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
-                >
-                  De-escalate to Department Head
-                </button>
-              </div>
-            }
-            onClose={() => setDirectorModalRecordId(null)}
-            approveLabel="Open Merge View"
           />
         )}
         {staffHistoryRecord && (

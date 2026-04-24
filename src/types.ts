@@ -6,7 +6,7 @@ export type ConflictType = 'budget' | 'timeline' | 'headcount' | 'technical';
 
 export type Severity = 'high' | 'medium' | 'low';
 
-export type EscalationStatus = 'pending' | 'forwarded' | 'merged' | 'returned_to_staff' | 'returned_to_head';
+export type EscalationStatus = 'pending' | 'forwarded' | 'merged' | 'returned_to_staff' | 'returned_to_head' | 'approved_by_director';
 export type EscalationLevel = 'staff_to_head' | 'head_to_director';
 export type EscalationTicketStatus = 'open';
 export type EscalationReviewTarget = 'staff' | 'lead' | 'director';
@@ -192,6 +192,57 @@ export interface Phase {
   name: string;
   duration: string;
   deliverables: string[];
+}
+
+export interface ExistingSystem {
+  id: string;
+  name: string;
+  department: string;
+  description: string;
+  monthlyCost: number;
+  color: string;
+  isMerged?: boolean;
+  combinedSavings?: string;
+  sourceTitles?: string[];
+}
+
+export interface ZAIMergeRecommendation {
+  id: string;
+  title: string;
+  rationale: string;
+  candidateIds: string[];
+  candidateType: Record<string, 'blueprint' | 'system'>;
+  projectedSavings: string;
+  compatibilityScore: number;
+}
+
+export type ProjectHealth = 'ON_TRACK' | 'AT_RISK' | 'DELAYED';
+
+export interface MetricRow {
+  label: string;
+  predicted: string;
+  actual: string;
+  status: 'ok' | 'warn' | 'bad';
+  impact: string;
+}
+
+export interface ProjectDecision {
+  action: string;
+  loggedAt: string;
+}
+
+export interface ProjectTracker {
+  id: string;
+  title: string;
+  department: string;
+  currentMonth: number;
+  totalMonths: number;
+  health: ProjectHealth;
+  metrics: MetricRow[];
+  glmRecommendation?: string;
+  decisionActions?: string[];
+  decisions: ProjectDecision[];
+  roiProjected: string;
 }
 
 export interface MergedStrategy {

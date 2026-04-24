@@ -5,19 +5,25 @@ import {
   Attachment,
   Blueprint,
   EscalationRecord,
+  ExistingSystem,
   MergeSuggestion,
   MergedStrategy,
+  ProjectTracker,
   RetrievedContext,
   Submission,
   SubmissionStatus,
   User,
+  ZAIMergeRecommendation,
 } from '../types';
 import {
   createDemoBlueprints,
+  createDirectorMergeRecommendations,
   createMergedStrategy,
   createMergeSuggestions,
   createRetrievedContext,
   createSeedEscalationQueue,
+  MOCK_EXISTING_SYSTEMS,
+  MOCK_PROJECT_TRACKERS,
   MOCK_USERS,
 } from '../data/mockData';
 
@@ -33,6 +39,9 @@ export interface AppState {
   escalationQueue: EscalationRecord[];
   selectedMergeIds: string[];
   mergedStrategy: MergedStrategy | null;
+  existingSystems: ExistingSystem[];
+  projectTrackers: ProjectTracker[];
+  mergedExistingSystems: ExistingSystem[];
 }
 
 interface AppContextValue extends AppState {
@@ -42,6 +51,11 @@ interface AppContextValue extends AppState {
   mergeSuggestions: MergeSuggestion[];
   selectedMergeRecords: EscalationRecord[];
   activeMergeSuggestion: MergeSuggestion | null;
+  directorPendingEscalations: EscalationRecord[];
+  directorApprovedEscalations: EscalationRecord[];
+  directorReviewedEscalations: EscalationRecord[];
+  allDisplayedSystems: ExistingSystem[];
+  directorMergeRecommendations: ZAIMergeRecommendation[];
   login: (userId: string) => void;
   logout: () => void;
   startSubmission: (problemStatement: string, attachments: Attachment[]) => void;
@@ -58,6 +72,10 @@ interface AppContextValue extends AppState {
   deEscalateToDeptHead: (recordId: string, reviewNote: string) => void;
   selectMergePair: (blueprintIds: string[]) => void;
   completeMerge: () => void;
+  directorApprove: (recordId: string) => void;
+  directorDeEscalateToStaff: (recordId: string, reviewNote: string) => void;
+  approveMerge: (recommendation: ZAIMergeRecommendation) => void;
+  logProjectDecision: (projectId: string, action: string) => void;
 }
 
 type Action =
@@ -76,7 +94,11 @@ type Action =
   | { type: 'deEscalateToStaff'; payload: { recordId: string; reviewNote: string } }
   | { type: 'deEscalateToDeptHead'; payload: { recordId: string; reviewNote: string } }
   | { type: 'selectMergePair'; payload: { blueprintIds: string[] } }
-  | { type: 'completeMerge' };
+  | { type: 'completeMerge' }
+  | { type: 'directorApprove'; payload: { recordId: string } }
+  | { type: 'directorDeEscalateToStaff'; payload: { recordId: string; reviewNote: string } }
+  | { type: 'approveMerge'; payload: { recommendation: ZAIMergeRecommendation } }
+  | { type: 'logProjectDecision'; payload: { projectId: string; action: string } };
 
 const AppContext = createContext<AppContextValue | null>(null);
 
@@ -98,6 +120,9 @@ function createInitialState(overrides?: Partial<AppState>): AppState {
     escalationQueue,
     selectedMergeIds: [],
     mergedStrategy: null,
+    existingSystems: MOCK_EXISTING_SYSTEMS,
+    projectTrackers: MOCK_PROJECT_TRACKERS,
+    mergedExistingSystems: [],
   };
 
   return syncMergeSelection({
@@ -369,6 +394,87 @@ function reducer(state: AppState, action: Action): AppState {
         mergedStrategy,
       });
     }
+    case 'directorApprove': {
+      const escalationQueue = state.escalationQueue.map(record =>
+        record.id === action.payload.recordId && record.status === 'forwarded'
+          ? { ...record, status: 'approved_by_director' as const }
+          : record,
+      );
+      return syncMergeSelection({ ...state, escalationQueue });
+    }
+    case 'directorDeEscalateToStaff': {
+      if (!state.currentUser || !action.payload.reviewNote.trim()) return state;
+      const currentUser = state.currentUser;
+      const escalationQueue = state.escalationQueue.map(record => {
+        if (record.id !== action.payload.recordId || record.status !== 'forwarded') return record;
+        return {
+          ...record,
+          status: 'returned_to_staff' as const,
+          note: `Returned to staff by director ${currentUser.name} for revision.`,
+          reviews: [
+            {
+              id: createId('review'),
+              byRole: currentUser.role,
+              target: 'staff' as const,
+              note: action.payload.reviewNote.trim(),
+              createdAt: '2026-04-24',
+            },
+            ...(record.reviews ?? []),
+          ],
+        };
+      });
+      return syncMergeSelection({ ...state, escalationQueue });
+    }
+    case 'approveMerge': {
+      const { recommendation } = action.payload;
+      const blueprintIds = recommendation.candidateIds.filter(id => recommendation.candidateType[id] === 'blueprint');
+      const systemIds = recommendation.candidateIds.filter(id => recommendation.candidateType[id] === 'system');
+      const escalationQueue = state.escalationQueue.map(record =>
+        blueprintIds.includes(record.blueprint.id) ? { ...record, status: 'merged' as const } : record,
+      );
+      const sourceBlueprints = state.escalationQueue
+        .filter(r => blueprintIds.includes(r.blueprint.id))
+        .map(r => r.blueprint);
+      const sourceSystems = state.existingSystems.filter(s => systemIds.includes(s.id));
+      const totalOpex =
+        sourceBlueprints.reduce((sum, bp) => sum + bp.financeModel.opexMonthlyValue, 0) +
+        sourceSystems.reduce((sum, s) => sum + s.monthlyCost, 0);
+      const sourceNames = [...sourceBlueprints.map(bp => bp.title), ...sourceSystems.map(s => s.name)];
+      const mergedSystem: ExistingSystem = {
+        id: createId('merged-sys'),
+        name: `Unified ${sourceBlueprints[0]?.department ?? 'Platform'} System`,
+        department: sourceBlueprints[0]?.department ?? 'Technology',
+        description: `Merged from: ${sourceNames.join(' + ')}`,
+        monthlyCost: Math.round(totalOpex * 0.82),
+        color: 'var(--color-primary)',
+        isMerged: true,
+        combinedSavings: recommendation.projectedSavings,
+        sourceTitles: sourceNames,
+      };
+      return syncMergeSelection({
+        ...state,
+        escalationQueue,
+        mergedExistingSystems: [...state.mergedExistingSystems, mergedSystem],
+      });
+    }
+    case 'logProjectDecision': {
+      const { projectId, action: decisionAction } = action.payload;
+      const projectTrackers = state.projectTrackers.map(tracker => {
+        if (tracker.id !== projectId) return tracker;
+        const baseRoi = parseInt(tracker.roiProjected, 10);
+        const updatedRoi = decisionAction.includes('Accept')
+          ? `${baseRoi - 8}%`
+          : decisionAction.includes('Re-scope')
+            ? `${baseRoi - 15}%`
+            : tracker.roiProjected;
+        return {
+          ...tracker,
+          decisions: [{ action: decisionAction, loggedAt: '2026-04-24' }, ...tracker.decisions],
+          roiProjected: updatedRoi,
+        };
+      });
+      return { ...state, projectTrackers };
+    }
     default:
       return state;
   }
@@ -394,6 +500,16 @@ export function AppProvider({
     );
     const activeMergeSuggestion =
       mergeSuggestions.find(item => item.blueprintIds.every(id => state.selectedMergeIds.includes(id))) ?? null;
+    const directorPendingEscalations = state.escalationQueue.filter(r => r.status === 'forwarded');
+    const directorApprovedEscalations = state.escalationQueue.filter(r => r.status === 'approved_by_director');
+    const directorReviewedEscalations = state.escalationQueue.filter(
+      r => r.status === 'returned_to_head' || r.status === 'returned_to_staff',
+    );
+    const allDisplayedSystems = [...state.existingSystems, ...state.mergedExistingSystems];
+    const directorMergeRecommendations = createDirectorMergeRecommendations(
+      directorApprovedEscalations,
+      allDisplayedSystems,
+    );
 
     return {
       ...state,
@@ -403,6 +519,11 @@ export function AppProvider({
       mergeSuggestions,
       selectedMergeRecords,
       activeMergeSuggestion,
+      directorPendingEscalations,
+      directorApprovedEscalations,
+      directorReviewedEscalations,
+      allDisplayedSystems,
+      directorMergeRecommendations,
       login: (userId: string) => dispatch({ type: 'login', payload: { userId } }),
       logout: () => dispatch({ type: 'logout' }),
       startSubmission: (problemStatement: string, attachments: Attachment[]) =>
@@ -425,6 +546,13 @@ export function AppProvider({
       selectMergePair: (blueprintIds: string[]) =>
         dispatch({ type: 'selectMergePair', payload: { blueprintIds } }),
       completeMerge: () => dispatch({ type: 'completeMerge' }),
+      directorApprove: (recordId: string) => dispatch({ type: 'directorApprove', payload: { recordId } }),
+      directorDeEscalateToStaff: (recordId: string, reviewNote: string) =>
+        dispatch({ type: 'directorDeEscalateToStaff', payload: { recordId, reviewNote } }),
+      approveMerge: (recommendation: ZAIMergeRecommendation) =>
+        dispatch({ type: 'approveMerge', payload: { recommendation } }),
+      logProjectDecision: (projectId: string, action: string) =>
+        dispatch({ type: 'logProjectDecision', payload: { projectId, action } }),
     };
   }, [state]);
 

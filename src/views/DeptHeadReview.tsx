@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle, ChevronDown, ChevronUp, GitCommitHorizontal, GitMerge, SendHorizonal, TicketCheck } from 'lucide-react';
+import AssumptionAudit from '../components/AssumptionAudit';
 import BlueprintDetailModal from '../components/BlueprintDetailModal';
 import { useApp } from '../context/AppContext';
 import { EscalationRecord } from '../types';
@@ -34,6 +35,7 @@ function EscalationCard({
   onViewDetails: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [assumptionsComplete, setAssumptionsComplete] = useState(false);
   const { blueprint, submission, submittedBy } = record;
 
   return (
@@ -131,6 +133,11 @@ function EscalationCard({
                 </div>
               </div>
 
+              <AssumptionAudit
+                blueprint={blueprint}
+                onAllActioned={() => setAssumptionsComplete(true)}
+              />
+
               <div
                 className="flex items-center justify-between gap-4 pt-2"
                 style={{ borderTop: '1px solid var(--color-border)' }}
@@ -158,10 +165,12 @@ function EscalationCard({
                   ) : (
                     <button
                       onClick={onApprove}
-                      className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:scale-[1.02]"
+                      disabled={!assumptionsComplete}
+                      title={!assumptionsComplete ? 'Review all assumptions before escalating' : undefined}
+                      className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                       style={{
                         background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
-                        boxShadow: '0 0 16px rgba(37,99,235,0.25)',
+                        boxShadow: assumptionsComplete ? '0 0 16px rgba(37,99,235,0.25)' : 'none',
                       }}
                     >
                       Escalate to Director

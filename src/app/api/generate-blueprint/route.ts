@@ -10,6 +10,9 @@ const DEFAULT_ZAI_BASE_URL = 'https://api.z.ai/api/paas/v4/';
 const DEFAULT_ZAI_MODEL = 'glm-5.1';
 const FORCE_MOCK_BLUEPRINTS = process.env.FORCE_MOCK_BLUEPRINTS === 'true';
 
+// Toggle: true = skip all API calls and serve data/response mock blueprints directly
+const USE_MOCK = process.env.USE_MOCK !== undefined ? process.env.USE_MOCK === 'true' : true;
+
 const COLOR_TOKENS = [
   { color: 'var(--color-primary)', accentColor: 'var(--color-primary)' },
   { color: 'var(--color-success)', accentColor: 'var(--color-success)' },
@@ -479,6 +482,90 @@ function loadMockBlueprints(): Blueprint[] | null {
   }
 }
 
+function loadResponseMockBlueprints(): Blueprint[] | null {
+  try {
+    const indexPath = path.join(process.cwd(), 'data', 'response', 'index.json');
+    const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
+    if (!index?.versions || !Array.isArray(index.versions) || index.versions.length === 0) return null;
+
+    const concepts = loadDataSource('response/prototype-concepts.json');
+    const architectures = loadDataSource('response/system-architectures.json');
+    const techStackData = loadDataSource('response/tech-stacks.json');
+    const financeModels = loadDataSource('response/finance-models.json');
+    const timelines = loadDataSource('response/timelines.json');
+
+    const versions = (index.versions as Record<string, unknown>[]).slice(0, 3);
+    const ids = versions.map(() => createId('bp'));
+    const conflicts = buildConflictsForBlueprints(ids);
+
+    const SCORE_ROWS: [number, number, number, number][] = [
+      [80, 92, 73, 72],
+      [76, 85, 69, 63],
+      [89, 80, 86, 79],
+    ];
+
+    const blueprints: Blueprint[] = versions.map((version, i) => {
+      const vId = version.id as string;
+      const find = <T,>(arr: unknown): T | undefined =>
+        Array.isArray((arr as { versions?: unknown[] })?.versions)
+          ? ((arr as { versions: Record<string, unknown>[] }).versions.find(v => v.id === vId) as T | undefined)
+          : undefined;
+
+      const concept = find<Record<string, unknown>>(concepts) ?? {};
+      const arch = find<Record<string, unknown>>(architectures) ?? {};
+      const tech = find<Record<string, unknown>>(techStackData) ?? {};
+      const fm = find<{ financeModel?: { capexValue: number; opexMonthlyValue: number; roiValue: number; paybackMonths: number } }>(financeModels);
+      const tl = find<Record<string, unknown>>(timelines) ?? {};
+
+      const builtFm = fm?.financeModel
+        ? buildFinanceModel(fm.financeModel.capexValue, fm.financeModel.opexMonthlyValue, fm.financeModel.roiValue, fm.financeModel.paybackMonths)
+        : buildFinanceModel(200000, 18000, 200, 12);
+
+      const [feasibility, impact, effort, risk] = SCORE_ROWS[i] ?? [78, 82, 75, 70];
+      const sc = buildScores(feasibility, impact, effort, risk);
+      const colorToken = COLOR_TOKENS[i % 3];
+      const id = ids[i];
+
+      const scoringInsights: ScoringInsight[] = [
+        { dimension: 'Budget', status: builtFm.totalCostYearOneValue < 500000 ? 'positive' : 'neutral', summary: 'Within strategic investment envelope for this fiscal year', score: builtFm.totalCostYearOneValue < 500000 ? 82 : 66 },
+        { dimension: 'Project Pipeline', status: 'neutral', summary: 'Moderate overlap with active initiatives in the pipeline', score: 65 },
+        { dimension: 'Product Portfolio', status: 'positive', summary: 'Fills a confirmed capability gap in the product catalogue', score: 83 },
+        { dimension: 'Past Rejections', status: 'positive', summary: 'No significant similarity to historically rejected proposals', score: 88 },
+        { dimension: 'Market Research', status: sc.businessImpact >= 85 ? 'positive' : 'neutral', summary: sc.businessImpact >= 85 ? 'Strong external demand signal validated' : 'Moderate market opportunity identified', score: sc.businessImpact },
+        { dimension: 'HR & Execution', status: Math.round((sc.feasibility + sc.effort) / 2) >= 75 ? 'positive' : 'neutral', summary: Math.round((sc.feasibility + sc.effort) / 2) >= 75 ? 'Existing team can execute with minimal gaps' : 'Small skill gaps — 1–2 specialist hires recommended', score: Math.round((sc.feasibility + sc.effort) / 2) },
+        { dimension: 'Legal & Compliance', status: sc.riskConflict >= 70 ? 'positive' : 'neutral', summary: sc.riskConflict >= 70 ? 'Aligned with current legal and compliance framework' : 'Standard compliance review required before approval', score: sc.riskConflict },
+      ];
+
+      return {
+        id,
+        title: (version.title as string | undefined) ?? (concept.title as string | undefined) ?? `Blueprint ${i + 1}`,
+        department: (version.department as string | undefined) ?? (concept.department as string | undefined) ?? 'Engineering',
+        description: (concept.description as string | undefined) ?? 'A strategic solution blueprint.',
+        prototypePreview: {
+          title: 'Prototype concept',
+          summary: (concept.summary as string | undefined) ?? 'Interactive prototype demonstrating the core solution.',
+          prototypeSourcePath: version.prototypeSourcePath as string | undefined,
+          prototypeCode: undefined,
+          screens: [],
+        },
+        architecture: (arch.architecture as string[] | undefined) ?? [],
+        techStack: normalizeTechStack(tech.techStack as TechStackCategory[] | undefined, 'Core stack'),
+        financeModel: builtFm,
+        scores: sc,
+        conflicts: conflicts.filter(c => c.affectedBlueprints.includes(id)),
+        scoringInsights,
+        timeline: (tl.timeline as Phase[] | undefined) ?? [],
+        ...colorToken,
+      };
+    });
+
+    return blueprints.length > 0 ? blueprints : null;
+  } catch (err) {
+    console.warn('[Mock] loadResponseMockBlueprints failed:', (err as Error).message);
+    return null;
+  }
+}
+
 async function callZAI(userContent: string): Promise<string> {
   const apiKey = process.env.ZAI_API_KEY?.trim();
   if (!apiKey) throw new Error('ZAI_API_KEY not set');
@@ -573,6 +660,20 @@ function assembleBlueprints(normalized: AIBlueprint[]): Blueprint[] {
 }
 
 async function generateBlueprints(problem: string): Promise<Blueprint[]> {
+  if (USE_MOCK) {
+    const responseMock = loadResponseMockBlueprints();
+    if (responseMock) {
+      console.log('[Mock] USE_MOCK=true, using data/response mock blueprints');
+      return responseMock;
+    }
+    const cached = loadMockBlueprints();
+    if (cached) {
+      console.log('[Mock] USE_MOCK=true, falling back to mock-blueprints.json');
+      return cached;
+    }
+    console.warn('[Mock] USE_MOCK=true but no mock data found, proceeding to API');
+  }
+
   if (FORCE_MOCK_BLUEPRINTS) {
     const cached = loadMockBlueprints();
     if (cached) {

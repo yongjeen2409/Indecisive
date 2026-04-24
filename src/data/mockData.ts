@@ -4,10 +4,12 @@ import {
   Conflict,
   EscalationLevel,
   EscalationRecord,
+  ExistingSystem,
   FinanceModel,
   MergeSuggestion,
   MergedStrategy,
   Phase,
+  ProjectTracker,
   RetrievedContext,
   Role,
   Scores,
@@ -16,6 +18,7 @@ import {
   TechnicalBlueprint,
   TechStackCategory,
   User,
+  ZAIMergeRecommendation,
 } from '../types';
 import { flattenTechStack, mergeTechStackCategories } from '../lib/techStack';
 
@@ -451,7 +454,154 @@ function createEscalationRecord(submittedBy: User, problemStatement: string, blu
 }
 
 export function createSeedEscalationQueue(): EscalationRecord[] {
-  return [];
+  const user = TEAM_SUBMITTERS[0];
+  return [
+    createEscalationRecord(
+      user,
+      'Our data analytics pipeline is fragmented across departments with inconsistent reporting tools, leading to duplicate work and unreliable executive insights.',
+      1,
+      'Forwarded after strong dept head review — analytics case is well-evidenced.',
+      'head_to_director',
+    ),
+    createEscalationRecord(
+      user,
+      'Internal workflow automation bottlenecks are slowing delivery cycles and creating significant operational debt across teams.',
+      2,
+      'Operations team strongly supports this. Recommended for director approval.',
+      'head_to_director',
+    ),
+    createEscalationRecord(
+      user,
+      'Platform modernization is needed to accelerate release cycles and reduce technical debt accumulation in our Engineering stack.',
+      0,
+      'Engineering lead endorses this proposal — strong feasibility score.',
+      'head_to_director',
+    ),
+  ];
+}
+
+export const MOCK_EXISTING_SYSTEMS: ExistingSystem[] = [
+  {
+    id: 'sys-1',
+    name: 'Legacy ERP',
+    department: 'Finance',
+    description: 'Monolithic ERP system handling finance, payroll, and procurement across all departments.',
+    monthlyCost: 42000,
+    color: '#ef4444',
+  },
+  {
+    id: 'sys-2',
+    name: 'Jira / Confluence',
+    department: 'IT',
+    description: 'Project tracking and documentation platform used across engineering and product teams.',
+    monthlyCost: 8000,
+    color: '#64748b',
+  },
+  {
+    id: 'sys-3',
+    name: 'HR Portal',
+    department: 'HR',
+    description: 'Employee self-service portal for HR transactions, onboarding workflows, and leave management.',
+    monthlyCost: 6000,
+    color: '#7c3aed',
+  },
+];
+
+export const MOCK_PROJECT_TRACKERS: ProjectTracker[] = [
+  {
+    id: 'proj-1',
+    title: 'Data Platform Modernisation',
+    department: 'Strategy & Data',
+    currentMonth: 2,
+    totalMonths: 3,
+    health: 'ON_TRACK',
+    metrics: [
+      { label: 'Cost savings', predicted: '$120k/mo', actual: '$118k/mo', status: 'ok', impact: 'On target — no action needed.' },
+      { label: 'User adoption', predicted: '80%', actual: '78%', status: 'ok', impact: 'Within acceptable variance.' },
+      { label: 'Integration uptime', predicted: '99.5%', actual: '99.7%', status: 'ok', impact: 'Exceeding SLA targets.' },
+    ],
+    decisions: [],
+    roiProjected: '276%',
+  },
+  {
+    id: 'proj-2',
+    title: 'Operational Automation Suite',
+    department: 'Operations',
+    currentMonth: 1,
+    totalMonths: 4,
+    health: 'AT_RISK',
+    metrics: [
+      { label: 'Cost savings', predicted: '$80k/mo', actual: '$62k/mo', status: 'warn', impact: '22% shortfall — ROI payback extends by ~2 months.' },
+      { label: 'Automation coverage', predicted: '65%', actual: '41%', status: 'bad', impact: 'Well below target — delivery timeline at risk.' },
+      { label: 'Staff onboarding', predicted: '100%', actual: '94%', status: 'ok', impact: 'Minor lag, no material impact.' },
+    ],
+    glmRecommendation: 'Z.AI detects automation coverage 37% below target in Month 1. Root cause: insufficient tooling setup time allocated in Phase 1. Recommend scoping a Phase 2 timeline extension or re-prioritising onboarding tasks to recover delivery velocity before Month 2 checkpoint.',
+    decisionActions: ['Escalate to HR', 'Re-scope Project', 'Accept Risk'],
+    decisions: [],
+    roiProjected: '192%',
+  },
+  {
+    id: 'proj-3',
+    title: 'Platform Orchestration Hub',
+    department: 'Engineering',
+    currentMonth: 3,
+    totalMonths: 3,
+    health: 'DELAYED',
+    metrics: [
+      { label: 'Cost savings', predicted: '$95k/mo', actual: '$71k/mo', status: 'bad', impact: 'Significant shortfall affecting annual ROI targets.' },
+      { label: 'Release cadence', predicted: '2-week cycles', actual: '4-week cycles', status: 'warn', impact: 'Delivery pace halved — stakeholder confidence at risk.' },
+      { label: 'Integration coverage', predicted: '90%', actual: '88%', status: 'ok', impact: 'Near target, minor gap.' },
+    ],
+    decisions: [],
+    roiProjected: '228%',
+  },
+];
+
+export function createDirectorMergeRecommendations(
+  approvedRecords: EscalationRecord[],
+  allSystems: ExistingSystem[],
+): ZAIMergeRecommendation[] {
+  const results: ZAIMergeRecommendation[] = [];
+
+  for (let i = 0; i < approvedRecords.length; i++) {
+    for (let j = i + 1; j < approvedRecords.length; j++) {
+      const bp1 = approvedRecords[i].blueprint;
+      const bp2 = approvedRecords[j].blueprint;
+      const archScore = clamp(60 + overlapScore(bp1.architecture, bp2.architecture), 60, 96);
+      const techScore = clamp(55 + overlapScore(flattenTechStack(bp1.techStack), flattenTechStack(bp2.techStack)), 55, 95);
+      const compat = Math.round((archScore + techScore) / 2);
+      const savings = Math.round((bp1.financeModel.totalCostYearOneValue + bp2.financeModel.totalCostYearOneValue) * 0.13);
+      results.push({
+        id: `rec-${bp1.id.slice(-5)}-${bp2.id.slice(-5)}`,
+        title: `Merge "${bp1.title}" with "${bp2.title}"`,
+        rationale: `Z.AI identifies architectural alignment between these blueprints. Consolidating shared platform services reduces duplicated delivery effort and unlocks combined governance.`,
+        candidateIds: [bp1.id, bp2.id],
+        candidateType: { [bp1.id]: 'blueprint', [bp2.id]: 'blueprint' },
+        projectedSavings: formatCurrency(savings),
+        compatibilityScore: compat,
+      });
+    }
+  }
+
+  for (const record of approvedRecords) {
+    const bp = record.blueprint;
+    const bestSystem = [...allSystems].filter(s => !s.isMerged).sort((a, b) => b.monthlyCost - a.monthlyCost)[0];
+    if (bestSystem) {
+      const savings = Math.round(bestSystem.monthlyCost * 5);
+      const compat = bp.department === bestSystem.department ? 81 : 63;
+      results.push({
+        id: `rec-${bp.id.slice(-5)}-${bestSystem.id}`,
+        title: `Integrate "${bp.title}" into ${bestSystem.name}`,
+        rationale: `Z.AI recommends extending the existing "${bestSystem.name}" with capabilities from "${bp.title}" rather than running parallel systems. This avoids duplicated operational overhead and leverages existing infrastructure.`,
+        candidateIds: [bp.id, bestSystem.id],
+        candidateType: { [bp.id]: 'blueprint', [bestSystem.id]: 'system' },
+        projectedSavings: formatCurrency(savings),
+        compatibilityScore: compat,
+      });
+    }
+  }
+
+  return results.sort((a, b) => b.compatibilityScore - a.compatibilityScore).slice(0, 5);
 }
 
 function overlapScore(left: string[], right: string[]) {
