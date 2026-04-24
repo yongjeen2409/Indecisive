@@ -544,7 +544,12 @@ export default function DirectorPortal() {
       <motion.div key="merge-idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
         <div className="flex flex-col items-center justify-center py-16 space-y-5 text-center">
           <div className="flex items-center gap-2">
-            <Sparkles size={18} style={{ color: 'var(--color-accent)' }} />
+            <img
+              src="/z-ai-logo.png"
+              alt="Z.ai logo"
+              className="w-[18px] h-[18px] shrink-0 object-cover"
+              style={{ borderRadius: '0.3rem' }}
+            />
             <p className="font-mono text-xs" style={{ color: 'var(--color-accent)' }}>Z.AI MERGE ANALYSIS</p>
           </div>
           <div>

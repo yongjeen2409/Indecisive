@@ -75,12 +75,12 @@ export default function Navbar() {
       }}
     >
       <button onClick={() => router.push(ROUTES.dashboard)} className="flex items-center gap-3 group">
-        <div
-          className="flex h-8 w-8 items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))' }}
-        >
-          <span className="font-display text-xs font-bold text-white">I</span>
-        </div>
+        <img
+          src="/indecisive-logo.jpeg"
+          alt="Indecisive logo"
+          className="h-8 w-8 shrink-0 object-cover"
+          style={{ borderRadius: '0.65rem' }}
+        />
         <div className="text-left">
           <p className="font-display text-sm font-bold tracking-wider" style={{ color: 'var(--color-text-primary)' }}>
             Indecisive

@@ -522,7 +522,7 @@ export default function Dashboard() {
                         className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-80"
                         style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-bright))' }}
                       >
-                        Validate with ODIS
+                        Validate with Indecisive
                         <ArrowRight size={14} />
                       </button>
                       <button

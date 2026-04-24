@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, Send, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Send, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../context/AppContext';
 import { ROUTES } from '../lib/routes';
@@ -338,7 +338,7 @@ interface ChatMessage {
 }
 
 const ODIS_GREETING =
-  "I'm ODIS — I check whether the problem you're describing genuinely exists in this company, using live data from finance, HR, and active projects. Describe the problem you want to solve. I'll validate it and tell you whether it's real — or what the actual problem is.";
+  "I'm Indecisive — I check whether the problem you're describing genuinely exists in this company, using live data from finance, HR, and active projects. Describe the problem you want to solve. I'll validate it and tell you whether it's real — or what the actual problem is.";
 
 export default function ProblemChatModal({ onClose }: { onClose: () => void }) {
   const { startSubmission } = useApp();
@@ -478,15 +478,15 @@ export default function ProblemChatModal({ onClose }: { onClose: () => void }) {
           style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-bg-panel)' }}
         >
           <div className="flex items-center gap-3">
-            <div
-              className="flex items-center justify-center w-8 h-8"
-              style={{ background: 'rgba(194,96,73,0.12)', border: '1px solid rgba(194,96,73,0.3)' }}
-            >
-              <Sparkles size={14} style={{ color: 'var(--color-primary)' }} />
-            </div>
+            <img
+              src="/z-ai-logo.png"
+              alt="Z.ai logo"
+              className="w-8 h-8 shrink-0 object-cover"
+              style={{ borderRadius: '0.5rem' }}
+            />
             <div>
               <p className="font-display font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>
-                ODIS — Decision Intelligence Engine
+                Indecisive - Decision Intelligence Engine
               </p>
               <p className="text-[10px] font-mono" style={{ color: 'var(--color-text-muted)' }}>
                 Z.AI GLM · Problem Validation
@@ -685,3 +685,4 @@ export default function ProblemChatModal({ onClose }: { onClose: () => void }) {
     </motion.div>
   );
 }
+
