@@ -26,6 +26,7 @@ import {
   MOCK_PROJECT_TRACKERS,
   MOCK_USERS,
 } from '../data/mockData';
+import { buildMergedSystemName } from '../lib/mergeNaming';
 
 export interface AppState {
   currentUser: User | null;
@@ -442,7 +443,12 @@ function reducer(state: AppState, action: Action): AppState {
       const sourceNames = [...sourceBlueprints.map(bp => bp.title), ...sourceSystems.map(s => s.name)];
       const mergedSystem: ExistingSystem = {
         id: createId('merged-sys'),
-        name: `Unified ${sourceBlueprints[0]?.department ?? 'Platform'} System`,
+        name: buildMergedSystemName({
+          proposedName: recommendation.title,
+          department: sourceBlueprints[0]?.department ?? sourceSystems[0]?.department ?? 'Technology',
+          blueprintTitles: sourceBlueprints.map(bp => bp.title),
+          systemNames: sourceSystems.map(system => system.name),
+        }),
         department: sourceBlueprints[0]?.department ?? 'Technology',
         description: `Merged from: ${sourceNames.join(' + ')}`,
         monthlyCost: Math.round(totalOpex * 0.82),
