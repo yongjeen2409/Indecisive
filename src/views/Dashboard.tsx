@@ -11,13 +11,14 @@ import {
   Layers3,
   Plus,
 } from 'lucide-react';
-import { GitCommitHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import BatchBlueprintArenaModal from '../components/BatchBlueprintArenaModal';
 import BlueprintDetailModal from '../components/BlueprintDetailModal';
-import { ROLE_LABELS, RoleAvatar } from '../components/RoleAvatar';
+import ManagerBatchReviewPanel from '../components/ManagerBatchReviewPanel';
 import { useApp } from '../context/AppContext';
+import { buildManagerBatchSyntheticRecord, getManagerBatchPrimaryBlueprint } from '../lib/managerReview';
 import { ROUTES, getLatestStaffRoute, isDeptHead, isDirector } from '../lib/routes';
-import { EscalationRecord } from '../types';
+import { EscalationRecord, ManagerReviewBatch } from '../types';
 import DirectorPortal from './DirectorPortal';
 import ProblemChatModal from '../components/ProblemChatModal';
 
@@ -70,6 +71,33 @@ function getStaffSubmissionStatusMeta(status: EscalationRecord['status']) {
   }
 }
 
+function getManagerBatchStatusMeta(status: ManagerReviewBatch['status']) {
+  switch (status) {
+    case 'forwarded_to_director':
+      return {
+        label: 'One blueprint forwarded to director',
+        background: 'rgba(16,185,129,0.12)',
+        border: '1px solid rgba(16,185,129,0.28)',
+        color: 'var(--color-success)',
+      };
+    case 'returned_to_employee':
+      return {
+        label: 'Returned for reranking',
+        background: 'rgba(196,122,48,0.12)',
+        border: '1px solid rgba(196,122,48,0.28)',
+        color: 'var(--color-warning)',
+      };
+    case 'pending':
+    default:
+      return {
+        label: 'Awaiting manager review',
+        background: 'rgba(37,99,235,0.12)',
+        border: '1px solid rgba(37,99,235,0.28)',
+        color: 'var(--color-accent)',
+      };
+  }
+}
+
 export default function Dashboard() {
   const {
     currentUser,
@@ -77,15 +105,16 @@ export default function Dashboard() {
     retrievedContext,
     submissionStatus,
     selectedBlueprint,
-    escalationQueue,
-    staffEscalations,
-    approveToDirector,
-    deEscalateToStaff,
+    rankedBlueprints,
+    managerPendingBatches,
+    managerReturnedBatches,
+    managerForwardedBatches,
+    myManagerReviewBatches,
   } = useApp();
   const router = useRouter();
-  const [modalRecord, setModalRecord] = useState<EscalationRecord | null>(null);
   const [staffHistoryRecord, setStaffHistoryRecord] = useState<EscalationRecord | null>(null);
-  const [reviewDraftByRecord, setReviewDraftByRecord] = useState<Record<string, string>>({});
+  const [managerModalState, setManagerModalState] = useState<{ batchId: string; blueprintId: string } | null>(null);
+  const [arenaBatchId, setArenaBatchId] = useState<string | null>(null);
   const [deptTab, setDeptTab] = useState<'review' | 'forwarded' | 'all'>('review');
   const [staffTab, setStaffTab] = useState<'new' | 'current' | 'history'>('current');
   const [showOdisChat, setShowOdisChat] = useState(false);
@@ -97,9 +126,16 @@ export default function Dashboard() {
   const deptHeadMode = isDeptHead(currentUser.role);
   const directorMode = isDirector(currentUser.role);
   const latestStaffRoute = getLatestStaffRoute(submissionStatus);
-  const myEscalatedSubmissions = escalationQueue.filter(
-    record => record.level === 'staff_to_head' && record.submittedBy.id === currentUser.id,
-  );
+  const mySubmissionHistory = myManagerReviewBatches;
+  const allManagerBatches = [...managerPendingBatches, ...managerForwardedBatches, ...managerReturnedBatches];
+  const managerModalBatch = managerModalState
+    ? allManagerBatches.find(batch => batch.id === managerModalState.batchId) ?? null
+    : null;
+  const managerModalBlueprint = managerModalBatch && managerModalState
+    ? (managerModalBatch.rescoredBlueprints ?? managerModalBatch.blueprints).find(
+      blueprint => blueprint.id === managerModalState.blueprintId,
+    ) ?? null
+    : null;
   const contextCounts = retrievedContext
     ? [
         { label: 'Jira tickets', value: retrievedContext.jiraTickets.length },
@@ -144,8 +180,8 @@ export default function Dashboard() {
                 {
                   id: 'review' as const,
                   icon: <ClipboardList size={18} />,
-                  label: 'Review staff escalations',
-                  sub: `${staffEscalations.filter(r => r.status === 'pending').length} blueprint${staffEscalations.filter(r => r.status === 'pending').length === 1 ? '' : 's'} waiting for review`,
+                  label: 'Review ranked batches',
+                  sub: `${managerPendingBatches.length} batch${managerPendingBatches.length === 1 ? '' : 'es'} waiting for review`,
                   iconColor: 'var(--color-accent)',
                   activeBg: 'linear-gradient(135deg, rgba(37,99,235,0.15), rgba(29,78,216,0.15))',
                   activeBorder: '1px solid rgba(37,99,235,0.45)',
@@ -154,7 +190,7 @@ export default function Dashboard() {
                   id: 'forwarded' as const,
                   icon: <GitMerge size={18} />,
                   label: 'Forwarded to Director',
-                  sub: `${staffEscalations.filter(r => r.status === 'forwarded' || r.status === 'merged').length} blueprint${staffEscalations.filter(r => r.status === 'forwarded' || r.status === 'merged').length === 1 ? '' : 's'} in Director queue`,
+                  sub: `${managerForwardedBatches.length} batch${managerForwardedBatches.length === 1 ? '' : 'es'} already forwarded to Director`,
                   iconColor: 'var(--color-success)',
                   activeBg: 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(5,150,105,0.12))',
                   activeBorder: '1px solid rgba(16,185,129,0.4)',
@@ -162,8 +198,8 @@ export default function Dashboard() {
                 {
                   id: 'all' as const,
                   icon: <BarChart3 size={18} />,
-                  label: 'Total escalations',
-                  sub: `${staffEscalations.length} solution${staffEscalations.length === 1 ? '' : 's'} submitted by staff`,
+                  label: 'Total manager batches',
+                  sub: `${managerPendingBatches.length + managerForwardedBatches.length + managerReturnedBatches.length} ranked submission${managerPendingBatches.length + managerForwardedBatches.length + managerReturnedBatches.length === 1 ? '' : 's'} submitted by staff`,
                   iconColor: 'var(--color-warning)',
                   activeBg: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.12))',
                   activeBorder: '1px solid rgba(245,158,11,0.4)',
@@ -216,34 +252,43 @@ export default function Dashboard() {
                         Awaiting your review
                       </h2>
                       <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
-                        {staffEscalations.filter(r => r.status === 'pending').length} pending
+                        {managerPendingBatches.length} pending
                       </span>
                     </div>
-                    {staffEscalations.filter(r => r.status === 'pending' || r.status === 'returned_to_head').length > 0 ? (
+                    {managerPendingBatches.length > 0 ? (
                       <div className="space-y-3">
-                        {staffEscalations.filter(r => r.status === 'pending' || r.status === 'returned_to_head').map(record => (
-                          <button
-                            key={record.id}
-                            onClick={() => setModalRecord(record)}
+                        {managerPendingBatches.map(batch => {
+                          const previewBlueprint = getManagerBatchPrimaryBlueprint(batch);
+                          if (!previewBlueprint) {
+                            return null;
+                          }
+
+                          return (
+                            <button
+                              key={batch.id}
+                              onClick={() => setArenaBatchId(batch.id)}
                             className="w-full p-4 text-left transition-all hover:border-blue-500/30"
                             style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
                           >
                             <div className="flex items-center justify-between gap-4">
                               <div>
-                                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>{record.blueprint.title}</p>
+                                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                                  {batch.submittedBy.name} ranked packet
+                                </p>
                                 <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                                  {record.submittedBy.name} · {record.submittedBy.department} · score {record.blueprint.scores.total}
+                                  {previewBlueprint.title} · {batch.submittedBy.department} · 3 blueprints · score {previewBlueprint.scores.total}
                                 </p>
                               </div>
                               <ArrowRight size={16} style={{ color: 'var(--color-text-muted)' }} />
                             </div>
                           </button>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No pending escalations.</p>
-                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Once staff escalate a blueprint from the scoring step, it will appear here.</p>
+                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No pending ranked packets.</p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Once staff escalate their 3 ranked blueprints, they will appear here.</p>
                       </div>
                     )}
                     <button
@@ -264,36 +309,45 @@ export default function Dashboard() {
                         Forwarded to Director
                       </h2>
                       <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
-                        {staffEscalations.filter(r => r.status === 'forwarded' || r.status === 'merged').length} forwarded
+                        {managerForwardedBatches.length} forwarded
                       </span>
                     </div>
-                    {staffEscalations.filter(r => r.status === 'forwarded' || r.status === 'merged').length > 0 ? (
+                    {managerForwardedBatches.length > 0 ? (
                       <div className="space-y-3">
-                        {staffEscalations.filter(r => r.status === 'forwarded' || r.status === 'merged').map(record => (
-                          <button
-                            key={record.id}
-                            onClick={() => setModalRecord(record)}
+                        {managerForwardedBatches.map(batch => {
+                          const previewBlueprint = getManagerBatchPrimaryBlueprint(batch);
+                          if (!previewBlueprint) {
+                            return null;
+                          }
+
+                          return (
+                            <button
+                              key={batch.id}
+                              onClick={() => setManagerModalState({ batchId: batch.id, blueprintId: previewBlueprint.id })}
                             className="w-full p-4 text-left transition-all hover:border-green-500/30"
                             style={{ background: 'var(--color-bg-panel)', border: '1px solid rgba(16,185,129,0.2)' }}
                           >
                             <div className="flex items-center justify-between gap-4">
                               <div>
-                                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>{record.blueprint.title}</p>
+                                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                                  {batch.submittedBy.name} ranked packet
+                                </p>
                                 <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                                  {record.submittedBy.name} · {record.submittedBy.department} · score {record.blueprint.scores.total}
+                                  {previewBlueprint.title} · {batch.submittedBy.department} · forwarded to director
                                 </p>
                               </div>
                               <span className="text-[10px] px-2 py-0.5 font-mono shrink-0" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)', border: '1px solid rgba(16,185,129,0.3)' }}>
-                                {record.status === 'merged' ? 'MERGED' : 'FORWARDED'}
+                                FORWARDED
                               </span>
                             </div>
                           </button>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No forwarded blueprints yet.</p>
-                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Approve a staff escalation to forward it to the Director queue.</p>
+                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No forwarded packets yet.</p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Once you forward one blueprint from a ranked packet, it will stay visible here.</p>
                       </div>
                     )}
                   </motion.div>
@@ -306,14 +360,14 @@ export default function Dashboard() {
                         All escalations
                       </h2>
                       <span className="text-xs font-mono px-2 py-1" style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}>
-                        {staffEscalations.length} total
+                        {managerPendingBatches.length + managerForwardedBatches.length + managerReturnedBatches.length} total
                       </span>
                     </div>
                     <div className="grid grid-cols-3 gap-3 mb-5">
                       {[
-                        { label: 'Pending review', value: staffEscalations.filter(r => r.status === 'pending' || r.status === 'returned_to_head').length, color: 'var(--color-warning)' },
-                        { label: 'Forwarded', value: staffEscalations.filter(r => r.status === 'forwarded' || r.status === 'merged').length, color: 'var(--color-success)' },
-                        { label: 'Returned to staff', value: staffEscalations.filter(r => r.status === 'returned_to_staff').length, color: 'var(--color-accent)' },
+                        { label: 'Pending review', value: managerPendingBatches.length, color: 'var(--color-warning)' },
+                        { label: 'Forwarded', value: managerForwardedBatches.length, color: 'var(--color-success)' },
+                        { label: 'Returned to employee', value: managerReturnedBatches.length, color: 'var(--color-accent)' },
                       ].map(({ label, value, color }) => (
                         <div key={label} className="p-4 text-center" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
                           <p className="font-display font-bold text-3xl mb-1" style={{ color }}>{value}</p>
@@ -321,38 +375,49 @@ export default function Dashboard() {
                         </div>
                       ))}
                     </div>
-                    {staffEscalations.length > 0 ? (
+                    {allManagerBatches.length > 0 ? (
                       <div className="space-y-3">
-                        {staffEscalations.map(record => (
-                          <button
-                            key={record.id}
-                            onClick={() => setModalRecord(record)}
+                        {allManagerBatches.map(batch => {
+                          const previewBlueprint = getManagerBatchPrimaryBlueprint(batch);
+                          const statusMeta = getManagerBatchStatusMeta(batch.status);
+                          if (!previewBlueprint) {
+                            return null;
+                          }
+
+                          return (
+                            <button
+                              key={batch.id}
+                              onClick={() => setManagerModalState({ batchId: batch.id, blueprintId: previewBlueprint.id })}
                             className="w-full p-4 text-left transition-all hover:border-blue-500/30"
                             style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
                           >
                             <div className="flex items-center justify-between gap-4">
                               <div>
-                                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>{record.blueprint.title}</p>
+                                <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                                  {batch.submittedBy.name} ranked packet
+                                </p>
                                 <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                                  {record.submittedBy.name} · {record.submittedBy.department} · score {record.blueprint.scores.total}
+                                  {previewBlueprint.title} · {batch.submittedBy.department} · {previewBlueprint.scores.total} total score
                                 </p>
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
-                                {record.status !== 'pending' && (
-                                  <span className="text-[10px] px-2 py-0.5 font-mono" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--color-success)', border: '1px solid rgba(16,185,129,0.3)' }}>
-                                    {record.status.toUpperCase().replace('_', ' ')}
-                                  </span>
-                                )}
+                                <span
+                                  className="text-[10px] px-2 py-0.5 font-mono"
+                                  style={{ background: statusMeta.background, color: statusMeta.color, border: statusMeta.border }}
+                                >
+                                  {statusMeta.label}
+                                </span>
                                 <ArrowRight size={16} style={{ color: 'var(--color-text-muted)' }} />
                               </div>
                             </div>
                           </button>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
-                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No escalations yet.</p>
-                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Once staff escalate a blueprint from the scoring step, it will appear here.</p>
+                        <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No ranked packets yet.</p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Once staff escalate a ranked batch from the blueprint page, it will appear here.</p>
                       </div>
                     )}
                   </motion.div>
@@ -395,10 +460,10 @@ export default function Dashboard() {
                 {
                   id: 'history' as const,
                   icon: <BarChart3 size={18} />,
-                  label: 'Escalation history',
-                  sub: myEscalatedSubmissions.length > 0
-                    ? `${myEscalatedSubmissions.length} past submission${myEscalatedSubmissions.length === 1 ? '' : 's'}`
-                    : 'No escalations yet.',
+                  label: 'Submission history',
+                  sub: mySubmissionHistory.length > 0
+                    ? `${mySubmissionHistory.length} past ranked submission${mySubmissionHistory.length === 1 ? '' : 's'}`
+                    : 'No submissions yet.',
                   iconColor: 'var(--color-success)',
                   activeBg: 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(5,150,105,0.12))',
                   activeBorder: '1px solid rgba(16,185,129,0.4)',
@@ -497,9 +562,9 @@ export default function Dashboard() {
                         </div>
                         <div className="flex items-center justify-between p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
                           <div>
-                            <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>Preferred blueprint</p>
+                            <p className="text-xs mb-1" style={{ color: 'var(--color-text-muted)' }}>Current Top 1</p>
                             <p className="text-sm" style={{ color: 'var(--color-text-primary)' }}>
-                              {selectedBlueprint ? selectedBlueprint.title : 'Not selected yet'}
+                              {rankedBlueprints[0]?.title ?? selectedBlueprint?.title ?? 'Not ranked yet'}
                             </p>
                           </div>
                           <button
@@ -531,25 +596,26 @@ export default function Dashboard() {
                       <h2 className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>Past submissions</h2>
                     </div>
                     <p className="text-sm mb-4" style={{ color: 'var(--color-text-secondary)' }}>
-                      Reopen any blueprint you already escalated and review the original submission record.
+                      Review the status of each ranked packet you previously sent for manager review.
                     </p>
-                    {myEscalatedSubmissions.length > 0 ? (
+                    {mySubmissionHistory.length > 0 ? (
                       <div className="space-y-3">
-                        {myEscalatedSubmissions.map(record => {
-                          const statusMeta = getStaffSubmissionStatusMeta(record.status);
+                        {mySubmissionHistory.map(batch => {
+                          const statusMeta = getManagerBatchStatusMeta(batch.status);
+                          const topRanked = (batch.rescoredBlueprints ?? batch.blueprints).find(blueprint => blueprint.id === batch.rankingOrder[0]);
                           return (
-                            <button
-                              key={record.id}
-                              onClick={() => setStaffHistoryRecord(record)}
-                              aria-label={`Review ${record.blueprint.title} submission`}
-                              className="w-full p-4 text-left transition-all hover:border-blue-500/30"
+                            <div
+                              key={batch.id}
+                              className="w-full p-4 text-left"
                               style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}
                             >
                               <div className="flex items-start justify-between gap-3 mb-3">
                                 <div>
-                                  <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>{record.blueprint.title}</p>
+                                  <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                                    {topRanked?.title ?? 'Ranked blueprint packet'}
+                                  </p>
                                   <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                                    Escalated {record.escalatedAt} | {record.blueprint.department}
+                                    Submitted {batch.escalatedAt} | Top 1 / Top 2 / Top 3 packet
                                   </p>
                                 </div>
                                 <span
@@ -562,10 +628,18 @@ export default function Dashboard() {
                               <div className="p-3" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
                                 <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--color-text-muted)' }}>Original problem statement</p>
                                 <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                                  {getSubmissionPreview(record.submission.problemStatement)}
+                                  {getSubmissionPreview(batch.submission.problemStatement)}
                                 </p>
                               </div>
-                            </button>
+                              {batch.managerNote ? (
+                                <div className="mt-3 p-3" style={{ background: 'rgba(196,122,48,0.08)', border: '1px solid rgba(196,122,48,0.18)' }}>
+                                  <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--color-warning)' }}>Latest manager note</p>
+                                  <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+                                    {batch.managerNote}
+                                  </p>
+                                </div>
+                              ) : null}
+                            </div>
                           );
                         })}
                       </div>
@@ -573,7 +647,7 @@ export default function Dashboard() {
                       <div className="p-5" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
                         <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>No past submissions yet.</p>
                         <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                          Once you escalate a blueprint, it will stay here so you can review it later.
+                          Once you escalate a ranked blueprint packet, it will stay here so you can review manager outcomes later.
                         </p>
                       </div>
                     )}
@@ -592,155 +666,25 @@ export default function Dashboard() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {modalRecord && (
+        {arenaBatchId && (() => {
+          const arenaBatch = allManagerBatches.find(b => b.id === arenaBatchId);
+          return arenaBatch ? (
+            <BatchBlueprintArenaModal
+              batch={arenaBatch}
+              onClose={() => setArenaBatchId(null)}
+            />
+          ) : null;
+        })()}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {managerModalBatch && managerModalBlueprint && (
           <BlueprintDetailModal
-            record={modalRecord}
-            isForwarded={modalRecord.status === 'forwarded' || modalRecord.status === 'merged'}
-            onApprove={() => approveToDirector(modalRecord.id)}
-            onClose={() => setModalRecord(null)}
-            reviewPanel={(() => {
-              const isLocked = modalRecord.status === 'forwarded' || modalRecord.status === 'merged';
-              const reviews = modalRecord.reviews ?? [];
-              return (
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <GitCommitHorizontal size={18} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
-                    <p className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>
-                      Escalated on {modalRecord.escalatedAt}
-                    </p>
-                  </div>
-
-                  <div style={{ border: '1px solid var(--color-border)' }}>
-                    {/* Escalated row */}
-                    <div
-                      className="flex items-center justify-between gap-3 px-4 py-3"
-                      style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-bg-panel)' }}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--color-text-primary)' }}>
-                          Escalated this blueprint
-                        </p>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <RoleAvatar initials={modalRecord.submittedBy.avatar} role={modalRecord.submittedBy.role} size={16} />
-                          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                            <span style={{ color: 'var(--color-text-secondary)' }}>{modalRecord.submittedBy.name}</span>
-                            <span className="ml-1" style={{ color: 'var(--color-text-muted)', fontSize: '10px' }}>
-                              ({ROLE_LABELS[modalRecord.submittedBy.role]})
-                            </span>
-                            {' '}escalated · {modalRecord.escalatedAt}
-                          </p>
-                        </div>
-                      </div>
-                      <span
-                        className="text-[10px] font-mono px-2 py-0.5 shrink-0"
-                        style={{ background: `${modalRecord.blueprint.color}18`, color: modalRecord.blueprint.accentColor, border: `1px solid ${modalRecord.blueprint.color}35` }}
-                      >
-                        {modalRecord.submittedBy.department}
-                      </span>
-                    </div>
-
-                    {/* Ticket row */}
-                    {modalRecord.ticket && (
-                      <div
-                        className="flex items-center justify-between gap-3 px-4 py-3"
-                        style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-bg-panel)' }}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--color-text-primary)' }}>
-                            {modalRecord.ticket.title}
-                          </p>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <RoleAvatar initials={modalRecord.ticket.createdByRole.slice(0, 2).toUpperCase()} role={modalRecord.ticket.createdByRole} size={16} />
-                            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                              <span style={{ color: 'var(--color-text-secondary)' }}>{ROLE_LABELS[modalRecord.ticket.createdByRole]}</span>
-                              {' '}generated ticket · {modalRecord.ticket.createdAt}
-                            </p>
-                          </div>
-                        </div>
-                        <span
-                          className="text-[10px] font-mono px-2 py-0.5 shrink-0"
-                          style={{ background: 'rgba(245,158,11,0.12)', color: 'var(--color-warning)', border: '1px solid rgba(245,158,11,0.3)' }}
-                        >
-                          {modalRecord.ticket.id}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Review rows */}
-                    {reviews.map((review, i) => (
-                      <div
-                        key={review.id}
-                        className="px-4 py-3"
-                        style={{ borderBottom: i < reviews.length - 1 || !isLocked ? '1px solid var(--color-border)' : undefined, background: 'var(--color-bg-panel)' }}
-                      >
-                        <p className="text-sm font-semibold leading-snug mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                          {review.note}
-                        </p>
-                        <div className="flex items-center gap-1.5">
-                          <RoleAvatar initials={review.byRole.slice(0, 2).toUpperCase()} role={review.byRole} size={16} />
-                          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                            <span style={{ color: 'var(--color-text-secondary)' }}>{ROLE_LABELS[review.byRole]}</span>
-                            {' '}reviewed · {review.createdAt}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Forwarded row */}
-                    {isLocked && (
-                      <div className="flex items-center gap-3 px-4 py-3" style={{ background: 'rgba(16,185,129,0.06)' }}>
-                        <GitMerge size={14} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
-                        <div>
-                          <p className="text-sm font-semibold" style={{ color: 'var(--color-success)' }}>Forwarded to Director</p>
-                          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>no further action needed</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {!isLocked && (
-                    <div className="mt-5">
-                      <div className="flex items-center gap-2 mb-2">
-                        <RoleAvatar initials="DH" role="lead" size={16} />
-                        <p className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>Leave a review</p>
-                      </div>
-                      <div style={{ border: '1px solid var(--color-border)' }}>
-                        <textarea
-                          value={reviewDraftByRecord[modalRecord.id] ?? ''}
-                          onChange={event =>
-                            setReviewDraftByRecord(current => ({ ...current, [modalRecord.id]: event.target.value }))
-                          }
-                          rows={4}
-                          className="w-full p-3 text-sm"
-                          style={{ background: 'var(--color-bg-panel)', color: 'var(--color-text-primary)', resize: 'vertical', display: 'block' }}
-                          placeholder="Summarize what staff should revise before resubmission."
-                        />
-                        <div
-                          className="flex items-center justify-end px-3 py-2"
-                          style={{ borderTop: '1px solid var(--color-border)', background: 'var(--color-bg-deep)' }}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const reviewNote = (reviewDraftByRecord[modalRecord.id] ?? '').trim();
-                              if (!reviewNote) return;
-                              deEscalateToStaff(modalRecord.id, reviewNote);
-                              setReviewDraftByRecord(current => ({ ...current, [modalRecord.id]: '' }));
-                              setModalRecord(null);
-                            }}
-                            disabled={!(reviewDraftByRecord[modalRecord.id] ?? '').trim()}
-                            className="px-4 py-1.5 text-xs font-semibold transition-all disabled:opacity-50 hover:opacity-80"
-                            style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)' }}
-                          >
-                            De-escalate to Staff
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+            record={buildManagerBatchSyntheticRecord(managerModalBatch, managerModalBlueprint)}
+            isForwarded={managerModalBatch.status === 'forwarded_to_director'}
+            onClose={() => setManagerModalState(null)}
+            statusLabel="Manager packet preview"
+            reviewPanel={<ManagerBatchReviewPanel batch={managerModalBatch} blueprintId={managerModalBlueprint.id} />}
           />
         )}
         {staffHistoryRecord && (

@@ -11,8 +11,12 @@ interface RecalcResult {
   explanation: string;
 }
 
+function clampRoi(value: number) {
+  return Math.min(95, Math.max(25, Math.round(value)));
+}
+
 function parseMockRoi(currentRoi: string, assumptionLabel: string, oldValue: string, newValue: string): RecalcResult {
-  const base = parseFloat(currentRoi.replace(/[^0-9.-]/g, '')) || 200;
+  const base = clampRoi(parseFloat(currentRoi.replace(/[^0-9.-]/g, '')) || 68);
   let delta = 0;
 
   const label = assumptionLabel.toLowerCase();
@@ -23,7 +27,8 @@ function parseMockRoi(currentRoi: string, assumptionLabel: string, oldValue: str
   } else if (label.includes('roi') || label.includes('return')) {
     const newNum = parseFloat(newValue.replace(/[^0-9.-]/g, ''));
     if (!isNaN(newNum)) {
-      return { updatedRoi: `${newNum}%`, explanation: `ROI revised to ${newNum}% based on corrected projection.` };
+      const normalized = clampRoi(newNum);
+      return { updatedRoi: `${normalized}%`, explanation: `ROI revised to ${normalized}% based on corrected projection.` };
     }
     delta = -Math.round(base * 0.1);
   } else if (label.includes('headcount') || label.includes('team') || label.includes('capacity')) {
@@ -32,7 +37,7 @@ function parseMockRoi(currentRoi: string, assumptionLabel: string, oldValue: str
     delta = -Math.round(base * 0.05);
   }
 
-  const updated = Math.max(50, Math.round(base + delta));
+  const updated = clampRoi(base + delta);
   return {
     updatedRoi: `${updated}%`,
     explanation: `ROI revised from ${currentRoi} to ${updated}% after correcting ${assumptionLabel} from "${oldValue}" to "${newValue}".`,

@@ -34,7 +34,7 @@ export function getLatestStaffRoute(status: SubmissionStatus) {
     case 'blueprints':
       return ROUTES.blueprints;
     case 'conflicts':
-      return ROUTES.conflicts;
+      return ROUTES.blueprints;
     case 'scoring':
       return ROUTES.blueprints;
     case 'escalated':

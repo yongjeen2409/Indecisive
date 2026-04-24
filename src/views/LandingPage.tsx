@@ -7,7 +7,7 @@ import DecisionGraph from '../components/DecisionGraph';
 import { ROUTES } from '../lib/routes';
 
 const METRICS = [
-  { value: '340%', label: 'Projected ROI on merged strategies' },
+  { value: '72%', label: 'Projected ROI on merged strategies' },
   { value: '6.2x', label: 'Faster decision cycles across teams' },
   { value: '94%', label: 'Conflict detection confidence' },
   { value: '48h', label: 'From problem to leadership-ready strategy' },

@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertTriangle, ArrowUpRight, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ArrowUpRight, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ArchitectureFlowchart from '../components/ArchitectureFlowchart';
@@ -19,6 +19,10 @@ const STATUS_STYLES: Record<ScoringInsight['status'], { dot: string; text: strin
 
 const TABS = ['Prototype Concept', 'System Architecture', 'Tech Stack', 'Finance Model', 'Development Timeline'] as const;
 type Tab = (typeof TABS)[number];
+
+function rankLabel(index: number) {
+  return `Rank ${index + 1}`;
+}
 
 function InsightCell({ insight }: { insight: ScoringInsight }) {
   const styles = STATUS_STYLES[insight.status];
@@ -40,18 +44,19 @@ function DetailModal({
   blueprints,
   initialIndex,
   onClose,
-  selectedId,
-  onSelect,
+  rankingOrder,
+  onAssignRank,
 }: {
   blueprints: Blueprint[];
   initialIndex: number;
   onClose: () => void;
-  selectedId: string | undefined;
-  onSelect: (id: string) => void;
+  rankingOrder: string[];
+  onAssignRank: (blueprintId: string, rankIndex: number) => void;
 }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [activeTab, setActiveTab] = useState<Tab>('Prototype Concept');
   const blueprint = blueprints[currentIndex];
+  const currentRank = rankingOrder.findIndex(id => id === blueprint.id);
 
   function navigate(dir: 1 | -1) {
     setCurrentIndex((currentIndex + dir + blueprints.length) % blueprints.length);
@@ -67,7 +72,6 @@ function DetailModal({
       style={{ background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(6px)' }}
       onClick={onClose}
     >
-      {/* Prev arrow — no background, high contrast */}
       <button
         className="absolute left-5 z-10 transition-opacity opacity-70 hover:opacity-100"
         style={{ color: '#ffffff' }}
@@ -77,7 +81,6 @@ function DetailModal({
         <ChevronLeft size={44} strokeWidth={1.5} />
       </button>
 
-      {/* Main card — 85% screen */}
       <AnimatePresence mode="wait">
         <motion.div
           key={blueprint.id}
@@ -95,7 +98,6 @@ function DetailModal({
           }}
           onClick={e => e.stopPropagation()}
         >
-          {/* Close */}
           <button
             className="absolute top-4 right-4 z-20 p-1.5 transition-all hover:scale-110"
             style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
@@ -104,7 +106,6 @@ function DetailModal({
             <X size={13} />
           </button>
 
-          {/* Header */}
           <div
             className="p-6 pb-0 shrink-0"
             style={{
@@ -122,6 +123,14 @@ function DetailModal({
               <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-muted)' }}>
                 {currentIndex + 1} of {blueprints.length}
               </span>
+              {currentRank >= 0 ? (
+                <span
+                  className="text-[10px] font-mono px-2 py-0.5 uppercase"
+                  style={{ background: 'rgba(196, 122, 48, 0.14)', color: 'var(--color-warning)' }}
+                >
+                  {rankLabel(currentRank)}
+                </span>
+              ) : null}
             </div>
             <h2 className="font-display font-bold text-2xl mb-1 pr-10" style={{ color: 'var(--color-text-primary)' }}>
               {blueprint.title}
@@ -130,7 +139,6 @@ function DetailModal({
               {blueprint.description}
             </p>
 
-            {/* Tabs */}
             <div className="flex overflow-x-auto gap-0" style={{ marginBottom: '-1px' }}>
               {TABS.map(tab => (
                 <button
@@ -149,7 +157,6 @@ function DetailModal({
             </div>
           </div>
 
-          {/* Tab content */}
           <div className="overflow-y-auto flex-1 p-6">
             <AnimatePresence mode="wait">
               <motion.div
@@ -247,24 +254,30 @@ function DetailModal({
             </AnimatePresence>
           </div>
 
-          {/* Footer */}
           <div className="p-4 shrink-0" style={{ borderTop: '1px solid var(--color-border)' }}>
-            <button
-              onClick={() => onSelect(blueprint.id)}
-              className="w-full py-2.5 text-sm font-medium transition-all hover:opacity-90"
-              style={{
-                background: selectedId === blueprint.id ? blueprint.color : `${blueprint.color}20`,
-                border: `1px solid ${blueprint.color}50`,
-                color: selectedId === blueprint.id ? 'var(--color-text-primary)' : blueprint.accentColor,
-              }}
-            >
-              {selectedId === blueprint.id ? 'Preferred blueprint selected' : 'Select as preferred blueprint'}
-            </button>
+            <div className="grid grid-cols-3 gap-2">
+              {blueprints.map((_, rankIndex) => {
+                const active = currentRank === rankIndex;
+                return (
+                  <button
+                    key={rankIndex}
+                    onClick={() => onAssignRank(blueprint.id, rankIndex)}
+                    className="py-2.5 text-sm font-medium transition-all hover:opacity-90"
+                    style={{
+                      background: active ? blueprint.color : `${blueprint.color}18`,
+                      border: `1px solid ${blueprint.color}50`,
+                      color: active ? 'var(--color-text-primary)' : blueprint.accentColor,
+                    }}
+                  >
+                    {active ? `${rankIndex + 1} Selected` : `Set ${rankIndex + 1}`}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </motion.div>
       </AnimatePresence>
 
-      {/* Next arrow — no background, high contrast */}
       <button
         className="absolute right-5 z-10 transition-opacity opacity-70 hover:opacity-100"
         style={{ color: '#ffffff' }}
@@ -277,25 +290,19 @@ function DetailModal({
   );
 }
 
-const SEL_C = 'rgba(196, 122, 48,';
-const SEL_SIDES = `inset 2px 0 0 ${SEL_C} 0.75), inset -2px 0 0 ${SEL_C} 0.75)`;
-const SEL_TOP = `inset 0 2px 0 ${SEL_C} 0.75)`;
-const SEL_BOTTOM = `inset 0 -2px 0 ${SEL_C} 0.75)`;
-const SEL_GLOW = `inset 0 0 28px ${SEL_C} 0.12)`;
-
 export default function BlueprintArena() {
-  const { blueprints, selectedBlueprint, selectBlueprint, activeSubmission, openConflictReview, escalateSelectedBlueprint, submissionStatus } = useApp();
+  const {
+    blueprints,
+    rankedBlueprintIds,
+    latestReturnedManagerBatch,
+    activeSubmission,
+    setBlueprintRanking,
+    escalateRankedBlueprints,
+    submissionStatus,
+  } = useApp();
   const router = useRouter();
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [isEscalating, setIsEscalating] = useState(false);
-
-  const handleEscalate = () => {
-    if (!selectedBlueprint || isEscalating) return;
-    setIsEscalating(true);
-    window.setTimeout(() => {
-      escalateSelectedBlueprint();
-    }, 900);
-  };
 
   useEffect(() => {
     if (isEscalating && submissionStatus === 'escalated') {
@@ -303,23 +310,42 @@ export default function BlueprintArena() {
     }
   }, [isEscalating, submissionStatus, router]);
 
-  const uniqueConflicts = Array.from(
-    new Map(blueprints.flatMap(b => b.conflicts).map(c => [c.id, c])).values(),
-  );
+  const assignRank = (blueprintId: string, rankIndex: number) => {
+    const currentOrder = rankedBlueprintIds.length > 0
+      ? [...rankedBlueprintIds]
+      : blueprints.map(blueprint => blueprint.id);
+    const currentIndex = currentOrder.indexOf(blueprintId);
+    if (currentIndex === -1) return;
+
+    const nextOrder = [...currentOrder];
+    const [movedId] = nextOrder.splice(currentIndex, 1);
+    nextOrder.splice(rankIndex, 0, movedId);
+    setBlueprintRanking(nextOrder);
+  };
+
+  const handleEscalate = () => {
+    if (blueprints.length === 0 || isEscalating) return;
+    setIsEscalating(true);
+    window.setTimeout(() => {
+      escalateRankedBlueprints();
+    }, 900);
+  };
+
+  const topRankedId = rankedBlueprintIds[0] ?? blueprints[0]?.id ?? null;
+  const topRanked = blueprints.find(blueprint => blueprint.id === topRankedId) ?? null;
 
   return (
     <div className="page-shell" style={{ background: 'var(--color-bg-deep)' }}>
       <div className="page-container max-w-6xl space-y-8">
-        {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <p className="font-mono text-xs mb-2" style={{ color: 'var(--color-primary)' }}>
             BLUEPRINT ARENA
           </p>
           <h1 className="font-display font-bold text-3xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
-            Indecisive generated {blueprints.length} solution blueprints
+            Rank all 3 blueprints here
           </h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>
-            Each blueprint is scored across 7 dimensions. Click View Full Details to explore the prototype, architecture, and implementation plan.
+            Label each blueprint as rank 1, 2, or 3 directly on its card, then escalate the full ranked set to your manager.
           </p>
           {activeSubmission ? (
             <div className="mt-4 inline-flex max-w-3xl p-3" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
@@ -331,96 +357,86 @@ export default function BlueprintArena() {
           ) : null}
         </motion.div>
 
-        {/* Conflict banner */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.18 }}
-          className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-          style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
-        >
-          <div className="flex items-start gap-3">
-            <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ repeat: 2, duration: 0.5 }}>
-              <AlertTriangle size={18} style={{ color: 'var(--color-danger)' }} />
-            </motion.div>
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                {uniqueConflicts.length} conflicts detected before ranking
-              </p>
-              <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                Indecisive requires conflict review before the scoring table opens.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => { openConflictReview(); router.push(ROUTES.conflicts); }}
-            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-all hover:scale-105"
-            style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--color-danger-glow)', border: '1px solid rgba(239, 68, 68, 0.4)' }}
+        {latestReturnedManagerBatch?.managerNote ? (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-5"
+            style={{ background: 'rgba(196, 122, 48, 0.08)', border: '1px solid rgba(196, 122, 48, 0.24)' }}
           >
-            Review conflict report
-            <ChevronRight size={14} />
-          </button>
-        </motion.div>
+            <p className="font-mono text-xs mb-2" style={{ color: 'var(--color-warning)' }}>
+              RETURNED BY MANAGER
+            </p>
+            <p className="text-sm leading-relaxed mb-2" style={{ color: 'var(--color-text-primary)' }}>
+              {latestReturnedManagerBatch.managerNote}
+            </p>
+            <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+              The manager has sent this batch back to you. Update the ranking if needed and resubmit all 3 blueprints with the current assumption set.
+            </p>
+          </motion.div>
+        ) : null}
 
-        {/* Scoring-style table */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.12 }}
           className="overflow-x-auto"
           style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
         >
           <div className="min-w-205">
             <div
               className="grid"
-              style={{ gridTemplateColumns: `200px repeat(${blueprints.length}, minmax(200px, 1fr))` }}
+              style={{ gridTemplateColumns: `220px repeat(${blueprints.length}, minmax(220px, 1fr))` }}
             >
-              {/* Top-left header cell */}
               <div className="p-5" style={{ borderRight: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
                 <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                  Blueprint table
+                  Blueprint ranking board
                 </p>
                 <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                  Scored across 7 dimensions drawn from internal systems and policies.
+                  Set each blueprint to `1`, `2`, or `3` directly on its card. The plans stay in their original order.
                 </p>
               </div>
 
-              {/* Blueprint header columns */}
               {blueprints.map((blueprint, index) => {
-                const sel = selectedBlueprint?.id === blueprint.id;
+                const currentRank = rankedBlueprintIds.findIndex(id => id === blueprint.id);
                 return (
-                <div
-                  key={blueprint.id}
-                  className="p-5"
-                  style={{
-                    borderLeft: index === 0 ? 'none' : '1px solid var(--color-border)',
-                    borderBottom: '1px solid var(--color-border)',
-                    background: 'transparent',
-                    boxShadow: sel ? `${SEL_SIDES}, ${SEL_TOP}, ${SEL_GLOW}` : 'none',
-                    transition: 'box-shadow 0.3s',
-                  }}
-                >
-                  <p className="text-[10px] font-mono mb-2" style={{ color: blueprint.accentColor }}>
-                    Blueprint {index + 1}
-                  </p>
-                  <h2 className="font-display font-semibold text-sm mb-0.5" style={{ color: 'var(--color-text-primary)' }}>
-                    {blueprint.title}
-                  </h2>
-                  <p className="text-xs mb-4" style={{ color: 'var(--color-text-secondary)' }}>
-                    {blueprint.department}
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => selectBlueprint(blueprint.id)}
-                      className="w-full py-2 text-xs font-medium transition-all"
-                      style={{
-                        background: sel ? blueprint.color : `${blueprint.color}22`,
-                        border: `1px solid ${blueprint.color}55`,
-                        color: sel ? 'var(--color-text-primary)' : blueprint.accentColor,
-                      }}
-                    >
-                      {sel ? 'Selected' : 'Select blueprint'}
-                    </button>
+                  <div
+                    key={blueprint.id}
+                    className="p-5"
+                    style={{
+                      borderLeft: index === 0 ? 'none' : '1px solid var(--color-border)',
+                      borderBottom: '1px solid var(--color-border)',
+                      background: 'transparent',
+                    }}
+                  >
+                    <p className="text-[10px] font-mono mb-2" style={{ color: blueprint.accentColor }}>
+                      {currentRank >= 0 ? rankLabel(currentRank) : 'Not ranked'}
+                    </p>
+                    <h2 className="font-display font-semibold text-sm mb-0.5" style={{ color: 'var(--color-text-primary)' }}>
+                      {blueprint.title}
+                    </h2>
+                    <p className="text-xs mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+                      {blueprint.department}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 mb-2">
+                      {blueprints.map((_, rankIndex) => {
+                        const active = currentRank === rankIndex;
+                        return (
+                          <button
+                            key={rankIndex}
+                            onClick={() => assignRank(blueprint.id, rankIndex)}
+                            className="py-2 text-xs font-medium transition-all"
+                            style={{
+                              background: active ? blueprint.color : `${blueprint.color}18`,
+                              border: `1px solid ${blueprint.color}45`,
+                              color: active ? 'var(--color-text-primary)' : blueprint.accentColor,
+                            }}
+                          >
+                            {rankIndex + 1}
+                          </button>
+                        );
+                      })}
+                    </div>
                     <button
                       onClick={() => setExpandedIndex(index)}
                       className="w-full py-2 text-xs font-medium transition-all hover:opacity-80"
@@ -433,14 +449,11 @@ export default function BlueprintArena() {
                       View Full Details
                     </button>
                   </div>
-                </div>
                 );
               })}
 
-              {/* Insight rows */}
               {INSIGHT_LABELS.map((label, labelIndex) => (
                 <div key={label} className="contents">
-                  {/* Row label */}
                   <div
                     className="p-5"
                     style={{ borderRight: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}
@@ -450,24 +463,20 @@ export default function BlueprintArena() {
                     </p>
                   </div>
 
-                  {/* Per-blueprint insight cells */}
                   {blueprints.map((blueprint, colIndex) => {
-                    const sel = selectedBlueprint?.id === blueprint.id;
                     const isLast = labelIndex === INSIGHT_LABELS.length - 1;
                     return (
-                    <div
-                      key={`${label}-${blueprint.id}`}
-                      className="p-5"
-                      style={{
-                        borderLeft: colIndex === 0 ? 'none' : '1px solid var(--color-border)',
-                        borderBottom: '1px solid var(--color-border)',
-                        background: 'transparent',
-                        boxShadow: sel ? `${SEL_SIDES}, ${isLast ? `${SEL_BOTTOM}, ` : ''}${SEL_GLOW}` : 'none',
-                        transition: 'box-shadow 0.3s',
-                      }}
-                    >
-                      <InsightCell insight={blueprint.scoringInsights[labelIndex]} />
-                    </div>
+                      <div
+                        key={`${label}-${blueprint.id}`}
+                        className="p-5"
+                        style={{
+                          borderLeft: colIndex === 0 ? 'none' : '1px solid var(--color-border)',
+                          borderBottom: '1px solid var(--color-border)',
+                          background: 'transparent',
+                        }}
+                      >
+                        <InsightCell insight={blueprint.scoringInsights[labelIndex]} />
+                      </div>
                     );
                   })}
                 </div>
@@ -476,47 +485,39 @@ export default function BlueprintArena() {
           </div>
         </motion.div>
 
-        {/* Bottom bar */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.45 }}
+          transition={{ delay: 0.2 }}
           className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4"
           style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
         >
           <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-            {selectedBlueprint
-              ? `Ready to escalate: ${selectedBlueprint.title}`
-              : 'Select a blueprint to escalate it for superior review.'}
+            {topRanked
+              ? `${topRanked.title} is currently rank 1. Escalating now will send all 3 blueprints with their chosen rank labels and assumptions to your manager.`
+              : 'Rank the blueprints, then escalate the full batch to your manager.'}
           </p>
           <div className="flex gap-3">
-            <button
-              onClick={() => { openConflictReview(); router.push(ROUTES.conflicts); }}
-              className="px-4 py-2.5 text-sm font-medium transition-all"
-              style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
-            >
-              Review conflicts
-            </button>
             <motion.button
               onClick={handleEscalate}
-              disabled={!selectedBlueprint || isEscalating}
+              disabled={blueprints.length === 0 || isEscalating}
               className="px-6 py-2.5 text-sm font-semibold flex items-center gap-2 transition-all disabled:opacity-50"
               style={{
                 background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary))',
                 color: 'var(--color-text-primary)',
-                boxShadow: selectedBlueprint ? '0 0 20px rgba(37, 99, 235, 0.35)' : 'none',
+                boxShadow: '0 0 20px rgba(37, 99, 235, 0.35)',
               }}
-              whileHover={!isEscalating && !!selectedBlueprint ? { scale: 1.03 } : {}}
+              whileHover={!isEscalating && blueprints.length > 0 ? { scale: 1.03 } : {}}
             >
               {isEscalating ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white animate-spin" />
-                  Escalating...
+                  Escalating ranked batch...
                 </>
               ) : (
                 <>
                   <ArrowUpRight size={16} />
-                  Escalate blueprint
+                  Escalate
                 </>
               )}
             </motion.button>
@@ -530,8 +531,8 @@ export default function BlueprintArena() {
             blueprints={blueprints}
             initialIndex={expandedIndex}
             onClose={() => setExpandedIndex(null)}
-            selectedId={selectedBlueprint?.id}
-            onSelect={id => selectBlueprint(id)}
+            rankingOrder={rankedBlueprintIds}
+            onAssignRank={assignRank}
           />
         )}
       </AnimatePresence>

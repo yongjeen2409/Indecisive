@@ -40,7 +40,7 @@ function buildAssumptions(bp: Blueprint): Assumption[] {
     },
     {
       id: 'roi',
-      label: 'Projected Annual ROI',
+      label: 'Planned Annual ROI',
       value: bp.financeModel.roi,
       source: 'Finance Model · April 2025 Projection',
       staleness: 'Source is 12 months old',

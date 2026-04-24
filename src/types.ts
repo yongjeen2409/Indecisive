@@ -1,4 +1,6 @@
 export type Role = 'staff' | 'lead' | 'director' | 'executive';
+export type AIProvider = 'zai' | 'gemini' | 'mock';
+export type Confidence = 'HIGH' | 'MEDIUM' | 'LOW';
 
 export type SubmissionStatus = 'draft' | 'analyzing' | 'blueprints' | 'conflicts' | 'scoring' | 'escalated';
 
@@ -47,6 +49,7 @@ export interface PrototypePreview {
   summary: string;
   screens: PrototypeScreen[];
   prototypeSourceJsx?: string;
+  prototypeSourcePath?: string;
   prototypeCode?: string;
 }
 
@@ -164,6 +167,47 @@ export interface EscalationRecord {
     note: string;
     createdAt: string;
   }[];
+}
+
+export interface ReviewAssumption {
+  id: string;
+  label: string;
+  value: string;
+  source: string;
+  staleness: string | null;
+  confidence: Confidence;
+  impact: string;
+  editable: boolean;
+}
+
+export type ManagerReviewBatchStatus = 'pending' | 'returned_to_employee' | 'forwarded_to_director';
+
+export interface ManagerReviewBatchHistory {
+  id: string;
+  action: 'submitted' | 'resubmitted' | 'reevaluated' | 'rejected' | 'forwarded';
+  byRole: Role;
+  note: string;
+  createdAt: string;
+  provider?: AIProvider;
+}
+
+export interface ManagerReviewBatch {
+  id: string;
+  submission: Submission;
+  submittedBy: Pick<User, 'id' | 'name' | 'role' | 'department' | 'avatar'>;
+  blueprints: Blueprint[];
+  rankingOrder: string[];
+  baselineAssumptions: ReviewAssumption[];
+  assumptions: ReviewAssumption[];
+  rescoredBlueprints: Blueprint[] | null;
+  selectedBlueprintId: string | null;
+  status: ManagerReviewBatchStatus;
+  note: string;
+  provider: AIProvider;
+  fallback: boolean;
+  managerNote: string | null;
+  escalatedAt: string;
+  history: ManagerReviewBatchHistory[];
 }
 
 export interface MergeCompatibility {

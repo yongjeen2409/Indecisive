@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { DragEvent, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, ShieldCheck } from 'lucide-react';
+import { ArrowUpRight, GripVertical, RotateCcw, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../context/AppContext';
 import { ROUTES } from '../lib/routes';
-import { Scores } from '../types';
+import { Blueprint, ReviewAssumption, Scores } from '../types';
 
 const CRITERIA = [
   { key: 'feasibility', label: 'Feasibility', description: 'Technical and organizational viability', color: 'var(--color-primary-bright)' },
@@ -41,21 +41,61 @@ function ScoreBar({ score, color, delay }: { score: number; color: string; delay
   );
 }
 
+function AssumptionValueCard({ assumption }: { assumption: ReviewAssumption }) {
+  return (
+    <div className="p-4" style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)' }}>
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <div>
+          <p className="text-xs font-mono uppercase" style={{ color: 'var(--color-accent)' }}>
+            {assumption.label}
+          </p>
+          <p className="text-lg font-display font-semibold mt-1" style={{ color: 'var(--color-text-primary)' }}>
+            {assumption.value}
+          </p>
+        </div>
+        <span
+          className="text-[10px] font-mono px-2 py-1"
+          style={{
+            background: 'rgba(196, 122, 48, 0.12)',
+            border: '1px solid rgba(196, 122, 48, 0.22)',
+            color: 'var(--color-warning)',
+          }}
+        >
+          {assumption.confidence}
+        </span>
+      </div>
+      <p className="text-xs mb-1" style={{ color: 'var(--color-text-secondary)' }}>
+        {assumption.source}
+      </p>
+      <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+        {assumption.impact}
+      </p>
+      {assumption.staleness ? (
+        <p className="text-[11px] mt-2" style={{ color: 'var(--color-warning)' }}>
+          {assumption.staleness}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function rankLabel(index: number) {
+  return index === 0 ? 'Top 1' : index === 1 ? 'Top 2' : `Top ${index + 1}`;
+}
+
 export default function ScoringView() {
   const {
-    blueprints,
-    selectedBlueprint,
+    rankedBlueprints,
+    reviewAssumptions,
+    latestReturnedManagerBatch,
+    setBlueprintRanking,
     selectBlueprint,
-    escalateSelectedBlueprint,
+    escalateRankedBlueprints,
     submissionStatus,
   } = useApp();
   const router = useRouter();
   const [isEscalating, setIsEscalating] = useState(false);
-
-  const rankedBlueprints = useMemo(
-    () => [...blueprints].sort((left, right) => right.scores.total - left.scores.total),
-    [blueprints],
-  );
+  const [draggedBlueprintId, setDraggedBlueprintId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isEscalating && submissionStatus === 'escalated') {
@@ -64,12 +104,50 @@ export default function ScoringView() {
   }, [isEscalating, router, submissionStatus]);
 
   const handleEscalate = () => {
-    if (!selectedBlueprint || isEscalating) return;
+    if (rankedBlueprints.length === 0 || isEscalating) return;
     setIsEscalating(true);
     window.setTimeout(() => {
-      escalateSelectedBlueprint();
+      escalateRankedBlueprints();
     }, 900);
   };
+
+  const moveBlueprint = (draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return;
+    const currentOrder = rankedBlueprints.map(blueprint => blueprint.id);
+    const draggedIndex = currentOrder.indexOf(draggedId);
+    const targetIndex = currentOrder.indexOf(targetId);
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const nextOrder = [...currentOrder];
+    const [dragged] = nextOrder.splice(draggedIndex, 1);
+    nextOrder.splice(targetIndex, 0, dragged);
+    setBlueprintRanking(nextOrder);
+    selectBlueprint(nextOrder[0]);
+  };
+
+  const handleDragStart = (event: DragEvent<HTMLDivElement>, blueprintId: string) => {
+    setDraggedBlueprintId(blueprintId);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', blueprintId);
+  };
+
+  const handleDrop = (targetId: string) => {
+    if (!draggedBlueprintId) return;
+    moveBlueprint(draggedBlueprintId, targetId);
+    setDraggedBlueprintId(null);
+  };
+
+  const resetToScoreOrder = () => {
+    const ordered = [...rankedBlueprints]
+      .sort((left, right) => right.scores.total - left.scores.total)
+      .map(blueprint => blueprint.id);
+    setBlueprintRanking(ordered);
+    if (ordered[0]) {
+      selectBlueprint(ordered[0]);
+    }
+  };
+
+  const leadBlueprint = rankedBlueprints[0] ?? null;
 
   return (
     <div className="page-shell" style={{ background: 'var(--color-bg-deep)' }}>
@@ -79,18 +157,151 @@ export default function ScoringView() {
             SCORING AND RANKING
           </p>
           <h1 className="font-display font-bold text-3xl mb-2" style={{ color: 'var(--color-text-primary)' }}>
-            Compare blueprints side by side
+            Rank all 3 blueprints for manager review
           </h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>
-            The decision engine has scored each blueprint across the four Indecisive criteria. Select one
-            option and escalate it to your superior for review.
+            Drag the blueprints into your preferred Top 1, Top 2, and Top 3 order. Your manager will receive the full ranked set together with the actual scoring assumptions used for this blueprint pass.
           </p>
+        </motion.div>
+
+        {latestReturnedManagerBatch?.managerNote ? (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-5"
+            style={{ background: 'rgba(196, 122, 48, 0.08)', border: '1px solid rgba(196, 122, 48, 0.24)' }}
+          >
+            <p className="font-mono text-xs mb-2" style={{ color: 'var(--color-warning)' }}>
+              RETURNED BY MANAGER
+            </p>
+            <p className="text-sm leading-relaxed mb-2" style={{ color: 'var(--color-text-primary)' }}>
+              {latestReturnedManagerBatch.managerNote}
+            </p>
+            <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+              The assumption values below now reflect the updated manager review context. Re-rank the blueprints and resubmit the full set when ready.
+            </p>
+          </motion.div>
+        ) : null}
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]"
+        >
+          <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+            <div className="flex items-center justify-between gap-3 mb-5">
+              <div>
+                <p className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                  Employee ranking
+                </p>
+                <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                  Drag cards to reorder the manager packet.
+                </p>
+              </div>
+              <button
+                onClick={resetToScoreOrder}
+                className="flex items-center gap-2 px-3 py-2 text-xs font-medium transition-all hover:opacity-80"
+                style={{ background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
+              >
+                <RotateCcw size={14} />
+                Reset to score order
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {rankedBlueprints.map((blueprint, index) => (
+                <motion.div
+                  key={blueprint.id}
+                  layout
+                  draggable
+                  onDragStart={event => handleDragStart(event as unknown as DragEvent<HTMLDivElement>, blueprint.id)}
+                  onDragOver={event => event.preventDefault()}
+                  onDragEnter={event => event.preventDefault()}
+                  onDragEnd={() => setDraggedBlueprintId(null)}
+                  onDrop={() => handleDrop(blueprint.id)}
+                  className="p-4 cursor-move"
+                  style={{
+                    background: index === 0 ? `${blueprint.color}14` : 'var(--color-bg-panel)',
+                    border: `1px solid ${draggedBlueprintId === blueprint.id ? blueprint.color : 'var(--color-border)'}`,
+                    boxShadow: index === 0 ? `0 0 20px ${blueprint.color}18` : 'none',
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div
+                        className="w-10 h-10 flex items-center justify-center shrink-0"
+                        style={{ background: `${blueprint.color}18`, border: `1px solid ${blueprint.color}35`, color: blueprint.accentColor }}
+                      >
+                        <GripVertical size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-mono mb-1" style={{ color: blueprint.accentColor }}>
+                          {rankLabel(index)}
+                        </p>
+                        <h2 className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                          {blueprint.title}
+                        </h2>
+                        <p className="text-xs mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                          {blueprint.department}
+                        </p>
+                        <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                          {blueprint.description}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                        Total
+                      </p>
+                      <p className="font-display font-bold text-2xl" style={{ color: blueprint.accentColor }}>
+                        {blueprint.scores.total}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+              <p className="font-display font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                Current scoring assumptions
+              </p>
+              <p className="text-xs mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+                These are the actual assumptions behind the current blueprint scores, and they will travel with your ranked batch to the manager portal.
+              </p>
+              <div className="space-y-3">
+                {reviewAssumptions.map(assumption => (
+                  <AssumptionValueCard key={assumption.id} assumption={assumption} />
+                ))}
+              </div>
+            </div>
+
+            {leadBlueprint ? (
+              <div className="p-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <ShieldCheck size={16} style={{ color: 'var(--color-success)' }} />
+                  <p className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                    Current Top 1
+                  </p>
+                </div>
+                <p className="text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                  {leadBlueprint.title}
+                </p>
+                <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                  This ranked packet will be escalated to your manager as a three-blueprint batch. The manager can reevaluate the whole set, edit assumption values, then either choose one blueprint for director review or return the set to you.
+                </p>
+              </div>
+            ) : null}
+          </div>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.12 }}
           className="overflow-x-auto"
           style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
         >
@@ -101,10 +312,10 @@ export default function ScoringView() {
             >
               <div className="p-5" style={{ borderRight: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
                 <p className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                  Ranking table
+                  Score table
                 </p>
                 <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                  Higher scores indicate stronger fit for the requested outcome under the current constraints.
+                  Scores update visually here, but the employee ranking order stays fixed unless you drag it.
                 </p>
               </div>
 
@@ -115,13 +326,13 @@ export default function ScoringView() {
                   style={{
                     borderLeft: index === 0 ? 'none' : '1px solid var(--color-border)',
                     borderBottom: '1px solid var(--color-border)',
-                    background: selectedBlueprint?.id === blueprint.id ? `${blueprint.color}14` : 'transparent',
+                    background: index === 0 ? `${blueprint.color}12` : 'transparent',
                   }}
                 >
                   <div className="flex items-start justify-between gap-3 mb-4">
                     <div>
                       <p className="text-xs font-mono mb-2" style={{ color: blueprint.accentColor }}>
-                        Rank {index + 1}
+                        {rankLabel(index)}
                       </p>
                       <h2 className="font-display font-semibold text-sm mb-1" style={{ color: 'var(--color-text-primary)' }}>
                         {blueprint.title}
@@ -139,18 +350,6 @@ export default function ScoringView() {
                       </p>
                     </div>
                   </div>
-
-                  <button
-                    onClick={() => selectBlueprint(blueprint.id)}
-                    className="w-full py-2.5 text-sm font-medium transition-all"
-                    style={{
-                      background: selectedBlueprint?.id === blueprint.id ? blueprint.color : `${blueprint.color}22`,
-                      border: `1px solid ${blueprint.color}55`,
-                      color: selectedBlueprint?.id === blueprint.id ? 'var(--color-text-primary)' : blueprint.accentColor,
-                    }}
-                  >
-                    {selectedBlueprint?.id === blueprint.id ? 'Selected for escalation' : 'Select blueprint'}
-                  </button>
                 </div>
               ))}
 
@@ -172,7 +371,7 @@ export default function ScoringView() {
                       style={{
                         borderLeft: columnIndex === 0 ? 'none' : '1px solid var(--color-border)',
                         borderBottom: '1px solid var(--color-border)',
-                        background: selectedBlueprint?.id === blueprint.id ? `${blueprint.color}14` : 'transparent',
+                        background: columnIndex === 0 ? `${blueprint.color}12` : 'transparent',
                       }}
                     >
                       <ScoreBar
@@ -191,7 +390,7 @@ export default function ScoringView() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
+          transition={{ delay: 0.2 }}
           className="mt-8 p-5"
           style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
         >
@@ -200,13 +399,13 @@ export default function ScoringView() {
               <div className="flex items-center gap-2 mb-1">
                 <ShieldCheck size={16} style={{ color: 'var(--color-success)' }} />
                 <p className="font-display font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                  Ready to escalate?
+                  Ready to escalate the ranked batch?
                 </p>
               </div>
               <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                {selectedBlueprint
-                  ? `${selectedBlueprint.title} will move into the superior review queue.`
-                  : 'Select one blueprint from the comparison table to continue.'}
+                {leadBlueprint
+                  ? `${leadBlueprint.title} is your current Top 1, but all three ranked blueprints and the current scoring assumptions will be sent together to your manager.`
+                  : 'Rank the three blueprints to continue.'}
               </p>
             </div>
 
@@ -220,23 +419,23 @@ export default function ScoringView() {
               </button>
               <motion.button
                 onClick={handleEscalate}
-                disabled={!selectedBlueprint || isEscalating}
+                disabled={rankedBlueprints.length === 0 || isEscalating}
                 className="px-6 py-2.5 text-sm font-semibold text-white flex items-center gap-2 transition-all disabled:opacity-50"
                 style={{
                   background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary))',
-                  boxShadow: selectedBlueprint ? '0 0 20px rgba(37, 99, 235, 0.35)' : 'none',
+                  boxShadow: leadBlueprint ? '0 0 20px rgba(37, 99, 235, 0.35)' : 'none',
                 }}
-                whileHover={!isEscalating && selectedBlueprint ? { scale: 1.03 } : {}}
+                whileHover={!isEscalating && rankedBlueprints.length > 0 ? { scale: 1.03 } : {}}
               >
                 {isEscalating ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white animate-spin" />
-                    Escalating...
+                    Escalating ranked batch...
                   </>
                 ) : (
                   <>
                     <ArrowUpRight size={16} />
-                    Escalate blueprint
+                    Escalate ranked batch
                   </>
                 )}
               </motion.button>

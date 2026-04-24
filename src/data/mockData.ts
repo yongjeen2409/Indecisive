@@ -1,4 +1,5 @@
 import {
+  AIProvider,
   Attachment,
   Blueprint,
   Conflict,
@@ -6,6 +7,7 @@ import {
   EscalationRecord,
   ExistingSystem,
   FinanceModel,
+  ManagerReviewBatch,
   MergeSuggestion,
   MergedStrategy,
   Phase,
@@ -21,6 +23,7 @@ import {
   ZAIMergeRecommendation,
 } from '../types';
 import { flattenTechStack, mergeTechStackCategories } from '../lib/techStack';
+import { buildSharedReviewAssumptions, cloneReviewAssumptions, getDefaultRankingOrder } from '../lib/reviewAssumptions';
 
 const TODAY = '2026-04-21';
 
@@ -140,15 +143,16 @@ function summarizeProblem(problemStatement: string, maxLength = 110) {
 
 function buildFinanceModel(capexValue: number, opexMonthlyValue: number, roiValue: number, paybackMonths: number): FinanceModel {
   const totalCostYearOneValue = capexValue + opexMonthlyValue * 12;
+  const normalizedRoiValue = clamp(Math.round(roiValue), 25, 95);
   return {
     capex: formatCurrency(capexValue),
     opex: formatMonthlyCurrency(opexMonthlyValue),
-    roi: `${roiValue}%`,
+    roi: `${normalizedRoiValue}%`,
     paybackPeriod: formatPayback(paybackMonths),
     totalCost: formatCurrency(totalCostYearOneValue),
     capexValue,
     opexMonthlyValue,
-    roiValue,
+    roiValue: normalizedRoiValue,
     paybackMonths,
     totalCostYearOneValue,
   };
@@ -360,10 +364,10 @@ export function createDemoBlueprints(problemStatement: string): Blueprint[] {
         { category: 'Workflow orchestration', tools: ['Workflow rules engine', 'workflow orchestration'] },
         { category: 'Platform foundation', tools: ['Kubernetes', 'API gateway'] },
       ]),
-      financeModel: buildFinanceModel(210000, 18000, 228, 11),
+      financeModel: buildFinanceModel(210000, 18000, 62, 11),
       scores: buildScores(76, 88, 69, 63),
       conflicts: conflicts.filter(conflict => conflict.affectedBlueprints.includes(ids[0])),
-      scoringInsights: buildScoringInsights(buildScores(76, 88, 69, 63), buildFinanceModel(210000, 18000, 228, 11), 0),
+      scoringInsights: buildScoringInsights(buildScores(76, 88, 69, 63), buildFinanceModel(210000, 18000, 62, 11), 0),
       timeline: BLUEPRINT_TIMELINES[0],
       ...COLOR_TOKENS[0],
     },
@@ -383,10 +387,10 @@ export function createDemoBlueprints(problemStatement: string): Blueprint[] {
         { category: 'Data transformation', tools: ['dbt', 'stream processing'] },
         { category: 'Presentation layer', tools: ['Executive insight cockpit'] },
       ]),
-      financeModel: buildFinanceModel(175000, 22000, 276, 10),
+      financeModel: buildFinanceModel(175000, 22000, 78, 10),
       scores: buildScores(82, 92, 73, 72),
       conflicts: conflicts.filter(conflict => conflict.affectedBlueprints.includes(ids[1])),
-      scoringInsights: buildScoringInsights(buildScores(82, 92, 73, 72), buildFinanceModel(175000, 22000, 276, 10), 1),
+      scoringInsights: buildScoringInsights(buildScores(82, 92, 73, 72), buildFinanceModel(175000, 22000, 78, 10), 1),
       timeline: BLUEPRINT_TIMELINES[1],
       ...COLOR_TOKENS[1],
     },
@@ -406,10 +410,10 @@ export function createDemoBlueprints(problemStatement: string): Blueprint[] {
         { category: 'Automation layer', tools: ['Automation toolkit', 'n8n'] },
         { category: 'Governance and audit', tools: ['audit logging'] },
       ]),
-      financeModel: buildFinanceModel(90000, 12000, 192, 7),
+      financeModel: buildFinanceModel(90000, 12000, 54, 7),
       scores: buildScores(89, 75, 86, 79),
       conflicts: conflicts.filter(conflict => conflict.affectedBlueprints.includes(ids[2])),
-      scoringInsights: buildScoringInsights(buildScores(89, 75, 86, 79), buildFinanceModel(90000, 12000, 192, 7), 2),
+      scoringInsights: buildScoringInsights(buildScores(89, 75, 86, 79), buildFinanceModel(90000, 12000, 54, 7), 2),
       timeline: BLUEPRINT_TIMELINES[2],
       ...COLOR_TOKENS[2],
     },
@@ -480,6 +484,68 @@ export function createSeedEscalationQueue(): EscalationRecord[] {
   ];
 }
 
+function createManagerReviewBatch(
+  submittedBy: User,
+  problemStatement: string,
+  provider: AIProvider = 'mock',
+  status: ManagerReviewBatch['status'] = 'pending',
+): ManagerReviewBatch {
+  const attachments: Attachment[] = [
+    { id: createId('attachment'), name: `${submittedBy.department.toLowerCase().replace(/\s+/g, '-')}-brief.pdf`, sizeLabel: '2.4 MB' },
+  ];
+  const submission = createSubmission(submittedBy, problemStatement, attachments);
+  const blueprints = createDemoBlueprints(problemStatement);
+  const rankingOrder = getDefaultRankingOrder(blueprints);
+  const assumptions = buildSharedReviewAssumptions(blueprints);
+
+  return {
+    id: createId('mgr-batch'),
+    submission,
+    submittedBy: submission.submittedBy,
+    blueprints,
+    rankingOrder,
+    baselineAssumptions: cloneReviewAssumptions(assumptions),
+    assumptions: cloneReviewAssumptions(assumptions),
+    rescoredBlueprints: null,
+    selectedBlueprintId: rankingOrder[0] ?? null,
+    status,
+    note: `Submitted ranked blueprint set for ${submittedBy.department} leadership review.`,
+    provider,
+    fallback: provider === 'mock',
+    managerNote: status === 'returned_to_employee' ? 'Please review the updated assumptions before resubmitting.' : null,
+    escalatedAt: TODAY,
+    history: [
+      {
+        id: createId('mgr-history'),
+        action: 'submitted',
+        byRole: submittedBy.role,
+        note: 'Employee submitted ranked blueprint set to manager review.',
+        createdAt: TODAY,
+        provider,
+      },
+    ],
+  };
+}
+
+export function createSeedManagerReviewBatches(): ManagerReviewBatch[] {
+  const user = TEAM_SUBMITTERS[0];
+
+  return [
+    createManagerReviewBatch(
+      user,
+      'Our data analytics pipeline is fragmented across departments with inconsistent reporting tools, leading to duplicate work and unreliable executive insights.',
+      'mock',
+      'pending',
+    ),
+    createManagerReviewBatch(
+      user,
+      'Internal workflow automation bottlenecks are slowing delivery cycles and creating significant operational debt across teams.',
+      'mock',
+      'returned_to_employee',
+    ),
+  ];
+}
+
 export const MOCK_EXISTING_SYSTEMS: ExistingSystem[] = [
   {
     id: 'sys-1',
@@ -521,7 +587,7 @@ export const MOCK_PROJECT_TRACKERS: ProjectTracker[] = [
       { label: 'Integration uptime', predicted: '99.5%', actual: '99.7%', status: 'ok', impact: 'Exceeding SLA targets.' },
     ],
     decisions: [],
-    roiProjected: '276%',
+    roiProjected: '78%',
   },
   {
     id: 'proj-2',
@@ -538,7 +604,7 @@ export const MOCK_PROJECT_TRACKERS: ProjectTracker[] = [
     glmRecommendation: 'Z.AI detects automation coverage 37% below target in Month 1. Root cause: insufficient tooling setup time allocated in Phase 1. Recommend scoping a Phase 2 timeline extension or re-prioritising onboarding tasks to recover delivery velocity before Month 2 checkpoint.',
     decisionActions: ['Escalate to HR', 'Re-scope Project', 'Accept Risk'],
     decisions: [],
-    roiProjected: '192%',
+    roiProjected: '54%',
   },
   {
     id: 'proj-3',
@@ -553,7 +619,7 @@ export const MOCK_PROJECT_TRACKERS: ProjectTracker[] = [
       { label: 'Integration coverage', predicted: '90%', actual: '88%', status: 'ok', impact: 'Near target, minor gap.' },
     ],
     decisions: [],
-    roiProjected: '228%',
+    roiProjected: '62%',
   },
 ];
 
@@ -705,7 +771,7 @@ export function createMergedStrategy(records: EscalationRecord[], createdByRole:
   const mergedFinance = buildFinanceModel(
     Math.round(totalCapex - savingsValue * 0.35),
     Math.round(totalOpex * 0.88),
-    clamp(Math.round(sourceBlueprints.reduce((sum, blueprint) => sum + blueprint.financeModel.roiValue, 0) / sourceBlueprints.length + 34), 220, 360),
+    clamp(Math.round(sourceBlueprints.reduce((sum, blueprint) => sum + blueprint.financeModel.roiValue, 0) / sourceBlueprints.length + 10), 45, 95),
     clamp(Math.round(sourceBlueprints.reduce((sum, blueprint) => sum + blueprint.financeModel.paybackMonths, 0) / sourceBlueprints.length - 1), 7, 14),
   );
   const theme = inferTheme(records[0]?.submission.problemStatement ?? 'organizational decisioning');

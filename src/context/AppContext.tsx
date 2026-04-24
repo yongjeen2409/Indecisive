@@ -2,14 +2,17 @@
 
 import { createContext, ReactNode, useContext, useMemo, useReducer } from 'react';
 import {
+  AIProvider,
   Attachment,
   Blueprint,
   EscalationRecord,
   ExistingSystem,
+  ManagerReviewBatch,
   MergeSuggestion,
   MergedStrategy,
   ProjectTracker,
   RetrievedContext,
+  ReviewAssumption,
   Submission,
   SubmissionStatus,
   User,
@@ -22,11 +25,18 @@ import {
   createMergeSuggestions,
   createRetrievedContext,
   createSeedEscalationQueue,
+  createSeedManagerReviewBatches,
   MOCK_EXISTING_SYSTEMS,
   MOCK_PROJECT_TRACKERS,
   MOCK_USERS,
 } from '../data/mockData';
 import { buildMergedSystemName } from '../lib/mergeNaming';
+import {
+  buildSharedReviewAssumptions,
+  cloneReviewAssumptions,
+  getDefaultRankingOrder,
+  reevaluateBlueprintSet,
+} from '../lib/reviewAssumptions';
 
 export interface AppState {
   currentUser: User | null;
@@ -35,18 +45,24 @@ export interface AppState {
   attachments: Attachment[];
   retrievedContext: RetrievedContext | null;
   blueprints: Blueprint[];
+  reviewAssumptions: ReviewAssumption[];
+  rankedBlueprintIds: string[];
   selectedBlueprintId: string | null;
   conflictsAcknowledged: boolean;
   escalationQueue: EscalationRecord[];
+  managerReviewBatches: ManagerReviewBatch[];
   selectedMergeIds: string[];
   mergedStrategy: MergedStrategy | null;
   existingSystems: ExistingSystem[];
   projectTrackers: ProjectTracker[];
   mergedExistingSystems: ExistingSystem[];
+  lastBlueprintProvider: AIProvider | null;
+  lastBlueprintFallback: boolean;
 }
 
 interface AppContextValue extends AppState {
   selectedBlueprint: Blueprint | null;
+  rankedBlueprints: Blueprint[];
   staffEscalations: EscalationRecord[];
   pendingEscalations: EscalationRecord[];
   mergeSuggestions: MergeSuggestion[];
@@ -57,20 +73,37 @@ interface AppContextValue extends AppState {
   directorReviewedEscalations: EscalationRecord[];
   allDisplayedSystems: ExistingSystem[];
   directorMergeRecommendations: ZAIMergeRecommendation[];
+  managerPendingBatches: ManagerReviewBatch[];
+  managerReturnedBatches: ManagerReviewBatch[];
+  managerForwardedBatches: ManagerReviewBatch[];
+  myManagerReviewBatches: ManagerReviewBatch[];
+  latestReturnedManagerBatch: ManagerReviewBatch | null;
   login: (userId: string) => void;
   logout: () => void;
   startSubmission: (problemStatement: string, attachments: Attachment[]) => void;
   completeAnalysis: () => void;
-  completeAnalysisWithBlueprints: (blueprints: Blueprint[]) => void;
+  completeAnalysisWithBlueprints: (payload: {
+    blueprints: Blueprint[];
+    assumptions?: ReviewAssumption[] | null;
+    provider?: AIProvider;
+    fallback?: boolean;
+  }) => void;
   selectBlueprint: (blueprintId: string) => void;
+  setBlueprintRanking: (blueprintIds: string[]) => void;
   openConflictReview: () => void;
   acknowledgeConflicts: () => void;
   escalateSelectedBlueprint: () => void;
+  escalateRankedBlueprints: () => void;
   resetSubmission: () => void;
   approveToDirector: (recordId: string) => void;
   createEscalationTicket: (recordId: string) => void;
   deEscalateToStaff: (recordId: string, reviewNote: string) => void;
   deEscalateToDeptHead: (recordId: string, reviewNote: string) => void;
+  managerUpdateAssumptionValue: (batchId: string, assumptionId: string, value: string) => void;
+  managerApplyReevaluation: (batchId: string, blueprints: Blueprint[], provider: AIProvider, fallback: boolean) => void;
+  managerSelectBatchBlueprint: (batchId: string, blueprintId: string) => void;
+  managerEscalateBatchToDirector: (batchId: string) => void;
+  managerRejectBatch: (batchId: string, note: string) => void;
   selectMergePair: (blueprintIds: string[]) => void;
   completeMerge: () => void;
   directorApprove: (recordId: string) => void;
@@ -84,16 +117,22 @@ type Action =
   | { type: 'logout' }
   | { type: 'startSubmission'; payload: { problemStatement: string; attachments: Attachment[] } }
   | { type: 'completeAnalysis' }
-  | { type: 'completeAnalysisWithBlueprints'; payload: { blueprints: Blueprint[] } }
+  | { type: 'completeAnalysisWithBlueprints'; payload: { blueprints: Blueprint[]; assumptions?: ReviewAssumption[] | null; provider?: AIProvider; fallback?: boolean } }
   | { type: 'selectBlueprint'; payload: { blueprintId: string } }
+  | { type: 'setBlueprintRanking'; payload: { blueprintIds: string[] } }
   | { type: 'openConflictReview' }
   | { type: 'acknowledgeConflicts' }
-  | { type: 'escalateSelectedBlueprint' }
+  | { type: 'escalateRankedBlueprints' }
   | { type: 'resetSubmission' }
   | { type: 'approveToDirector'; payload: { recordId: string } }
   | { type: 'createEscalationTicket'; payload: { recordId: string } }
   | { type: 'deEscalateToStaff'; payload: { recordId: string; reviewNote: string } }
   | { type: 'deEscalateToDeptHead'; payload: { recordId: string; reviewNote: string } }
+  | { type: 'managerUpdateAssumptionValue'; payload: { batchId: string; assumptionId: string; value: string } }
+  | { type: 'managerApplyReevaluation'; payload: { batchId: string; blueprints: Blueprint[]; provider: AIProvider; fallback: boolean } }
+  | { type: 'managerSelectBatchBlueprint'; payload: { batchId: string; blueprintId: string } }
+  | { type: 'managerEscalateBatchToDirector'; payload: { batchId: string } }
+  | { type: 'managerRejectBatch'; payload: { batchId: string; note: string } }
   | { type: 'selectMergePair'; payload: { blueprintIds: string[] } }
   | { type: 'completeMerge' }
   | { type: 'directorApprove'; payload: { recordId: string } }
@@ -109,6 +148,7 @@ function createId(prefix: string) {
 
 function createInitialState(overrides?: Partial<AppState>): AppState {
   const escalationQueue = createSeedEscalationQueue();
+  const managerReviewBatches = createSeedManagerReviewBatches();
   const baseState: AppState = {
     currentUser: null,
     activeSubmission: null,
@@ -116,20 +156,26 @@ function createInitialState(overrides?: Partial<AppState>): AppState {
     attachments: [],
     retrievedContext: null,
     blueprints: [],
+    reviewAssumptions: [],
+    rankedBlueprintIds: [],
     selectedBlueprintId: null,
     conflictsAcknowledged: false,
     escalationQueue,
+    managerReviewBatches,
     selectedMergeIds: [],
     mergedStrategy: null,
     existingSystems: MOCK_EXISTING_SYSTEMS,
     projectTrackers: MOCK_PROJECT_TRACKERS,
     mergedExistingSystems: [],
+    lastBlueprintProvider: null,
+    lastBlueprintFallback: false,
   };
 
   return syncMergeSelection({
     ...baseState,
     ...overrides,
     escalationQueue: overrides?.escalationQueue ?? escalationQueue,
+    managerReviewBatches: overrides?.managerReviewBatches ?? managerReviewBatches,
   });
 }
 
@@ -172,7 +218,47 @@ function getRecommendedBlueprintId(blueprints: Blueprint[], selectedBlueprintId:
     return selectedBlueprintId;
   }
 
-  return [...blueprints].sort((left, right) => right.scores.total - left.scores.total)[0]?.id ?? null;
+  return getDefaultRankingOrder(blueprints)[0] ?? null;
+}
+
+function normalizeRanking(currentBlueprints: Blueprint[], incomingIds: string[]) {
+  const validIds = new Set(currentBlueprints.map(blueprint => blueprint.id));
+  const filtered = incomingIds.filter(id => validIds.has(id));
+  const missing = currentBlueprints.map(blueprint => blueprint.id).filter(id => !filtered.includes(id));
+  return [...filtered, ...missing];
+}
+
+function createManagerBatchRecord(state: AppState, status: ManagerReviewBatch['status']) {
+  const rankingOrder = normalizeRanking(state.blueprints, state.rankedBlueprintIds.length > 0 ? state.rankedBlueprintIds : getDefaultRankingOrder(state.blueprints));
+  const currentAssumptions = state.reviewAssumptions.length > 0 ? state.reviewAssumptions : buildSharedReviewAssumptions(state.blueprints);
+
+  return {
+    id: createId('mgr-batch'),
+    submission: state.activeSubmission!,
+    submittedBy: state.activeSubmission!.submittedBy,
+    blueprints: state.blueprints,
+    rankingOrder,
+    baselineAssumptions: cloneReviewAssumptions(currentAssumptions),
+    assumptions: cloneReviewAssumptions(currentAssumptions),
+    rescoredBlueprints: null,
+    selectedBlueprintId: rankingOrder[0] ?? null,
+    status,
+    note: `Employee ranked ${state.blueprints.length} blueprints for manager review.`,
+    provider: state.lastBlueprintProvider ?? 'mock',
+    fallback: state.lastBlueprintFallback || state.lastBlueprintProvider === 'mock' || state.lastBlueprintProvider === null,
+    managerNote: null,
+    escalatedAt: '2026-04-21',
+    history: [
+      {
+        id: createId('mgr-history'),
+        action: 'submitted' as const,
+        byRole: state.currentUser!.role,
+        note: 'Employee submitted ranked blueprint set to manager review.',
+        createdAt: '2026-04-21',
+        provider: state.lastBlueprintProvider ?? 'mock',
+      },
+    ],
+  };
 }
 
 function reducer(state: AppState, action: Action): AppState {
@@ -205,30 +291,56 @@ function reducer(state: AppState, action: Action): AppState {
         attachments: action.payload.attachments,
         retrievedContext: createRetrievedContext(action.payload.problemStatement),
         blueprints: [],
+        reviewAssumptions: [],
+        rankedBlueprintIds: [],
         selectedBlueprintId: null,
         conflictsAcknowledged: false,
+        lastBlueprintProvider: null,
+        lastBlueprintFallback: false,
       };
     }
     case 'completeAnalysis': {
       if (!state.activeSubmission) return state;
+      const blueprints = createDemoBlueprints(state.activeSubmission.problemStatement);
+      const rankingOrder = getDefaultRankingOrder(blueprints);
       return {
         ...state,
-        blueprints: createDemoBlueprints(state.activeSubmission.problemStatement),
+        blueprints,
+        reviewAssumptions: buildSharedReviewAssumptions(blueprints),
+        rankedBlueprintIds: rankingOrder,
+        selectedBlueprintId: rankingOrder[0] ?? null,
         submissionStatus: 'blueprints',
+        lastBlueprintProvider: 'mock',
+        lastBlueprintFallback: true,
       };
     }
     case 'completeAnalysisWithBlueprints': {
       if (!state.activeSubmission) return state;
+      const blueprints = action.payload.blueprints;
+      const rankingOrder = getDefaultRankingOrder(blueprints);
       return {
         ...state,
-        blueprints: action.payload.blueprints,
+        blueprints,
+        reviewAssumptions:
+          action.payload.assumptions && action.payload.assumptions.length > 0
+            ? action.payload.assumptions
+            : buildSharedReviewAssumptions(blueprints),
+        rankedBlueprintIds: rankingOrder,
+        selectedBlueprintId: rankingOrder[0] ?? null,
         submissionStatus: 'blueprints',
+        lastBlueprintProvider: action.payload.provider ?? 'mock',
+        lastBlueprintFallback: action.payload.fallback ?? false,
       };
     }
     case 'selectBlueprint':
       return {
         ...state,
         selectedBlueprintId: action.payload.blueprintId,
+      };
+    case 'setBlueprintRanking':
+      return {
+        ...state,
+        rankedBlueprintIds: normalizeRanking(state.blueprints, action.payload.blueprintIds),
       };
     case 'openConflictReview':
       if (state.blueprints.length === 0) return state;
@@ -240,40 +352,60 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         conflictsAcknowledged: true,
-        submissionStatus: 'blueprints',
+        submissionStatus: 'scoring',
         selectedBlueprintId: getRecommendedBlueprintId(state.blueprints, state.selectedBlueprintId),
       };
-    case 'escalateSelectedBlueprint': {
-      const blueprint = state.blueprints.find(item => item.id === state.selectedBlueprintId);
-      if (!blueprint || !state.activeSubmission || !state.currentUser) return state;
+    case 'escalateRankedBlueprints': {
+      if (!state.activeSubmission || !state.currentUser || state.blueprints.length === 0) return state;
 
-      const nextQueue = [
-        {
-          id: createId('escalation'),
-          submission: state.activeSubmission,
-          blueprint,
-          submittedBy: {
-            id: state.currentUser.id,
-            name: state.currentUser.name,
-            role: state.currentUser.role,
-            department: state.currentUser.department,
-            avatar: state.currentUser.avatar,
-          },
-          escalatedAt: '2026-04-21',
-          note: `Escalated from the ${state.currentUser.department} team after staff review.`,
-          status: 'pending' as const,
-          level: 'staff_to_head' as const,
-          ticket: null,
-          reviews: [],
-        },
-        ...state.escalationQueue,
-      ];
+      const currentUser = state.currentUser;
+      const rankingOrder = normalizeRanking(state.blueprints, state.rankedBlueprintIds.length > 0 ? state.rankedBlueprintIds : getDefaultRankingOrder(state.blueprints));
+      const assumptions = state.reviewAssumptions.length > 0 ? state.reviewAssumptions : buildSharedReviewAssumptions(state.blueprints);
+      const existingBatchIndex = state.managerReviewBatches.findIndex(
+        batch =>
+          batch.submission.id === state.activeSubmission?.id &&
+          batch.submittedBy.id === state.currentUser?.id &&
+          batch.status === 'returned_to_employee',
+      );
 
-      return syncMergeSelection({
+      const managerReviewBatches =
+        existingBatchIndex >= 0
+          ? state.managerReviewBatches.map((batch, index) =>
+              index === existingBatchIndex
+                ? {
+                    ...batch,
+                    blueprints: state.blueprints,
+                    rankingOrder,
+                    baselineAssumptions: cloneReviewAssumptions(assumptions),
+                    assumptions: cloneReviewAssumptions(assumptions),
+                    rescoredBlueprints: null,
+                    selectedBlueprintId: rankingOrder[0] ?? null,
+                    status: 'pending' as const,
+                    note: 'Employee resubmitted the ranked blueprint set after manager feedback.',
+                    managerNote: null,
+                    history: [
+                      {
+                        id: createId('mgr-history'),
+                        action: 'resubmitted' as const,
+                        byRole: currentUser.role,
+                        note: 'Employee resubmitted ranked blueprints after manager rejection.',
+                        createdAt: '2026-04-24',
+                        provider: state.lastBlueprintProvider ?? 'mock',
+                      },
+                      ...batch.history,
+                    ],
+                  }
+                : batch,
+            )
+          : [createManagerBatchRecord({ ...state, rankedBlueprintIds: rankingOrder, reviewAssumptions: assumptions }, 'pending'), ...state.managerReviewBatches];
+
+      return {
         ...state,
-        escalationQueue: nextQueue,
+        managerReviewBatches,
+        rankedBlueprintIds: rankingOrder,
+        selectedBlueprintId: rankingOrder[0] ?? null,
         submissionStatus: 'escalated',
-      });
+      };
     }
     case 'approveToDirector': {
       const escalationQueue = state.escalationQueue.map(record =>
@@ -352,6 +484,171 @@ function reducer(state: AppState, action: Action): AppState {
 
       return syncMergeSelection({ ...state, escalationQueue });
     }
+    case 'managerUpdateAssumptionValue': {
+      const managerReviewBatches = state.managerReviewBatches.map(batch =>
+        batch.id !== action.payload.batchId
+          ? batch
+          : {
+              ...batch,
+              rescoredBlueprints: null,
+              assumptions: batch.assumptions.map(assumption =>
+                assumption.id === action.payload.assumptionId
+                  ? { ...assumption, value: action.payload.value }
+                  : assumption,
+              ),
+            },
+      );
+
+      return { ...state, managerReviewBatches };
+    }
+    case 'managerApplyReevaluation': {
+      const managerReviewBatches = state.managerReviewBatches.map(batch =>
+        batch.id !== action.payload.batchId
+          ? batch
+          : {
+              ...batch,
+              rescoredBlueprints: action.payload.blueprints,
+              provider: action.payload.provider,
+              fallback: action.payload.fallback,
+              history: [
+                {
+                  id: createId('mgr-history'),
+                  action: 'reevaluated' as const,
+                  byRole: state.currentUser?.role ?? 'lead',
+                  note: 'Manager reevaluated the ranked blueprint set after editing assumptions.',
+                  createdAt: '2026-04-24',
+                  provider: action.payload.provider,
+                },
+                ...batch.history,
+              ],
+            },
+      );
+
+      return { ...state, managerReviewBatches };
+    }
+    case 'managerSelectBatchBlueprint': {
+      const managerReviewBatches = state.managerReviewBatches.map(batch =>
+        batch.id !== action.payload.batchId
+          ? batch
+          : {
+              ...batch,
+              selectedBlueprintId: action.payload.blueprintId,
+            },
+      );
+
+      return { ...state, managerReviewBatches };
+    }
+    case 'managerEscalateBatchToDirector': {
+      if (!state.currentUser) return state;
+      const currentUser = state.currentUser;
+      const targetBatch = state.managerReviewBatches.find(batch => batch.id === action.payload.batchId);
+      if (!targetBatch) return state;
+
+      const displayedBlueprints =
+        targetBatch.rescoredBlueprints ??
+        reevaluateBlueprintSet(targetBatch.blueprints, targetBatch.assumptions, targetBatch.baselineAssumptions);
+      const selectedBlueprint =
+        displayedBlueprints.find(blueprint => blueprint.id === targetBatch.selectedBlueprintId) ??
+        displayedBlueprints.find(blueprint => blueprint.id === targetBatch.rankingOrder[0]);
+      if (!selectedBlueprint) return state;
+
+      const escalationRecord: EscalationRecord = {
+        id: createId('escalation'),
+        submission: targetBatch.submission,
+        blueprint: selectedBlueprint,
+        submittedBy: targetBatch.submittedBy,
+        escalatedAt: '2026-04-24',
+        note: `Forwarded by manager ${state.currentUser.name} after reviewing ranked batch and updated assumptions.`,
+        status: 'forwarded',
+        level: 'head_to_director',
+        ticket: null,
+        reviews: [
+          {
+            id: createId('review'),
+            byRole: currentUser.role,
+            target: 'director',
+            note: `Manager selected rank ${targetBatch.rankingOrder.findIndex(id => id === selectedBlueprint.id) + 1 || 1} after reevaluation.`,
+            createdAt: '2026-04-24',
+          },
+        ],
+      };
+
+      const managerReviewBatches = state.managerReviewBatches.map(batch =>
+        batch.id !== action.payload.batchId
+          ? batch
+          : {
+              ...batch,
+              status: 'forwarded_to_director' as const,
+              managerNote: `Forwarded ${selectedBlueprint.title} to director after manager review.`,
+              history: [
+                {
+                  id: createId('mgr-history'),
+                  action: 'forwarded' as const,
+                  byRole: currentUser.role,
+                  note: `Forwarded ${selectedBlueprint.title} to the director queue.`,
+                  createdAt: '2026-04-24',
+                  provider: batch.provider,
+                },
+                ...batch.history,
+              ],
+            },
+      );
+
+      return syncMergeSelection({
+        ...state,
+        escalationQueue: [escalationRecord, ...state.escalationQueue],
+        managerReviewBatches,
+      });
+    }
+    case 'managerRejectBatch': {
+      if (!state.currentUser || !action.payload.note.trim()) return state;
+      const currentUser = state.currentUser;
+      const targetBatch = state.managerReviewBatches.find(batch => batch.id === action.payload.batchId);
+      if (!targetBatch) return state;
+      const returnedAssumptions = cloneReviewAssumptions(targetBatch.assumptions);
+      const returnedBlueprints =
+        targetBatch.rescoredBlueprints ??
+        reevaluateBlueprintSet(targetBatch.blueprints, targetBatch.assumptions, targetBatch.baselineAssumptions);
+
+      const managerReviewBatches = state.managerReviewBatches.map(batch =>
+        batch.id !== action.payload.batchId
+          ? batch
+          : {
+              ...batch,
+              blueprints: returnedBlueprints,
+              baselineAssumptions: cloneReviewAssumptions(returnedAssumptions),
+              assumptions: cloneReviewAssumptions(returnedAssumptions),
+              rescoredBlueprints: null,
+              status: 'returned_to_employee' as const,
+              managerNote: action.payload.note.trim(),
+              history: [
+                {
+                  id: createId('mgr-history'),
+                  action: 'rejected' as const,
+                  byRole: currentUser.role,
+                  note: action.payload.note.trim(),
+                  createdAt: '2026-04-24',
+                  provider: batch.provider,
+                },
+                ...batch.history,
+              ],
+            },
+      );
+
+      return {
+        ...state,
+        managerReviewBatches,
+        activeSubmission: targetBatch.submission,
+        attachments: targetBatch.submission.attachments,
+        retrievedContext: createRetrievedContext(targetBatch.submission.problemStatement),
+        blueprints: returnedBlueprints,
+        reviewAssumptions: returnedAssumptions,
+        rankedBlueprintIds: targetBatch.rankingOrder,
+        selectedBlueprintId: targetBatch.rankingOrder[0] ?? null,
+        conflictsAcknowledged: true,
+        submissionStatus: 'blueprints',
+      };
+    }
     case 'resetSubmission':
       return {
         ...state,
@@ -360,8 +657,12 @@ function reducer(state: AppState, action: Action): AppState {
         attachments: [],
         retrievedContext: null,
         blueprints: [],
+        reviewAssumptions: [],
+        rankedBlueprintIds: [],
         selectedBlueprintId: null,
         conflictsAcknowledged: false,
+        lastBlueprintProvider: null,
+        lastBlueprintFallback: false,
       };
     case 'selectMergePair':
       return syncMergeSelection({
@@ -498,6 +799,8 @@ export function AppProvider({
   const value = useMemo(() => {
     const selectedBlueprint =
       state.blueprints.find(blueprint => blueprint.id === state.selectedBlueprintId) ?? null;
+    const rankedBlueprints =
+      normalizeRanking(state.blueprints, state.rankedBlueprintIds).map(id => state.blueprints.find(blueprint => blueprint.id === id)).filter((blueprint): blueprint is Blueprint => Boolean(blueprint));
     const staffEscalations = state.escalationQueue.filter(record => record.level === 'staff_to_head');
     const pendingEscalations = state.escalationQueue.filter(record => record.status === 'forwarded');
     const mergeSuggestions = createMergeSuggestions(state.escalationQueue);
@@ -516,10 +819,21 @@ export function AppProvider({
       directorApprovedEscalations,
       allDisplayedSystems,
     );
+    const managerPendingBatches = state.managerReviewBatches.filter(batch => batch.status === 'pending');
+    const managerReturnedBatches = state.managerReviewBatches.filter(batch => batch.status === 'returned_to_employee');
+    const managerForwardedBatches = state.managerReviewBatches.filter(batch => batch.status === 'forwarded_to_director');
+    const myManagerReviewBatches = state.currentUser
+      ? state.managerReviewBatches.filter(batch => batch.submittedBy.id === state.currentUser?.id)
+      : [];
+    const latestReturnedManagerBatch =
+      state.activeSubmission
+        ? state.managerReviewBatches.find(batch => batch.submission.id === state.activeSubmission?.id && batch.status === 'returned_to_employee') ?? null
+        : null;
 
     return {
       ...state,
       selectedBlueprint,
+      rankedBlueprints,
       staffEscalations,
       pendingEscalations,
       mergeSuggestions,
@@ -530,17 +844,30 @@ export function AppProvider({
       directorReviewedEscalations,
       allDisplayedSystems,
       directorMergeRecommendations,
+      managerPendingBatches,
+      managerReturnedBatches,
+      managerForwardedBatches,
+      myManagerReviewBatches,
+      latestReturnedManagerBatch,
       login: (userId: string) => dispatch({ type: 'login', payload: { userId } }),
       logout: () => dispatch({ type: 'logout' }),
       startSubmission: (problemStatement: string, attachments: Attachment[]) =>
         dispatch({ type: 'startSubmission', payload: { problemStatement, attachments } }),
       completeAnalysis: () => dispatch({ type: 'completeAnalysis' }),
-      completeAnalysisWithBlueprints: (blueprints: Blueprint[]) =>
-        dispatch({ type: 'completeAnalysisWithBlueprints', payload: { blueprints } }),
+      completeAnalysisWithBlueprints: (payload: {
+        blueprints: Blueprint[];
+        assumptions?: ReviewAssumption[] | null;
+        provider?: AIProvider;
+        fallback?: boolean;
+      }) =>
+        dispatch({ type: 'completeAnalysisWithBlueprints', payload }),
       selectBlueprint: (blueprintId: string) => dispatch({ type: 'selectBlueprint', payload: { blueprintId } }),
+      setBlueprintRanking: (blueprintIds: string[]) =>
+        dispatch({ type: 'setBlueprintRanking', payload: { blueprintIds } }),
       openConflictReview: () => dispatch({ type: 'openConflictReview' }),
       acknowledgeConflicts: () => dispatch({ type: 'acknowledgeConflicts' }),
-      escalateSelectedBlueprint: () => dispatch({ type: 'escalateSelectedBlueprint' }),
+      escalateSelectedBlueprint: () => dispatch({ type: 'escalateRankedBlueprints' }),
+      escalateRankedBlueprints: () => dispatch({ type: 'escalateRankedBlueprints' }),
       resetSubmission: () => dispatch({ type: 'resetSubmission' }),
       approveToDirector: (recordId: string) => dispatch({ type: 'approveToDirector', payload: { recordId } }),
       createEscalationTicket: (recordId: string) =>
@@ -549,6 +876,16 @@ export function AppProvider({
         dispatch({ type: 'deEscalateToStaff', payload: { recordId, reviewNote } }),
       deEscalateToDeptHead: (recordId: string, reviewNote: string) =>
         dispatch({ type: 'deEscalateToDeptHead', payload: { recordId, reviewNote } }),
+      managerUpdateAssumptionValue: (batchId: string, assumptionId: string, value: string) =>
+        dispatch({ type: 'managerUpdateAssumptionValue', payload: { batchId, assumptionId, value } }),
+      managerApplyReevaluation: (batchId: string, blueprints: Blueprint[], provider: AIProvider, fallback: boolean) =>
+        dispatch({ type: 'managerApplyReevaluation', payload: { batchId, blueprints, provider, fallback } }),
+      managerSelectBatchBlueprint: (batchId: string, blueprintId: string) =>
+        dispatch({ type: 'managerSelectBatchBlueprint', payload: { batchId, blueprintId } }),
+      managerEscalateBatchToDirector: (batchId: string) =>
+        dispatch({ type: 'managerEscalateBatchToDirector', payload: { batchId } }),
+      managerRejectBatch: (batchId: string, note: string) =>
+        dispatch({ type: 'managerRejectBatch', payload: { batchId, note } }),
       selectMergePair: (blueprintIds: string[]) =>
         dispatch({ type: 'selectMergePair', payload: { blueprintIds } }),
       completeMerge: () => dispatch({ type: 'completeMerge' }),

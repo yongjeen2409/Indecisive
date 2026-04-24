@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import OpenAI from 'openai';
-import { Blueprint, Conflict, Phase, FinanceModel, Scores, ScoringInsight, TechStackCategory } from '../../../types';
+import { AIProvider, Blueprint, Conflict, Phase, FinanceModel, ReviewAssumption, Scores, ScoringInsight, TechStackCategory } from '../../../types';
 import { normalizeTechStack } from '../../../lib/techStack';
+import { buildSharedReviewAssumptions } from '../../../lib/reviewAssumptions';
 
 export const maxDuration = 300;
 const DEFAULT_ZAI_BASE_URL = 'https://api.z.ai/api/paas/v4/';
@@ -31,15 +32,16 @@ function formatCurrency(value: number) {
 
 function buildFinanceModel(capexValue: number, opexMonthlyValue: number, roiValue: number, paybackMonths: number): FinanceModel {
   const totalCostYearOneValue = capexValue + opexMonthlyValue * 12;
+  const normalizedRoiValue = Math.min(95, Math.max(25, Math.round(roiValue)));
   return {
     capex: formatCurrency(capexValue),
     opex: `${formatCurrency(opexMonthlyValue)}/mo`,
-    roi: `${roiValue}%`,
+    roi: `${normalizedRoiValue}%`,
     paybackPeriod: `${paybackMonths} months`,
     totalCost: formatCurrency(totalCostYearOneValue),
     capexValue,
     opexMonthlyValue,
-    roiValue,
+    roiValue: normalizedRoiValue,
     paybackMonths,
     totalCostYearOneValue,
   };
@@ -110,6 +112,45 @@ const SCORING_INSIGHTS_SCHEMA = `[
   { "dimension": "Legal & Compliance", "status": "positive|neutral|warning", "summary": "One sentence about policy alignment", "score": 88 }
 ]`;
 
+const ASSUMPTIONS_SCHEMA = `[
+  {
+    "id": "budget",
+    "label": "Implementation Budget",
+    "value": "$180k",
+    "source": "Finance system / planning envelope",
+    "staleness": null,
+    "confidence": "HIGH",
+    "impact": "Short sentence describing how this assumption affects all three blueprints"
+  },
+  {
+    "id": "roi",
+    "label": "Planned Annual ROI",
+    "value": "240%",
+    "source": "Z.AI decision model",
+    "staleness": "Optional warning",
+    "confidence": "MEDIUM",
+    "impact": "Short sentence describing downside if ROI is lower"
+  },
+  {
+    "id": "headcount",
+    "label": "Team Capacity Required",
+    "value": "7 FTEs / 4 months",
+    "source": "HR allocation estimate",
+    "staleness": null,
+    "confidence": "HIGH",
+    "impact": "Short sentence describing staffing sensitivity"
+  },
+  {
+    "id": "payback",
+    "label": "Payback Period",
+    "value": "11 months",
+    "source": "Finance model",
+    "staleness": null,
+    "confidence": "MEDIUM",
+    "impact": "Short sentence describing decision risk if payback slips"
+  }
+]`;
+
 const BASE_RULES = `Rules:
 1. All 3 blueprints must take fundamentally different approaches (build vs buy, AI-native vs incremental, internal vs external)
 2. Finance numbers grounded in company budget data - capex $50k-$800k range
@@ -122,6 +163,7 @@ const SYSTEM_PROMPT = `You are a senior enterprise solutions architect. Analyze 
 
 Return ONLY a valid JSON object — no markdown, no explanation, no code fences. Structure:
 {
+  "assumptions": ${ASSUMPTIONS_SCHEMA},
   "blueprints": [
     {
       "title": "Concise blueprint name",
@@ -131,7 +173,7 @@ Return ONLY a valid JSON object — no markdown, no explanation, no code fences.
       "prototypeCode": "Complete self-contained HTML document with inline CSS and vanilla JS demoing the solution UI. Dark theme (#0a0a0f background). No external CDN links. Realistic mock data for this specific use case. Interactive (tabs, buttons). At least 400px tall.",
       "architecture": ["Layer Name: Component description (Technology)"],
       "techStack": [{ "category": "Frontend / Experience", "tools": ["React", "Next.js"] }],
-      "financeModel": { "capexValue": 200000, "opexMonthlyValue": 15000, "roiValue": 250, "paybackMonths": 12 },
+      "financeModel": { "capexValue": 200000, "opexMonthlyValue": 15000, "roiValue": 72, "paybackMonths": 12 },
       "timeline": [{ "name": "Phase 1 — Foundation", "duration": "4 weeks", "deliverables": ["Item 1", "Item 2", "Item 3"] }],
       "scores": { "feasibility": 80, "businessImpact": 85, "effort": 75, "riskConflict": 70 },
       "scoringInsights": ${SCORING_INSIGHTS_SCHEMA}
@@ -148,6 +190,7 @@ const SYSTEM_PROMPT_GEMINI = `You are a senior enterprise solutions architect. A
 
 Return ONLY a valid JSON object — no markdown, no explanation, no code fences. Structure:
 {
+  "assumptions": ${ASSUMPTIONS_SCHEMA},
   "blueprints": [
     {
       "title": "Concise blueprint name",
@@ -156,7 +199,7 @@ Return ONLY a valid JSON object — no markdown, no explanation, no code fences.
       "prototypeSourceJsx": "Complete self-contained .jsx file source exporting a default React component. No markdown fences. Keep all state, mock data, and styles inside the file. Make it interactive with filters, tabs, panel state, or buttons. No external CDN links.",
       "architecture": ["Layer Name: Component description (Technology)"],
       "techStack": [{ "category": "Frontend / Experience", "tools": ["React", "Next.js"] }],
-      "financeModel": { "capexValue": 200000, "opexMonthlyValue": 15000, "roiValue": 250, "paybackMonths": 12 },
+      "financeModel": { "capexValue": 200000, "opexMonthlyValue": 15000, "roiValue": 72, "paybackMonths": 12 },
       "timeline": [{ "name": "Phase 1 — Foundation", "duration": "4 weeks", "deliverables": ["Item 1", "Item 2", "Item 3"] }],
       "scores": { "feasibility": 80, "businessImpact": 85, "effort": 75, "riskConflict": 70 },
       "scoringInsights": ${SCORING_INSIGHTS_SCHEMA}
@@ -180,6 +223,28 @@ interface AIBlueprint {
   scoringInsights: ScoringInsight[];
 }
 
+interface AIReviewAssumption {
+  id: string;
+  label: string;
+  value: string;
+  source: string;
+  staleness?: string | null;
+  confidence: ReviewAssumption['confidence'];
+  impact: string;
+}
+
+interface ParsedBlueprintPayload {
+  blueprints: AIBlueprint[];
+  assumptions: ReviewAssumption[] | null;
+}
+
+interface GeneratedBlueprintPayload {
+  blueprints: Blueprint[] | null;
+  assumptions: ReviewAssumption[] | null;
+  provider: AIProvider;
+  fallback: boolean;
+}
+
 function extractJSON(text: string): string {
   const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fenceMatch) return fenceMatch[1].trim();
@@ -200,7 +265,7 @@ function extractJSON(text: string): string {
 
 function normalizeAIBlueprint(raw: Partial<AIBlueprint>, index: number): AIBlueprint {
   const scores = raw.scores ?? { feasibility: 75, businessImpact: 78, effort: 70, riskConflict: 65 };
-  const financeModel = raw.financeModel ?? { capexValue: 200000, opexMonthlyValue: 18000, roiValue: 200, paybackMonths: 12 };
+  const financeModel = raw.financeModel ?? { capexValue: 200000, opexMonthlyValue: 18000, roiValue: 68, paybackMonths: 12 };
   const normalizedTechStack = normalizeTechStack(raw.techStack, 'Core stack');
 
   const defaultInsights: ScoringInsight[] = [
@@ -519,7 +584,7 @@ function loadResponseMockBlueprints(): Blueprint[] | null {
 
       const builtFm = fm?.financeModel
         ? buildFinanceModel(fm.financeModel.capexValue, fm.financeModel.opexMonthlyValue, fm.financeModel.roiValue, fm.financeModel.paybackMonths)
-        : buildFinanceModel(200000, 18000, 200, 12);
+        : buildFinanceModel(200000, 18000, 68, 12);
 
       const [feasibility, impact, effort, risk] = SCORE_ROWS[i] ?? [78, 82, 75, 70];
       const sc = buildScores(feasibility, impact, effort, risk);
@@ -653,23 +718,80 @@ function parseAIBlueprints(rawText: string): AIBlueprint[] {
   return rawBlueprints.slice(0, 3).map((raw, i) => normalizeAIBlueprint(raw, i));
 }
 
+function isReviewAssumption(value: unknown): value is AIReviewAssumption {
+  return (
+    isRecord(value) &&
+    typeof value.id === 'string' &&
+    typeof value.label === 'string' &&
+    typeof value.value === 'string' &&
+    typeof value.source === 'string' &&
+    (value.staleness === null || value.staleness === undefined || typeof value.staleness === 'string') &&
+    (value.confidence === 'HIGH' || value.confidence === 'MEDIUM' || value.confidence === 'LOW') &&
+    typeof value.impact === 'string'
+  );
+}
+
+function parseGenerationPayload(rawText: string): ParsedBlueprintPayload {
+  const jsonStr = extractJSON(rawText);
+  const parsed = JSON.parse(jsonStr);
+  const rawBlueprints: Partial<AIBlueprint>[] = Array.isArray(parsed)
+    ? parsed
+    : Array.isArray(parsed.blueprints)
+      ? parsed.blueprints
+      : [];
+  const rawAssumptions =
+    isRecord(parsed) && Array.isArray(parsed.assumptions)
+      ? parsed.assumptions.filter(isReviewAssumption)
+      : [];
+
+  return {
+    blueprints: rawBlueprints.slice(0, 3).map((raw, index) => normalizeAIBlueprint(raw, index)),
+    assumptions: rawAssumptions.length > 0
+      ? rawAssumptions.map(assumption => ({
+          id: assumption.id,
+          label: assumption.label,
+          value: assumption.value,
+          source: assumption.source,
+          staleness: assumption.staleness ?? null,
+          confidence: assumption.confidence,
+          impact: assumption.impact,
+          editable: true,
+        }))
+      : null,
+  };
+}
+
 function assembleBlueprints(normalized: AIBlueprint[]): Blueprint[] {
   const ids = normalized.map(() => createId('bp'));
   const conflicts = buildConflictsForBlueprints(ids);
   return normalized.map((ai, i) => aiToBlueprintType(ai, i, ids, conflicts));
 }
 
-async function generateBlueprints(problem: string): Promise<Blueprint[]> {
+function buildGeneratedBlueprintPayload(
+  blueprints: Blueprint[],
+  assumptions: ReviewAssumption[] | null,
+  provider: AIProvider,
+  fallback: boolean,
+): GeneratedBlueprintPayload {
+  return {
+    blueprints,
+    assumptions: assumptions && assumptions.length > 0 ? assumptions : buildSharedReviewAssumptions(blueprints),
+    provider,
+    fallback,
+  };
+}
+
+async function generateBlueprints(problem: string): Promise<GeneratedBlueprintPayload> {
   if (USE_MOCK) {
     const responseMock = loadResponseMockBlueprints();
     if (responseMock) {
       console.log('[Mock] USE_MOCK=true, using data/response mock blueprints');
-      return responseMock;
+      return buildGeneratedBlueprintPayload(responseMock, buildSharedReviewAssumptions(responseMock), 'mock', true);
     }
     const cached = loadMockBlueprints();
     if (cached) {
       console.log('[Mock] USE_MOCK=true, falling back to mock-blueprints.json');
-      return cached;
+      return buildGeneratedBlueprintPayload(cached, buildSharedReviewAssumptions(cached), 'mock', true);
     }
     console.warn('[Mock] USE_MOCK=true but no mock data found, proceeding to API');
   }
@@ -678,11 +800,16 @@ async function generateBlueprints(problem: string): Promise<Blueprint[]> {
     const cached = loadMockBlueprints();
     if (cached) {
       console.log('[Mock] FORCE_MOCK_BLUEPRINTS=true, using saved mock-blueprints.json');
-      return cached;
+      return buildGeneratedBlueprintPayload(cached, buildSharedReviewAssumptions(cached), 'mock', true);
     }
 
     console.warn('[Mock] FORCE_MOCK_BLUEPRINTS=true, but no valid mock blueprints were found');
-    return [];
+    return {
+      blueprints: null,
+      assumptions: null,
+      provider: 'mock',
+      fallback: true,
+    };
   }
 
   const userContent = buildContextMessage(problem);
@@ -690,11 +817,11 @@ async function generateBlueprints(problem: string): Promise<Blueprint[]> {
   // Try ZAI first
   try {
     const rawText = await callZAI(userContent);
-    const normalized = parseAIBlueprints(rawText);
-    if (normalized.length > 0) {
-      const blueprints = assembleBlueprints(normalized);
+    const parsed = parseGenerationPayload(rawText);
+    if (parsed.blueprints.length > 0) {
+      const blueprints = assembleBlueprints(parsed.blueprints);
       saveMockBlueprints(blueprints);
-      return blueprints;
+      return buildGeneratedBlueprintPayload(blueprints, parsed.assumptions, 'zai', false);
     }
   } catch (zaiErr) {
     console.warn('[ZAI] failed, trying Gemini:', (zaiErr as Error).message);
@@ -703,11 +830,11 @@ async function generateBlueprints(problem: string): Promise<Blueprint[]> {
   // Gemini fallback
   try {
     const rawText = await callGemini(userContent);
-    const normalized = parseAIBlueprints(rawText);
-    if (normalized.length > 0) {
-      const blueprints = assembleBlueprints(normalized);
+    const parsed = parseGenerationPayload(rawText);
+    if (parsed.blueprints.length > 0) {
+      const blueprints = assembleBlueprints(parsed.blueprints);
       saveMockBlueprints(blueprints);
-      return blueprints;
+      return buildGeneratedBlueprintPayload(blueprints, parsed.assumptions, 'gemini', true);
     }
   } catch (geminiErr) {
     console.warn('[Gemini] failed, trying saved mock data:', (geminiErr as Error).message);
@@ -717,10 +844,15 @@ async function generateBlueprints(problem: string): Promise<Blueprint[]> {
   const cached = loadMockBlueprints();
   if (cached) {
     console.log('[Mock] using saved mock-blueprints.json');
-    return cached;
+    return buildGeneratedBlueprintPayload(cached, buildSharedReviewAssumptions(cached), 'mock', true);
   }
 
-  return [];
+  return {
+    blueprints: null,
+    assumptions: null,
+    provider: 'mock',
+    fallback: true,
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -732,13 +864,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'problem is required' }, { status: 400 });
     }
 
-    const blueprints = await generateBlueprints(problem);
+    const result = await generateBlueprints(problem);
 
-    if (blueprints.length === 0) {
-      return NextResponse.json({ blueprints: null, fallback: true });
+    if (!result.blueprints || result.blueprints.length === 0) {
+      return NextResponse.json({
+        blueprints: null,
+        assumptions: null,
+        provider: result.provider,
+        fallback: true,
+      });
     }
 
-    return NextResponse.json({ blueprints, fallback: false });
+    return NextResponse.json(result);
   } catch (err) {
     console.error('generate-blueprint route error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

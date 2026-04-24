@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../context/AppContext';
 import { ROUTES } from '../lib/routes';
-import { Blueprint } from '../types';
+import { AIProvider, Blueprint, ReviewAssumption } from '../types';
 
 const STEPS = [
   'Loading budget & financial data...',
@@ -29,6 +29,9 @@ export default function AnalyzingLoader() {
     if (!activeSubmission || doneRef.current) return;
 
     let aiBlueprints: Blueprint[] | null = null;
+    let aiAssumptions: ReviewAssumption[] | null = null;
+    let aiProvider: AIProvider | undefined;
+    let aiFallback: boolean | undefined;
     let minTimePassed = false;
     let apiFetched = false;
 
@@ -38,7 +41,12 @@ export default function AnalyzingLoader() {
       doneRef.current = true;
 
       if (aiBlueprints && aiBlueprints.length > 0) {
-        completeAnalysisWithBlueprints(aiBlueprints);
+        completeAnalysisWithBlueprints({
+          blueprints: aiBlueprints,
+          assumptions: aiAssumptions,
+          provider: aiProvider,
+          fallback: aiFallback,
+        });
       } else {
         completeAnalysis();
       }
@@ -59,6 +67,15 @@ export default function AnalyzingLoader() {
       .then(data => {
         if (Array.isArray(data.blueprints) && data.blueprints.length > 0) {
           aiBlueprints = data.blueprints;
+        }
+        if (Array.isArray(data.assumptions)) {
+          aiAssumptions = data.assumptions;
+        }
+        if (typeof data.provider === 'string') {
+          aiProvider = data.provider;
+        }
+        if (typeof data.fallback === 'boolean') {
+          aiFallback = data.fallback;
         }
       })
       .catch(() => {})

@@ -7,8 +7,9 @@ import { useApp } from '../context/AppContext';
 import { ROUTES } from '../lib/routes';
 
 export default function EscalatedPage() {
-  const { selectedBlueprint, resetSubmission } = useApp();
+  const { rankedBlueprints, reviewAssumptions, resetSubmission } = useApp();
   const router = useRouter();
+  const topRanked = rankedBlueprints[0] ?? null;
 
   return (
     <div className="page-shell flex items-center justify-center" style={{ background: 'var(--color-bg-deep)' }}>
@@ -29,17 +30,15 @@ export default function EscalatedPage() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <h1 className="font-display font-bold text-3xl mb-3" style={{ color: 'var(--color-text-primary)' }}>
-            Blueprint escalated successfully
+            Ranked blueprint set escalated successfully
           </h1>
           <p className="mb-3 leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-            {selectedBlueprint
-              ? `"${selectedBlueprint.title}" is now in the superior review queue with its context, conflict notes, and score breakdown.`
-              : 'Your preferred blueprint is now in the superior review queue with its context and ranking details.'}
+            {topRanked
+              ? `"${topRanked.title}" is leading your Top 1 / Top 2 / Top 3 packet, and the full ranked set is now in the manager review queue with its current scoring assumptions and score breakdowns.`
+              : 'Your ranked blueprint packet is now in the manager review queue with its current scoring assumptions and scoring context.'}
           </p>
           <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-            Leadership can compare this escalation with other pending blueprints and generate a
-            unified strategy from the strongest pair. You can reopen this submission later from
-            your dashboard.
+            Your manager can reevaluate the full set, adjust assumption values, then either forward one blueprint to the director or return the packet to you for revision.
           </p>
         </motion.div>
 
@@ -52,10 +51,10 @@ export default function EscalatedPage() {
         >
           <div className="space-y-2 text-left">
             {[
-              'Submission attached to escalation record',
-              'Retrieved context bundled for superior review',
-              'Conflict acknowledgement preserved',
-              'Scoring table snapshot included',
+              'Top 1 / Top 2 / Top 3 ranking preserved',
+              `${reviewAssumptions.length} scoring assumption values attached`,
+              'Retrieved context bundled for manager review',
+              'Only one manager-selected blueprint will reach the director queue',
             ].map(step => (
               <div key={step} className="flex items-center gap-2 text-sm">
                 <CheckCircle size={14} style={{ color: 'var(--color-success)' }} />
