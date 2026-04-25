@@ -4,6 +4,9 @@ Indecisive is a role-based AI decision platform for complex organisational probl
 
 The app simulates how Indecisive helps teams submit business problems, pull internal context, generate multiple solution blueprints, surface conflicts, rank options, escalate decisions, and merge compatible strategies at a superior level.
 
+##Demo Video: https://drive.google.com/drive/folders/1ekw0ABb0koyUiH5UALKU3tkYe1s_gEOG?usp=drive_link
+
+
 ## Demo Scope
 
 This project is intentionally demo-only:
@@ -136,6 +139,7 @@ The Vitest and React Testing Library suite covers:
 - flow integrity such as conflict acknowledgement before scoring
 
 ## Project Notes
+
 
 - The demo seeds a small escalation queue so superior views are usable before a new staff submission is created.
 - Generated blueprints, retrieved context, merge suggestions, and unified outputs are derived from the active demo state instead of fixed output pages.
